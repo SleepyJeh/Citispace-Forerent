@@ -74,12 +74,14 @@ services:
   mysql:
     image: mysql:8.0
     ports:
-      - "${MYSQL_PORT:-3306}:3306"
+      - "${DB_PORT:-3306}:3306"
+    env_file:
+      - .env
     environment:
       - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-root}
-      - MYSQL_DATABASE=${MYSQL_DATABASE:-forerent}
-      - MYSQL_USER=${MYSQL_USER:-forerent_admin}
-      - MYSQL_PASSWORD=${MYSQL_PASSWORD:-forerent_su_secret}
+      - MYSQL_DATABASE=${DB_DATABASE:-db}
+      - MYSQL_USER=${DB_USERNAME:-user}
+      - MYSQL_PASSWORD=${DB_PASSWORD:-pass}
     volumes:
       - mysql-data-development:/var/lib/mysql
     networks:
