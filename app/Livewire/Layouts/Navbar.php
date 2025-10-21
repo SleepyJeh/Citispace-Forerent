@@ -16,6 +16,6 @@ class Navbar extends Component
 
     public function render()
     {
-        return view('layouts.common-navbar');
+        return view('livewire.layouts.common-navbar');
     }
 }
