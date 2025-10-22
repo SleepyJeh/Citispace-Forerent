@@ -17,7 +17,7 @@
     @livewireStyles
 </head>
 
-<body class=" min-h-dvh open-sans-300">
+<body class=" min-h-dvh font-body">
     @yield('content')
 
     @livewireScripts

@@ -13,6 +13,9 @@ Route::get('/user-login', function () {
     return view('common/login');
 })->name('user-login');
 
+Route::get('/dashboard', function () {
+    return view('users/admin/owner/settings');
+})->name('dashboard');
 
 Route::get('/addunit', function () {
     return view('users/admin/addunit');

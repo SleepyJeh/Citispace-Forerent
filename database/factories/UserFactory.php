@@ -1,20 +1,14 @@
 <?php
 
+// database/factories/UserFactory.php
+
 namespace Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 
-/**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\User>
- */
 class UserFactory extends Factory
 {
-    /**
-     * The current password being used by the factory.
-     */
-    protected static ?string $password;
-
     /**
      * Define the model's default state.
      *
@@ -23,14 +17,23 @@ class UserFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => fake()->name(),
+            // Use the new first_name and last_name columns
+            'first_name' => fake()->firstName(),
+            'last_name' => fake()->lastName(),
+            
             'email' => fake()->unique()->safeEmail(),
+            
+            // Randomly pick one of your allowed roles
+            'role' => fake()->randomElement(['tenant', 'manager', 'landlord']),
+            
+            'contact' => fake()->phoneNumber(),
+            'profile_img' => null, // Or use fake()->imageUrl()
+            'password' => 'password', // Will be hashed by the User model
+            
             'email_verified_at' => now(),
-            'password' => static::$password ??= 'password',
+            'phone_verified_at' => null, // Or 'now()' if you want them pre-verified
+            
             'remember_token' => Str::random(10),
-            'two_factor_secret' => Str::random(10),
-            'two_factor_recovery_codes' => Str::random(10),
-            'two_factor_confirmed_at' => now(),
         ];
     }
 
@@ -41,18 +44,6 @@ class UserFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'email_verified_at' => null,
-        ]);
-    }
-
-    /**
-     * Indicate that the model does not have two-factor authentication configured.
-     */
-    public function withoutTwoFactor(): static
-    {
-        return $this->state(fn (array $attributes) => [
-            'two_factor_secret' => null,
-            'two_factor_recovery_codes' => null,
-            'two_factor_confirmed_at' => null,
         ]);
     }
 }
