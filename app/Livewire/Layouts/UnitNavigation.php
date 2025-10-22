@@ -8,7 +8,13 @@ use Illuminate\Support\Collection;
 class UnitNavigation extends Component
 {
     /**
-     * A collection of units to display in the navigation.
+     * MODIFIED: This will hold the MASTER list of all units.
+     * @var Collection
+     */
+    public Collection $allUnits;
+
+    /**
+     * MODIFIED: This will now hold the FILTERED list of units.
      * @var Collection
      */
     public Collection $units;
@@ -19,17 +25,15 @@ class UnitNavigation extends Component
      */
     public $activeUnitId = null;
 
+    /**
+     * The currently selected gender tab.
+     * @var string
+     */
+    public string $activeGender = 'female'; // Default to 'female'
+
     // --- Pagination Properties ---
     public int $currentPage = 1;
-
-    /**
-     * MODIFIED:
-     * I've increased the items per page to 15.
-     * This will force the list to be long enough to
-     * activate the scrollbar in your h-[750px] container.
-     */
-    public int $itemsPerPage = 15; // Was 6
-
+    public int $itemsPerPage = 15;
     public int $totalPages;
     // ---------------------------
 
@@ -40,46 +44,63 @@ class UnitNavigation extends Component
     {
         /**
          * MODIFIED:
-         * I've added more units (up to 20) to ensure
-         * the list is long and that pagination still appears.
+         * 1. Populate the master $allUnits list.
+         * 2. Added 'gender' property to each unit for filtering.
          */
-        $this->units = collect([
-            ['id' => 1, 'name' => 'UNIT 1'],
-            ['id' => 2, 'name' => 'UNIT 2'],
-            ['id' => 3, 'name' => 'UNIT 3'],
-            ['id' => 4, 'name' => 'UNIT 4'],
-            ['id' => 5, 'name' => 'UNIT 5'],
-            ['id' => 6, 'name' => 'UNIT 6'],
-            ['id' => 7, 'name' => 'UNIT 7'],
-            ['id' => 8, 'name' => 'UNIT 8'],
-            ['id' => 9, 'name' => 'UNIT 9'],
-            ['id' => 10, 'name' => 'UNIT 10'],
-            ['id' => 11, 'name' => 'UNIT 11'],
-            ['id' => 12, 'name' => 'UNIT 12'],
-            ['id' => 13, 'name' => 'UNIT 13'],
-            ['id' => 14, 'name' => 'UNIT 14'], // <-- Added
-            ['id' => 15, 'name' => 'UNIT 15'], // <-- Added
-            ['id' => 16, 'name' => 'UNIT 16'], // <-- Added
-            ['id' => 17, 'name' => 'UNIT 17'], // <-- Added
-            ['id' => 18, 'name' => 'UNIT 18'], // <-- Added
-            ['id' => 19, 'name' => 'UNIT 19'], // <-- Added
-            ['id' => 20, 'name' => 'UNIT 20'], // <-- Added
+        $this->allUnits = collect([
+            ['id' => 1, 'name' => 'UNIT 1', 'gender' => 'female'],
+            ['id' => 2, 'name' => 'UNIT 2', 'gender' => 'male'],
+            ['id' => 3, 'name' => 'UNIT 3', 'gender' => 'female'],
+            ['id' => 4, 'name' => 'UNIT 4', 'gender' => 'male'],
+            ['id' => 5, 'name' => 'UNIT 5', 'gender' => 'female'],
+            ['id' => 6, 'name' => 'UNIT 6', 'gender' => 'female'],
+            ['id' => 7, 'name' => 'UNIT 7', 'gender' => 'male'],
+            ['id' => 8, 'name' => 'UNIT 8', 'gender' => 'female'],
+            ['id' => 9, 'name' => 'UNIT 9', 'gender' => 'male'],
+            ['id' => 10, 'name' => 'UNIT 10', 'gender' => 'female'],
+            ['id' => 11, 'name' => 'UNIT 11', 'gender' => 'female'],
+            ['id' => 12, 'name' => 'UNIT 12', 'gender' => 'male'],
+            ['id' => 13, 'name' => 'UNIT 13', 'gender' => 'female'],
+            ['id' => 14, 'name' => 'UNIT 14', 'gender' => 'male'],
+            ['id' => 15, 'name' => 'UNIT 15', 'gender' => 'female'],
+            ['id' => 16, 'name' => 'UNIT 16', 'gender' => 'male'],
+            ['id' => 17, 'name' => 'UNIT 17', 'gender' => 'female'],
+            ['id' => 18, 'name' => 'UNIT 18', 'gender' => 'male'],
+            ['id' => 19, 'name' => 'UNIT 19', 'gender' => 'female'],
+            ['id' => 20, 'name' => 'UNIT 20', 'gender' => 'male'],
         ]);
 
-        // Calculate total pages
+        // MODIFIED: Perform the initial filter based on the default activeGender
+        $this->filterUnits();
+    }
+
+    /**
+     * NEW: Helper function to filter units based on $activeGender
+     */
+    private function filterUnits()
+    {
+        // Filter the master list and re-index the collection
+        $this->units = $this->allUnits->where('gender', $this->activeGender)->values();
+
+        // Recalculate total pages for the filtered list
         $this->totalPages = (int) ceil($this->units->count() / $this->itemsPerPage);
 
-        // Set the first unit as active by default if the list is not empty
-        if ($this->units->isNotEmpty()) {
-            $this->activeUnitId = $this->units->first()['id'];
-        }
+        // Reset pagination to page 1
+        $this->currentPage = 1;
+
+        // Get the first unit from the *newly filtered* list
+        $firstUnit = $this->units->first();
+
+        // Set the active unit ID
+        $this->activeUnitId = $firstUnit ? $firstUnit['id'] : null;
+
+        // Dispatch an event to update the UnitDetail component
+        // Send 0 or null if the list is empty, getUnitById() in UnitDetail will handle it.
+        $this->dispatch('unitSelected', unitId: $this->activeUnitId ?? 0);
     }
 
     /**
      * Sets the clicked unit as the active one.
-     *
-     * @param int $unitId
-     * @return void
      */
     public function selectUnit(int $unitId)
     {
@@ -87,19 +108,26 @@ class UnitNavigation extends Component
         $this->dispatch('unitSelected', unitId: $unitId);
     }
 
-    // --- Pagination Methods ---
+    /**
+     * MODIFIED: This method now triggers the filtering logic.
+     */
+    public function selectGender(string $gender)
+    {
+        $this->activeGender = $gender;
+
+        // Call the new helper function to re-filter the list
+        $this->filterUnits();
+    }
+
+    // --- Pagination Methods (Unchanged) ---
 
     /**
      * Go to a specific page.
      */
     public function gotoPage(int $page)
     {
-        // Add boundary checks
-        if ($page < 1) {
-            $page = 1;
-        } elseif ($page > $this->totalPages) {
-            $page = $this->totalPages;
-        }
+        // Ensure page is within valid range
+        $page = max(1, min($page, $this->totalPages));
         $this->currentPage = $page;
     }
 
@@ -122,12 +150,10 @@ class UnitNavigation extends Component
 
     /**
      * Renders the component's view.
-     *
-     * @return \Illuminate\View\View
      */
     public function render()
     {
-        // Paginate the units collection
+        // MODIFIED: Paginate the *filtered* $this->units collection
         $paginatedUnits = $this->units->skip(($this->currentPage - 1) * $this->itemsPerPage)
             ->take($this->itemsPerPage);
 

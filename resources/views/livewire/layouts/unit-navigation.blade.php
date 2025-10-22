@@ -1,19 +1,50 @@
-{{-- MODIFIED: Added h-full and flex flex-col --}}
-<div class="w-full bg-white p-6 rounded-2xl shadow-md h-full flex flex-col">
-    <h2 class="text-xl font-bold text-gray-800 mb-4">Units</h2>
+{{-- 
+  MODIFIED: 
+  This layout combines the new gender tabs with your
+  original scrolling list and pagination.
+--}}
+<div class="w-full bg-white p-4 md:p-6 rounded-2xl shadow-md h-full flex flex-col">
+    <h2 class="text-xl md:text-2xl font-bold text-gray-800 mb-4">Units</h2>
 
-    {{-- MODIFIED: Replaced max-h-[400px] with flex-1 to fill available space --}}
+    {{-- Gender Tabs (From new design) --}}
+    <div class="mb-4 border-b border-gray-200 flex-shrink-0">
+        <ul class="flex flex-wrap -mb-px text-sm font-medium text-center" role="tablist">
+            <li class="mr-2" role="presentation">
+                <button
+                    class="inline-block p-4 rounded-t-lg border-b-2 {{ $activeGender === 'female' ? 'text-blue-600 border-blue-600' : 'text-gray-500 border-transparent hover:text-gray-600 hover:border-gray-300' }}"
+                    wire:click="selectGender('female')"
+                    type="button"
+                    role="tab">
+                    Female
+                </button>
+            </li>
+            <li class="mr-2" role="presentation">
+                <button
+                    class="inline-block p-4 rounded-t-lg border-b-2 {{ $activeGender === 'male' ? 'text-blue-600 border-blue-600' : 'text-gray-500 border-transparent hover:text-gray-600 hover:border-gray-300' }}"
+                    wire:click="selectGender('male')"
+                    type="button"
+                    role="tab">
+                    Male
+                </button>
+            </li>
+        </ul>
+    </div>
+
+    {{-- 
+      Unit List Container (Restored from original)
+      MODIFIED: flex-1 makes this section fill the available space
+    --}}
     <div class="flex-1 overflow-y-auto custom-scrollbar pr-2 space-y-3">
 
         {{-- Loop through the PAGINATED units --}}
         @foreach ($paginatedUnits as $unit)
         @php
-        // Define the base, active, and inactive classes for cleaner code
+        // Define the base, active, and inactive classes from your original file
         $baseClasses = 'w-full text-left font-semibold p-4 rounded-lg border-2 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-400';
 
-        // Determine which style to apply based on the active state
         $isActive = ($unit['id'] == $this->activeUnitId);
 
+        // Restored original button styles
         $activeClasses = 'bg-blue-600 text-white border-blue-600';
         $inactiveClasses = 'bg-transparent text-blue-600 border-gray-200 hover:bg-blue-50 hover:border-blue-500';
         @endphp
@@ -27,9 +58,9 @@
         @endforeach
     </div>
 
+    {{-- Pagination Block (Restored from original) --}}
     @if ($totalPages > 1)
-    {{-- This pagination block is now correctly positioned at the bottom --}}
-    <div class="flex justify-center items-center gap-2 mt-6 md:mt-8">
+    <div class="flex justify-center items-center gap-2 mt-6 md:mt-8 flex-shrink-0">
 
         @if ($currentPage > 1)
         <button
@@ -66,7 +97,7 @@
 
 </div>
 
-{{-- Add the custom scrollbar styles --}}
+{{-- Custom scrollbar styles (Restored from original) --}}
 @push('styles')
 <style>
     /* Custom Scrollbar Styling */
