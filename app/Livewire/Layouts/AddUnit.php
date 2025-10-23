@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Livewire;
+namespace App\Livewire\Layouts;
 
 use Livewire\Component;
 
@@ -9,42 +9,39 @@ class AddUnit extends Component
     // Property to track the current step, initialized to 1
     public $currentStep = 1;
 
-    // Array defining the steps and their labels
+    // REVISED: Steps array changed to 3 steps
     public $steps = [
         1 => 'Basic Info',
-        2 => 'Capacity',
-        3 => 'Amenities',
-        4 => 'Price Prediction',
+        2 => 'Amenities',
+        3 => 'Price Prediction',
     ];
 
     // Form properties for Step 1
-    public $unit_number;
-    public $property_type;
+    public $building_name;
     public $address;
-    public $floor_level;
-    public $view_type;
-    public $property_manager;
-    public $parking_available = false;
+    public $floor_number;
+    public $unit_number;
+    public $room_number;
+    public $dorm_type;
+    public $room_type;
+    public $bed_type;
+    public $bed_number;
+    public $utility_subsidy = false;
+    public $unit_capacity;
+    public $room_capacity;
 
-    // Form properties for Step 2 (Capacity)
-    public $square_area;
-    public $bedroom_count;
-    public $bathroom_count;
-    public $total_beds;
-    public $kitchen_count; // Changed to count, assuming it's a number
-    public $maximum_occupancy;
+    // 💡 NEW: Property for the editable price in Step 3
+    public $predicted_price = 29000;
 
-    // 💡 NEW: Form properties for Step 3 (Amenities)
-    // Using associative arrays to store checkbox states for each item
+    // Form properties for Step 2 (Amenities)
     public $amenities_features = [
         'air_conditioning' => false,
         'hot_cold_shower' => false,
         'fast_wifi' => false,
     ];
     public $bedroom_bedding = [
-        'queen_bed' => false,
-        'sofa_bed' => false,
         'beddings_pillows_duvet' => false,
+        'sofa_bed' => false,
     ];
     public $kitchen_dining = [
         'refrigerator' => false,
@@ -61,7 +58,7 @@ class AddUnit extends Component
         'blower' => false,
     ];
     public $consumables_provided = [
-        'toothpaste_1' => false, // Using _1 and _2 because image shows two toothpastes
+        'toothpaste_1' => false,
         'toothpaste_2' => false,
         'bath_soap' => false,
         'hand_soap' => false,
@@ -70,20 +67,40 @@ class AddUnit extends Component
         'slippers' => false,
     ];
 
+    // NEW: Form properties for Property Amenities (Step 2)
+    public $property_amenities = [
+        'pool_access' => false,
+        'gym_access' => false,
+        '247_cctv_security' => false,
+        'laundry_access' => false,
+    ];
+
+    // Public property to hold the dynamic amenity count
+    public $amenityCount = 0;
+
 
     /**
-     * Move to the next step, ensuring it doesn't exceed the max step.
+     * Function to handle "Select All" checkboxes.
+     */
+    public function selectAll($property, $checked)
+    {
+        if (property_exists($this, $property) && is_array($this->$property)) {
+            $this->$property = array_fill_keys(array_keys($this->$property), (bool)$checked);
+        }
+    }
+
+    /**
+     * Move to the next step.
      */
     public function nextStep()
     {
-        // Add validation logic here before advancing for the current step
         if ($this->currentStep < count($this->steps)) {
             $this->currentStep++;
         }
     }
 
     /**
-     * Move to the previous step, ensuring it doesn't go below step 1.
+     * Move to the previous step.
      */
     public function previousStep()
     {
@@ -97,10 +114,32 @@ class AddUnit extends Component
      */
     public function finish()
     {
-        // Add your final form submission/save logic here
-        session()->flash('message', 'Unit successfully added!');
-        // Optionally redirect or reset component properties
-        // return redirect()->to('/admin/units');
+        // You can now access the final price with $this->predicted_price
+        session()->flash('message', 'Unit successfully added with price: ' . $this->predicted_price);
+    }
+
+    /**
+     * Private helper function to calculate the total selected amenities.
+     */
+    private function calculateAmenityCount()
+    {
+        $count = 0;
+        $amenityArrays = [
+            'amenities_features',
+            'bedroom_bedding',
+            'kitchen_dining',
+            'entertainment',
+            'additional_items',
+            'consumables_provided',
+            'property_amenities',
+        ];
+
+        foreach ($amenityArrays as $group) {
+            if (property_exists($this, $group) && is_array($this->$group)) {
+                $count += count(array_filter($this->$group));
+            }
+        }
+        $this->amenityCount = $count;
     }
 
 
@@ -109,6 +148,53 @@ class AddUnit extends Component
      */
     public function render()
     {
-        return view('livewire.add-unit');
+        // Helper array for display labels
+        $labels = [
+            'amenities_features' => [
+                'air_conditioning' => 'Air Conditioning',
+                'hot_cold_shower' => 'Hot & Cold Shower',
+                'fast_wifi' => 'Fast Wi-Fi (50mbps Woody Fiber)',
+            ],
+            'bedroom_bedding' => [
+                'beddings_pillows_duvet' => 'Beddings, Pillows, Duvet',
+                'sofa_bed' => 'Sofa Bed',
+            ],
+            'kitchen_dining' => [
+                'refrigerator' => 'Refrigerator',
+                'microwave_oven' => 'Microwave Oven',
+                'oven_toaster' => 'Oven Toaster',
+                'water_kettle' => 'Water Kettle',
+                'coffee_table_chairs' => 'Coffee Table & Chairs',
+            ],
+            'entertainment' => [
+                'smart_tv_disney_plus' => '43" Smart TV With Free Disney+ Access',
+            ],
+            'additional_items' => [
+                'flat_iron' => 'Flat Iron',
+                'blower' => 'Blower',
+            ],
+            'consumables_provided' => [
+                'toothpaste_1' => 'Toothpaste',
+                'bath_soap' => 'Bath Soap',
+                'bathroom_tissue' => 'Bathroom Tissue',
+                'slippers' => 'Slippers',
+                'toothpaste_2' => 'Toothpaste',
+                'hand_soap' => 'Hand Soap',
+                'bath_towels' => 'Bath Towels',
+            ],
+            'property_amenities' => [
+                'pool_access' => 'Pool Access',
+                '247_cctv_security' => '24/7 CCTV Security',
+                'gym_access' => 'Gym Access',
+                'laundry_access' => 'Laundry Access',
+            ],
+        ];
+
+        // Calculate the amenity count every time the component renders
+        $this->calculateAmenityCount();
+
+        return view('livewire.layouts.add-unit', [
+            'labels' => $labels
+        ]);
     }
 }

@@ -1,51 +1,115 @@
-<div class="p-4">
-    {{-- Step Header --}}
-    <h3 class="flex items-center text-xl font-semibold text-[#021C3F] mb-6">
-        <svg class="w-6 h-6 mr-3 text-[#0030C5]" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-        </svg>
-        Basic Info
+<div class="p-6 md:p-8"> {{-- Added a bit more padding --}}
+
+    {{-- Section 1: Unit Identification --}}
+    <h3 class="text-lg font-semibold text-[#021C3F] mb-6">
+        Unit Identification
     </h3>
 
     {{-- Form Fields --}}
-    <div class="grid grid-cols-2 gap-x-8 gap-y-6">
-        <div>
-            <label for="unit_number" class="block mb-2 text-sm font-medium text-gray-900">Unit Number</label>
-            <input type="text" id="unit_number" wire:model="unit_number" class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-[#0030C5] focus:border-[#0030C5] block w-full p-3" placeholder="106">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6">
+        
+        {{-- Building Name (Full Width) --}}
+        {{-- 💡 FIX: Removed the extra background color from this input's wrapper --}}
+        <div class="relative md:col-span-2">
+            <input type="text" id="building_name" wire:model="building_name" class="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-transparent rounded-lg border border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-[#0030C5] peer" placeholder=" " />
+            <label for="building_name" class="absolute text-sm text-gray-500 duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-white px-2 peer-focus:px-2 peer-focus:text-[#0030C5] peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 start-1">Building Name</label>
         </div>
-        <div>
-            <label for="property_type" class="block mb-2 text-sm font-medium text-gray-900">Property Type</label>
-            <select id="property_type" wire:model="property_type" class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-[#0030C5] focus:border-[#0030C5] block w-full p-3">
-                <option>Condotel</option>
-                <option>Apartment</option>
+
+        {{-- Address --}}
+        <div class="relative">
+            <input type="text" id="address" wire:model="address" class="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-transparent rounded-lg border border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-[#0030C5] peer" placeholder=" " />
+            <label for="address" class="absolute text-sm text-gray-500 duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-white px-2 peer-focus:px-2 peer-focus:text-[#0030C5] peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 start-1">Address</label>
+        </div>
+
+        {{-- Floor Number --}}
+        <div class="relative">
+            {{-- 💡 ADDED: min="0" to restrict negative numbers --}}
+            <input type="number" id="floor_number" wire:model="floor_number" min="0" class="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-transparent rounded-lg border border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-[#0030C5] peer" placeholder=" " />
+            <label for="floor_number" class="absolute text-sm text-gray-500 duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-white px-2 peer-focus:px-2 peer-focus:text-[#0030C5] peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 start-1">Floor Number</label>
+        </div>
+
+        {{-- Unit Number --}}
+        <div class="relative">
+            <input type="text" id="unit_number" wire:model="unit_number" class="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-transparent rounded-lg border border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-[#0030C5] peer" placeholder=" " />
+            <label for="unit_number" class="absolute text-sm text-gray-500 duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-white px-2 peer-focus:px-2 peer-focus:text-[#0030C5] peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 start-1">Unit Number</label>
+        </div>
+
+        {{-- Room Number --}}
+        <div class="relative">
+            <input type="text" id="room_number" wire:model="room_number" class="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-transparent rounded-lg border border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-[#0030C5] peer" placeholder=" " />
+            <label for="room_number" class="absolute text-sm text-gray-500 duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-white px-2 peer-focus:px-2 peer-focus:text-[#0030C5] peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 start-1">Room Number</label>
+        </div>
+
+        {{-- Dorm Type --}}
+        <div class="relative">
+            <select id="dorm_type" wire:model="dorm_type" class="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-transparent rounded-lg border border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-[#0030C5] peer">
+                <option value="" selected></option> {{-- Empty option for placeholder --}}
+                <option value="All Female">All Female</option>
+                <option value="All Male">All Male</option>
+                <option value="Co-ed">Co-ed</option>
             </select>
+            <label for="dorm_type" class="absolute text-sm text-gray-500 duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-white px-2 peer-focus:px-2 peer-focus:text-[#0030C5] peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 start-1">Dorm Type</label>
         </div>
-        <div class="col-span-2">
-            <label for="address" class="block mb-2 text-sm font-medium text-gray-900">Address</label>
-            <input type="text" id="address" wire:model="address" class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-[#0030C5] focus:border-[#0030C5] block w-full p-3" placeholder="Fame Residences, Mandaluyong City">
-        </div>
-        <div>
-            <label for="floor_level" class="block mb-2 text-sm font-medium text-gray-900">Floor Level</label>
-            <input type="text" id="floor_level" wire:model="floor_level" class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-[#0030C5] focus:border-[#0030C5] block w-full p-3" placeholder="eg. 12">
-        </div>
-        <div>
-            <label for="view_type" class="block mb-2 text-sm font-medium text-gray-900">View Type</label>
-            <select id="view_type" wire:model="view_type" class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-[#0030C5] focus:border-[#0030C5] block w-full p-3">
-                <option>Select View</option>
-                <option>City View</option>
+
+        {{-- Room Type --}}
+        <div class="relative">
+            <select id="room_type" wire:model="room_type" class="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-transparent rounded-lg border border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-[#0030C5] peer">
+                <option value="" selected></option> {{-- Empty option for placeholder --}}
+                <option value="Shared">Shared</option>
+                <option value="Private">Private</option>
             </select>
+            <label for="room_type" class="absolute text-sm text-gray-500 duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-white px-2 peer-focus:px-2 peer-focus:text-[#0030C5] peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 start-1">Room Type</label>
         </div>
-        <div>
-            <label for="property_manager" class="block mb-2 text-sm font-medium text-gray-900">Property Manager</label>
-            <input type="text" id="property_manager" wire:model="property_manager" class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-[#0030C5] focus:border-[#0030C5] block w-full p-3" placeholder="Ninole Candelaria">
+
+        {{-- Bed Type --}}
+        <div class="relative">
+            <select id="bed_type" wire:model="bed_type" class="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-transparent rounded-lg border border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-[#0030C5] peer">
+                <option value="" selected></option> {{-- Empty option for placeholder --}}
+                <option value="Single">Single</option>
+                <option value="Double Deck">Double Deck</option>
+                <option value="Queen">Queen</option>
+            </select>
+            <label for="bed_type" class="absolute text-sm text-gray-500 duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-white px-2 peer-focus:px-2 peer-focus:text-[#0030C5] peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 start-1">Bed Type</label>
         </div>
-        <div class="flex items-end">
-            <div class="flex items-center h-full">
-                <input id="parking_available" type="checkbox" wire:model="parking_available" class="w-4 h-4 text-[#0030C5] bg-gray-100 border-gray-300 rounded focus:ring-[#0030C5]">
-                <label for="parking_available" class="ms-2 text-sm font-medium text-gray-900">Parking Available</label>
-            </div>
+
+        {{-- Bed Number --}}
+        <div class="relative">
+            <input type="text" id="bed_number" wire:model="bed_number" class="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-transparent rounded-lg border border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-[#0030C5] peer" placeholder=" " />
+            <label for="bed_number" class="absolute text-sm text-gray-500 duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-white px-2 peer-focus:px-2 peer-focus:text-[#0030C5] peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 start-1">Bed Number</label>
+        </div>
+
+        {{-- Utility Subsidy Checkbox --}}
+        <div class="flex items-center md:col-span-2">
+            <input id="utility_subsidy" type="checkbox" wire:model="utility_subsidy" class="w-4 h-4 text-[#0030C5] bg-gray-100 border-gray-300 rounded focus:ring-[#0030C5]">
+            <label for="utility_subsidy" class="ms-2 text-sm font-medium text-gray-900">Utility Subsidy</label>
+        </div>
+
+    </div>
+
+    {{-- Horizontal Separator (Dotted Line) --}}
+    <div class="border-t border-dashed border-gray-300 my-8"></div>
+
+    {{-- Section 2: Capacity --}}
+    <h3 class="text-lg font-semibold text-[#021C3F] mb-6">
+        Capacity
+    </h3>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6">
+        {{-- Unit Capacity --}}
+        <div class="relative">
+            {{-- 💡 ADDED: min="0" to restrict negative numbers --}}
+            <input type="number" id="unit_capacity" wire:model="unit_capacity" min="0" class="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-transparent rounded-lg border border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-[#0030C5] peer" placeholder=" " />
+            <label for="unit_capacity" class="absolute text-sm text-gray-500 duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-white px-2 peer-focus:px-2 peer-focus:text-[#0030C5] peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 start-1">Unit Capacity</label>
+        </div>
+
+        {{-- Room Capacity --}}
+        <div class="relative">
+            {{-- 💡 ADDED: min="0" to restrict negative numbers --}}
+            <input type="number" id="room_capacity" wire:model="room_capacity" min="0" class="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-transparent rounded-lg border border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-[#0030C5] peer" placeholder=" " />
+            <label for="room_capacity" class="absolute text-sm text-gray-500 duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-white px-2 peer-focus:px-2 peer-focus:text-[#0030C5] peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 start-1">Room Capacity</label>
         </div>
     </div>
+
 
     {{-- Horizontal Separator (Dotted Line) --}}
     <div class="border-t border-dashed border-gray-300 my-8"></div>
@@ -58,18 +122,24 @@
 
         <button
             wire:click="previousStep"
-        {{ $isPrevDisabled ? 'disabled' : '' }}
-        class="px-8 py-3 text-base font-medium rounded-lg shadow-md transition-colors duration-200
+            {{ $isPrevDisabled ? 'disabled' : '' }}
+            {{-- 💡 REVISED: Button styling to match the image --}}
+            class="py-2.5 px-6 font-medium text-sm rounded-lg shadow-md transition-colors duration-200
             {{ $isPrevDisabled
-                ? 'text-gray-400 bg-gray-100 cursor-not-allowed'
+                ? 'text-gray-500 bg-gray-200 cursor-not-allowed'
                 : 'text-gray-700 bg-gray-200 hover:bg-gray-300'
                 }}">
             Previous
         </button>
 
        @if ($currentStep < count($steps))
-        <button wire:click="nextStep" class="px-10 py-3 text-base font-medium text-white bg-[#070642] rounded-lg hover:bg-[#22228e] transition-colors duration-200 shadow-md">Next</button>
+        <button wire:click="nextStep"
+            {{-- 💡 REVISED: Button styling to match the image --}}
+            class="py-2.5 px-6 font-medium text-sm text-white bg-[#070642] rounded-lg hover:bg-[#22228e] transition-colors duration-200 shadow-md">
+            Next
+        </button>
     @else
-        <button wire:click="finish" class="px-10 py-3 text-base font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors duration-200 shadow-md">Finish</button>
+        <button wire:click="finish" class="py-2.5 px-6 font-medium text-sm text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors duration-200 shadow-md">Finish</button>
     @endif
+    </div>
 </div>
