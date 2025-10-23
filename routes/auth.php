@@ -5,8 +5,6 @@ use Illuminate\Support\Facades\Route;
 use Livewire\Volt\Volt;
 
 Route::middleware('guest')->group(function () {
-    Volt::route('login', 'auth.login')
-        ->name('login');
 
     Volt::route('register', 'auth.register')
         ->name('register');
@@ -28,5 +26,5 @@ Route::middleware('auth')->group(function () {
         ->name('verification.verify');
 });
 
-Route::post('logout', App\Livewire\Actions\Logout::class)
+Route::get('logout', App\Livewire\Actions\Logout::class)
     ->name('logout');

@@ -9,13 +9,13 @@ Route::get('/', function () {
     return view('common/index');
 })->name('home');
 
-Route::get('/user-login', function () {
+Route::get('/login', function () {
     return view('common/login');
-})->name('user-login');
+})->middleware('guest')->name('login');
 
 Route::get('/dashboard', function () {
-    return view('users/admin/owner/settings');
-})->name('dashboard');
+    return view('users/admin/owner/settings'); // This loads resources/views/settings.blade.php
+})->middleware('auth')->name('settings'); // Make sure it's protected!
 
 Route::get('/addunit', function () {
     return view('users/admin/addunit');
@@ -28,9 +28,4 @@ Route::get('/property', function () {
     return view('users/admin/property');
 })->name('property');
 
-require __DIR__.'/auth.php';
-
-
-
-
-
+require __DIR__ . '/auth.php';
