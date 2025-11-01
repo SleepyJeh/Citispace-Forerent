@@ -11,7 +11,7 @@
             @click.stop
         >
             <!-- Modal Header -->
-            <div class="flex items-start justify-between p-6 border-b border-gray-200">
+            <div class="flex items-start justify-between p-6 border-b  border-gray-200">
                 <div>
                     <h2 class="text-xl font-bold text-[#001B5E] uppercase">Add New Manager</h2>
                     <p class="mt-1 text-sm text-gray-600">Create an account for the new property manager.</p>
@@ -135,25 +135,38 @@
                         </div>
 
                         <div class="grid grid-cols-2 gap-4">
-                            <div class="relative">
-                                <input
-                                    wire:model.blur="phone"
-                                    type="text"
-                                    id="phone-{{ $modalId }}"
-                                    class="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-transparent rounded-lg border border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-[#0030C5] peer pl-12"
-                                    placeholder=" "
-                                />
-                                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-500 peer-focus:text-[#0030C5]">+63</span>
-                                <label
-                                    for="phone-{{ $modalId }}"
-                                    class="absolute text-sm text-gray-500 duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-white px-2 peer-focus:px-2 peer-focus:text-[#0030C5] peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 start-9"
-                                >
-                                    Phone Number
-                                </label>
-                                @error('phone')
-                                    <span class="text-xs text-red-500 mt-1 block">{{ $message }}</span>
-                                @enderror
-                            </div>
+                         <div class="relative">
+    <input
+        wire:model.blur="phone"
+        type="text"
+        id="phone-{{ $modalId }}"
+        class="block pb-2.5 pt-4 w-full text-sm text-gray-900 bg-transparent rounded-lg border border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-[#0030C5] peer pr-2.5
+               pl-2.5
+               peer-focus:pl-16
+               peer-[:not(:placeholder-shown)]:pl-16"
+        placeholder=" "
+    />
+
+    <div class="absolute top-4 left-0 px-3 flex items-center space-x-2 pointer-events-none
+                opacity-0 transition-opacity duration-300
+                peer-focus:opacity-100
+                peer-[:not(:placeholder-shown)]:opacity-100">
+        <span class="text-sm text-gray-500 peer-focus:text-[#0030C5]">+63</span>
+        <span class="border-l border-gray-300 h-5"></span> </div>
+
+    <label
+        for="phone-{{ $modalId }}"
+        class="absolute text-sm text-gray-500 duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-white px-2 peer-focus:px-2 peer-focus:text-[#0030C5]
+               peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2
+               peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4
+               start-1"
+    >
+        Phone Number
+    </label>
+    @error('phone')
+        <span class="text-xs text-red-500 mt-1 block">{{ $message }}</span>
+    @enderror
+</div>
 
                             <div class="relative">
                                 <input
