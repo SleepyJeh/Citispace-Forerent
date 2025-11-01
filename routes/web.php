@@ -24,8 +24,14 @@ Route::get('/addunit', function () {
 Route::get('/revenue', function () {
     return view('users/admin/revenue');
 })->name('revenue');
+
+Route::get('/manager', function () {
+    return view('users/admin/owner/managerdetails');
+})->name('manager');
+
 Route::get('/property', function () {
     return view('users/admin/property');
 })->name('property');
+
 
 require __DIR__ . '/auth.php';

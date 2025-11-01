@@ -2,9 +2,8 @@
 
 @section('content')
 
-{{-- This is the new main layout container from property.blade.php --}}
 <div class="flex flex-row h-screen overflow-hidden">
-    
+
     {{-- Sidebar (copied from property.blade.php) --}}
     <nav class="w-0 md:w-64 flex-shrink-0 h-full overflow-y-auto bg-white">
         @include('livewire.layouts.adminnav')
@@ -12,7 +11,7 @@
 
     {{-- This is the new main content area shell from property.blade.php --}}
     <section id="main-container" class="flex-1 h-full flex flex-col overflow-hidden">
-        
+
         {{-- Top Bar (copied from property.blade.php) --}}
         <div class="flex-shrink-0 bg-white z-30">
             <livewire:layouts.top-bar />
@@ -20,7 +19,7 @@
 
         {{-- Scrollable content area (copied from property.blade.php) --}}
         <div class="flex-1 overflow-y-auto">
-            
+
             {{-- This is the inner container, styled like property.blade.php's "pm-container" --}}
             {{-- It uses the same padding and background classes for consistency --}}
             <div id="add-container" class="w-full min-h-full rounded-tl-4xl bg-[#F4F7FC] flex flex-col px-4 md:px-8 lg:px-18 pt-9 pb-16">
