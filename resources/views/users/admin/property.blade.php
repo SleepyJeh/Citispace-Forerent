@@ -13,8 +13,8 @@
             <livewire:layouts.top-bar />
         </div>
 
-        <div class="flex-1 overflow-y-auto">
-            <div id="pm-container" class="w-full min-h-full rounded-tl-4xl bg-[#F4F7FC] flex flex-col px-4 md:px-8 lg:px-18 pt-9 pb-16">
+         <div class="flex-1 overflow-y-auto ml-8">
+            <div id="manager-container" class="page-container">
 
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mt-6 mb-6">
                     <div class="flex flex-col">
