@@ -31,7 +31,6 @@ class User extends Authenticatable
         'contact',    // <-- ADD THIS
         'email',
         'password',
-        // 'name' is removed as per your request
     ];
 
     /**
