@@ -61,7 +61,7 @@
                             class="flex items-center w-full p-2 text-gray-700 transition duration-75 rounded-lg pl-11 hover:bg-[#DFE8FC] hover:text-[#070642]">Apartment</a>
                     </li>
                     <li>
-                        <a href="/dorm"
+                        <a href="/property"
                             class="flex items-center w-full p-2 text-gray-700 transition duration-75 rounded-lg pl-11 hover:bg-[#DFE8FC] hover:text-[#070642]">Dorm</a>
                     </li>
                 </ul>
@@ -152,7 +152,7 @@
 
         <ul class="space-y-2 font-medium">
             <li>
-                <a href="#" class="flex items-center p-3 text-gray-700 rounded-lg hover:bg-[#DFE8FC] hover:text-[#070642] group">
+                <a href="{{ route('settings') }}" class="flex items-center p-3 text-gray-700 rounded-lg hover:bg-[#DFE8FC] hover:text-[#070642] group">
                     <svg class="w-5 h-5 text-gray-500 transition duration-75 group-hover:text-[#070642]"
                         width="39" height="38" viewBox="0 0 39 38" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M32.7236 18.768C32.7236 26.1917 26.6084 32.2099 19.0649 32.2099C11.5214 32.2099 5.40625 26.1917 5.40625 18.768C5.40625 11.3443 11.5214 5.32617 19.0649 5.32617C26.6084 5.32617 32.7236 11.3443 32.7236 18.768ZM12.8394 18.768C12.8394 22.1517 15.6267 24.8947 19.0649 24.8947C22.5031 24.8947 25.2904 22.1517 25.2904 18.768C25.2904 15.3844 22.5031 12.6413 19.0649 12.6413C15.6267 12.6413 12.8394 15.3844 12.8394 18.768Z" fill="currentColor" />

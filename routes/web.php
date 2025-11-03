@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Features;
 use Livewire\Volt\Volt;
 use App\Http\Controllers\Admin\UnitController;
+use App\Http\Controllers\PropertyController;
 
 Route::get('/', function () {
     return view('common/index');
@@ -32,6 +33,15 @@ Route::get('/manager', function () {
 Route::get('/property', function () {
     return view('users/admin/property');
 })->name('property');
+Route::middleware('auth')->group(function () {
+    // ... your other routes
+
+    // This route shows the list of properties (the page you uploaded)
+    Route::get('/property', [PropertyController::class, 'index'])->name('properties.index');
+
+    // This route will show the "Add Property" form (we can build this next)
+    Route::get('/properties/create', [PropertyController::class, 'create'])->name('properties.create');
+});
 
 Route::get('/revenue', function () {
     return view('users.admin.owner.revenue');
