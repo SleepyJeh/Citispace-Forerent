@@ -4,6 +4,6 @@
 
     <!-- Content -->
     <div class="relative z-10 p-6 flex items-center h-full">
-        <p class="text-white text-lg font-medium">Hello, Adam!</p>
+        <p class="text-white text-lg font-medium">Hello, {{ auth()->check() ? auth()->user()->first_name : 'Guest' }}!</p>
     </div>
 </div>

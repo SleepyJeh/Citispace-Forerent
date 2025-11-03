@@ -3,9 +3,7 @@
 @section('content')
 
 <div class="flex flex-row h-screen overflow-hidden">
-    <nav class="w-0 md:w-64 flex-shrink-0 h-full overflow-y-auto bg-white">
-        @include('livewire.layouts.adminnav')
-    </nav>
+    <livewire:navbars.side-bar />
 
     <section id="main-container" class="flex-1 h-full flex flex-col overflow-hidden">
         <div class="flex-shrink-0 bg-white z-30">
@@ -24,7 +22,6 @@
 
                 {{-- Revenue Container Component --}}
                 <livewire:layouts.revenue-container />
-
             </div>
         </div>
     </section>

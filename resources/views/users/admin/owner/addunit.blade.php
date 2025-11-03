@@ -4,10 +4,8 @@
 
 <div class="flex flex-row h-screen overflow-hidden">
 
-    {{-- Sidebar (copied from property.blade.php) --}}
-    <nav class="w-0 md:w-64 flex-shrink-0 h-full overflow-y-auto bg-white">
-        @include('livewire.layouts.adminnav')
-    </nav>
+    <!-- Navigations -->
+    <livewire:navbars.side-bar />
 
     {{-- This is the new main content area shell from property.blade.php --}}
     <section id="main-container" class="flex-1 h-full flex flex-col overflow-hidden">

@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Actions;
 
+use App\Enums\Role;
 use Livewire\Component;
 use Illuminate\Support\Facades\Auth;
 
@@ -34,7 +35,16 @@ class LoginForm extends Component
 
         if (Auth::attempt($credentials, $this->remember)) {
             session()->flash('success', 'Login successful!');
-            return redirect()->to('/dashboard'); // Redirect to dashboard
+
+            $role = auth()->user()->role;
+
+            // Check the role of user and redirect them to respective
+            return match ($role) {
+                Role::Landlord->value => redirect()->route('landlord.dashboard'),
+                Role::Manager->value => redirect()->route('manager.dashboard'),
+                Role::Tenant->value => redirect()->route('tenant.dashboard'),
+                default => redirect()->route('landing.home'),
+            };
         }
 
         session()->flash('error', 'Invalid email or password.');

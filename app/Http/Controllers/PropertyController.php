@@ -14,10 +14,10 @@ class PropertyController extends Controller
     public function index()
     {
         // Get all properties owned by the logged-in user
-        $properties = Property::where('user_id', Auth::id())->get();
+        $properties = Property::all();
 
         // Pass the $properties variable to your view
-        return view('users.admin.property', ['properties' => $properties]);
+        return view('users.admin.owner.property', ['properties' => $properties]);
     }
 
     /**
@@ -27,6 +27,6 @@ class PropertyController extends Controller
     public function create() {
         // You can change this later to point to a new "Add Property" form
         // For now, let's assume 'addunit' is the route name for your form
-        return redirect()->route('addunit');
+        return redirect()->route('landlord.property.add-unit');
     }
 }
