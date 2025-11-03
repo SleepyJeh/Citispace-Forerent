@@ -14,8 +14,12 @@ Route::get('/login', function () {
 })->middleware('guest')->name('login');
 
 Route::get('/dashboard', function () {
-    return view('users/admin/owner/settings'); // This loads resources/views/settings.blade.php
-})->middleware('auth')->name('settings'); // Make sure it's protected!
+    return view('users/admin/owner/settings');
+})->middleware('auth')->name('settings');
+
+Route::get('/dashboard', function () {
+    return view('users/admin/owner/dashboard');
+})->name('dashboard');
 
 Route::get('/addunit', function () {
     return view('users/admin/addunit');
@@ -34,7 +38,7 @@ Route::get('/property', function () {
 })->name('property');
 
 Route::get('/revenue', function () {
-    return view('users.admin.owner.revenue');
+    return view('users/admin/owner/revenue');
 })->name('revenue');
 
 require __DIR__ . '/auth.php';

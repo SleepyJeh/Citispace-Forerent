@@ -11,6 +11,11 @@ class RevenueReports extends Component
     public $netOperatingIncome = 120000;
     public $selectedMonth = 'month';
 
+    // Added properties to match the new dropdowns
+    public $selectedInflowTimeframe = 'month';
+    public $selectedProjectionTimeframe = 'month';
+
+
     // Sample data - replace with actual database queries
     public function getIncomeChartData()
     {

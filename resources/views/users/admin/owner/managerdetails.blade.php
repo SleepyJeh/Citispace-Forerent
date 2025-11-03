@@ -25,10 +25,8 @@
                        <button
                         type="button"
                         onclick="Livewire.dispatch('openAddManagerModal_manager-dashboard')"
-                        {{-- MODIFIED: Classes adjusted for a smaller size --}}
                         class="inline-flex items-center gap-x-2 rounded-full bg-[#152C73] px-6 py-3 text-base font-semibold text-white shadow-sm hover:bg-[#102050] focus:outline-none focus:ring-2 focus:ring-[#152C73] focus:ring-offset-2 transition-colors"
                     >
-                        {{-- MODIFIED: Icon size reduced to h-5 w-5 --}}
                         <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                             <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
                         </svg>
@@ -40,7 +38,6 @@
 
                 @include('livewire.layouts.admingreeting')
 
-                {{-- Success Message Flash --}}
                 @if (session()->has('message'))
                     <div class="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg relative" role="alert">
                         <span class="block sm:inline">{{ session('message') }}</span>

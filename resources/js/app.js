@@ -1,5 +1,8 @@
+
 import 'flowbite';
-// Initialize Flowbite dropdowns
+import ApexCharts from 'apexcharts';
+
+window.ApexCharts = ApexCharts;
 document.addEventListener('DOMContentLoaded', function() {
     const dropdownToggles = document.querySelectorAll('[data-collapse-toggle]');
     dropdownToggles.forEach(toggle => {

@@ -1,4 +1,18 @@
 <div>
+    @php
+        // We define the options here to easily loop over them for the custom dropdowns
+        $timeframeOptions = [
+            'month' => 'Month',
+            'quarter' => 'Quarter',
+            'year' => 'Year',
+        ];
+        // Options for the projection dropdown
+        $projectionOptions = [
+            'month' => 'Month',
+            'year' => 'Yearly',
+        ];
+    @endphp
+
     {{-- Key Metrics Cards --}}
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <div class="bg-blue-600 rounded-xl p-6 text-white shadow-lg">
@@ -24,11 +38,39 @@
     <div class="bg-white rounded-xl shadow-md p-6 mb-6">
         <div class="flex justify-between items-center mb-4">
             <h3 class="text-xl font-bold text-gray-800">Total Income</h3>
-            <select wire:model.live="selectedMonth" class="text-xs bg-[#070642] text-white rounded-lg px-3 py-1.5 border-0 focus:ring-2 focus:ring-blue-500">
-                <option value="month">Month</option>
-                <option value="quarter">Quarter</option>
-                <option value="year">Year</option>
-            </select>
+
+            {{-- UPDATED DROPDOWN --}}
+            <div x-data="{
+                    open: false,
+                    selectedLabel: '{{ $timeframeOptions[$selectedMonth] ?? 'Select Time' }}'
+                 }"
+                 class="relative w-32">
+                <button @click="open = !open"
+                    class="flex items-center justify-between w-full bg-[#070642] text-white rounded-lg px-3 py-1.5 border-0 focus:ring-2 focus:ring-blue-500 font-medium text-xs transition-all duration-150">
+                    {{-- Use Alpine's 'selectedLabel' variable --}}
+                    <span x-text="selectedLabel"></span>
+                    <svg :class="{ 'rotate-180': open }" class="w-4 h-4 ml-2 text-white transition-transform duration-200"
+                        xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd"
+                            d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                            clip-rule="evenodd" />
+                    </svg>
+                </button>
+                <div x-show="open" @click.away="open = false" x-transition
+                    class="absolute z-10 w-full mt-1 bg-[#070642] text-white rounded-lg shadow-lg overflow-hidden">
+                    @foreach ($timeframeOptions as $value => $label)
+                        <div
+                            wire:click.prevent="$set('selectedMonth', '{{ $value }}')"
+                            {{-- Update label instantly and close dropdown --}}
+                            @click="selectedLabel = '{{ $label }}'; open = false"
+                            class="px-3 py-2 hover:bg-blue-700 cursor-pointer text-xs {{ $selectedMonth === $value ? 'bg-blue-700 font-semibold' : '' }}">
+                            {{ $label }}
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+            {{-- END UPDATED DROPDOWN --}}
+
         </div>
         <div id="totalIncomeChart" style="height: 350px;"></div>
     </div>
@@ -37,11 +79,37 @@
     <div class="bg-white rounded-xl shadow-md p-6 mb-6">
         <div class="flex justify-between items-center mb-4">
             <h3 class="text-xl font-bold text-gray-800">Financial Inflows And Outflows</h3>
-            <select class="text-xs bg-[#070642] text-white rounded-lg px-3 py-1.5 border-0 focus:ring-2 focus:ring-blue-500">
-                <option value="month">Month</option>
-                <option value="quarter">Quarter</option>
-                <option value="year">Year</option>
-            </select>
+
+            {{-- UPDATED DROPDOWN --}}
+            <div x-data="{
+                    open: false,
+                    selectedLabel: '{{ $timeframeOptions[$selectedInflowTimeframe] ?? 'Select Time' }}'
+                 }"
+                 class="relative w-32">
+                <button @click="open = !open"
+                    class="flex items-center justify-between w-full bg-[#070642] text-white rounded-lg px-3 py-1.5 border-0 focus:ring-2 focus:ring-blue-500 font-medium text-xs transition-all duration-150">
+                    <span x-text="selectedLabel"></span>
+                    <svg :class="{ 'rotate-180': open }" class="w-4 h-4 ml-2 text-white transition-transform duration-200"
+                        xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd"
+                            d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                            clip-rule="evenodd" />
+                    </svg>
+                </button>
+                <div x-show="open" @click.away="open = false" x-transition
+                    class="absolute z-10 w-full mt-1 bg-[#070642] text-white rounded-lg shadow-lg overflow-hidden">
+                    @foreach ($timeframeOptions as $value => $label)
+                        <div
+                            wire:click.prevent="$set('selectedInflowTimeframe', '{{ $value }}')"
+                            @click="selectedLabel = '{{ $label }}'; open = false"
+                            class="px-3 py-2 hover:bg-blue-700 cursor-pointer text-xs {{ $selectedInflowTimeframe === $value ? 'bg-blue-700 font-semibold' : '' }}">
+                            {{ $label }}
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+            {{-- END UPDATED DROPDOWN --}}
+
         </div>
         <div id="inflowOutflowChart" style="height: 350px;"></div>
     </div>
@@ -84,9 +152,36 @@
             <div class="mb-6">
                 <div class="flex justify-between items-center mb-2">
                     <h4 class="text-lg font-semibold text-gray-700">Next Month's Projected Revenue</h4>
-                    <select class="text-xs bg-[#070642] text-white rounded-lg px-3 py-1.5 border-0">
-                        <option value="month">Month</option>
-                    </select>
+
+                    {{-- UPDATED DROPDOWN --}}
+                    <div x-data="{
+                            open: false,
+                            selectedLabel: '{{ $projectionOptions[$selectedProjectionTimeframe] ?? 'Select Time' }}'
+                         }"
+                         class="relative w-32">
+                        <button @click="open = !open"
+                            class="flex items-center justify-between w-full bg-[#070642] text-white rounded-lg px-3 py-1.5 border-0 font-medium text-xs transition-all duration-150">
+                            <span x-text="selectedLabel"></span>
+                            <svg :class="{ 'rotate-180': open }" class="w-4 h-4 ml-2 text-white transition-transform duration-200"
+                                xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd"
+                                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                                    clip-rule="evenodd" />
+                            </svg>
+                        </button>
+                        <div x-show="open" @click.away="open = false" x-transition
+                            class="absolute z-10 w-full mt-1 bg-[#070642] text-white rounded-lg shadow-lg overflow-hidden">
+                            @foreach ($projectionOptions as $value => $label)
+                                <div
+                                    wire:click.prevent="$set('selectedProjectionTimeframe', '{{ $value }}')"
+                                    @click="selectedLabel = '{{ $label }}'; open = false"
+                                    class="px-3 py-2 hover:bg-blue-700 cursor-pointer text-xs {{ $selectedProjectionTimeframe === $value ? 'bg-blue-700 font-semibold' : '' }}">
+                                    {{ $label }}
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                    {{-- END UPDATED DROPDOWN --}}
                 </div>
                 <div id="projectedRevenueChart" style="height: 200px;"></div>
             </div>
@@ -107,6 +202,8 @@
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // ... (Your existing ApexCharts JavaScript logic remains unchanged) ...
+
             // Total Income Chart
             const incomeOptions = {
                 series: [{
