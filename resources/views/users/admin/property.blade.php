@@ -39,42 +39,6 @@
 
                     <div class="w-full lg:w-[70%] flex flex-col gap-8">
 
-<<<<<<< HEAD
-                        @include('livewire.layouts.admingreeting')
-
-                        <div>
-                            <span class="com-header text-lg md:text-xl text-blue-900 font-bold mb-4">BUILDINGS</span>
-                            <div id="building-sort" class="flex gap-4 overflow-x-auto pb-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-                                <livewire:layouts.Buildings
-                                    title="Building 1"
-                                    address="3360 Ibarra St., Palanan, Makati" />
-                                <livewire:layouts.Buildings
-                                    image="https://media.istockphoto.com/id/1467597986/photo/professionally-landscaped-garden-flower-bed.jpg?s=2048x2048&w=is&k=20&c=EkSeVR74NXBQAgY7xgrUt27JP1sIJk51L3vUKT7RmvQ="
-                                    title="Building 1"
-                                    address="3360 Ibarra St., Palanan, Makati" />
-                                <livewire:layouts.Buildings
-                                    title="Building 1"
-                                    address="3360 Ibarra St., Palanan, Makati" />
-                                <livewire:layouts.Buildings
-                                    title="Building 1"
-                                    address="3360 Ibarra St., Palanan, Makati" />
-                                <livewire:layouts.Buildings
-                                    title="Building 1"
-                                    address="3360 Ibarra St., Palanan, Makati" />
-                            </div>
-                        </div>
-
-                        <div class="w-full">
-                            <livewire:layouts.unit-accordion />
-                        </div>
-
-                    </div>
-
-                    <div class="w-full lg:w-[30%] flex-shrink-0">
-                        <livewire:layouts.stats-sidebar />
-                    </div>
-
-=======
                 {{-- 
                   CHANGED: Building List with Empty State
                   This replaces your hard-coded list of <livewire:layouts.Buildings />
@@ -100,7 +64,6 @@
                             <p class="text-gray-500 mt-2">Get started by adding your first property.</p>
                         </div>
                     @endforelse
->>>>>>> 29d4319 (modified docker compose for api)
                 </div>
                 {{-- End Building List --}}
 
