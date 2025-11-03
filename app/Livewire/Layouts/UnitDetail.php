@@ -116,6 +116,6 @@ class UnitDetail extends Component
 
     public function render()
     {
-        return view('livewire.layouts.unit-specification');
+        return view('livewire.layouts.unit-details');
     }
 }

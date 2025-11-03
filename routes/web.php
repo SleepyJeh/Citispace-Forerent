@@ -22,10 +22,21 @@ Route::get('/addunit', function () {
 })->name('addunit');
 
 Route::get('/revenue', function () {
-    return view('users/admin/revenue');
+    return view('users/admin/owner/revenue');
 })->name('revenue');
+
+Route::get('/manager', function () {
+    return view('users/admin/owner/managerdetails');
+})->name('manager');
+
 Route::get('/property', function () {
     return view('users/admin/property');
 })->name('property');
 
+Route::get('/revenue', function () {
+    return view('users.admin.owner.revenue');
+})->name('revenue');
+
 require __DIR__ . '/auth.php';
+
+// The extra '}' has been removed.

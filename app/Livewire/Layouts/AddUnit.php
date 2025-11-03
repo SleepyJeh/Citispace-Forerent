@@ -26,53 +26,48 @@ class AddUnit extends Component
     public $room_type;
     public $bed_type;
     public $bed_number;
-    public $utility_subsidy = false;
+    public $utility_subsidy = false; // This property already exists for "Utility Subsidy"
     public $unit_capacity;
     public $room_capacity;
 
     // 💡 NEW: Property for the editable price in Step 3
     public $predicted_price = 29000;
 
-    // Form properties for Step 2 (Amenities)
+    // 💡 REVISED: Form properties for Step 2 based on your new list
     public $amenities_features = [
-        'air_conditioning' => false,
+        'ac_unit' => false,
         'hot_cold_shower' => false,
-        'fast_wifi' => false,
+        'free_wifi' => false,
+        'fully_furnished' => false,
     ];
     public $bedroom_bedding = [
-        'beddings_pillows_duvet' => false,
-        'sofa_bed' => false,
+        'bunk_bed_mattress' => false,
+        'closet_cabinet' => false,
     ];
     public $kitchen_dining = [
         'refrigerator' => false,
-        'microwave_oven' => false,
-        'oven_toaster' => false,
+        'microwave' => false,
         'water_kettle' => false,
-        'coffee_table_chairs' => false,
+        'rice_cooker' => false,
+        'dining_table' => false,
+        'induction_cooker' => false,
     ];
     public $entertainment = [
-        'smart_tv_disney_plus' => false,
+        // This category is now empty based on your new list
     ];
     public $additional_items = [
-        'flat_iron' => false,
-        'blower' => false,
+        'electric_fan' => false,
+        'washing_machine' => false,
     ];
     public $consumables_provided = [
-        'toothpaste_1' => false,
-        'toothpaste_2' => false,
-        'bath_soap' => false,
-        'hand_soap' => false,
-        'bathroom_tissue' => false,
-        'bath_towels' => false,
-        'slippers' => false,
+        // This category is now empty based on your new list
     ];
 
-    // NEW: Form properties for Property Amenities (Step 2)
+    // 💡 REVISED: Form properties for Property Amenities (Step 2)
     public $property_amenities = [
-        'pool_access' => false,
-        'gym_access' => false,
-        '247_cctv_security' => false,
-        'laundry_access' => false,
+        'access_pool' => false,
+        'access_gym' => false,
+        'housekeeping' => false,
     ];
 
     // Public property to hold the dynamic amenity count
@@ -80,13 +75,29 @@ class AddUnit extends Component
 
 
     /**
-     * Function to handle "Select All" checkboxes.
+     * Function to handle "Select All" for a specific group.
      */
     public function selectAll($property, $checked)
     {
         if (property_exists($this, $property) && is_array($this->$property)) {
             $this->$property = array_fill_keys(array_keys($this->$property), (bool)$checked);
         }
+    }
+
+    /**
+     * Function to handle the MASTER "Select All" checkbox from Step 2.
+     * This iterates and uses the existing selectAll function for each group.
+     */
+    public function masterSelectAll($checked)
+    {
+        $checked = (bool)$checked;
+        $this->selectAll('amenities_features', $checked);
+        $this->selectAll('bedroom_bedding', $checked);
+        $this->selectAll('kitchen_dining', $checked);
+        $this->selectAll('entertainment', $checked);
+        $this->selectAll('additional_items', $checked);
+        $this->selectAll('consumables_provided', $checked);
+        $this->selectAll('property_amenities', $checked);
     }
 
     /**
@@ -148,45 +159,40 @@ class AddUnit extends Component
      */
     public function render()
     {
-        // Helper array for display labels
+        // 💡 REVISED: Helper array for display labels based on your new list
         $labels = [
             'amenities_features' => [
-                'air_conditioning' => 'Air Conditioning',
-                'hot_cold_shower' => 'Hot & Cold Shower',
-                'fast_wifi' => 'Fast Wi-Fi (50mbps Woody Fiber)',
+                'ac_unit' => 'AC Unit',
+                'hot_cold_shower' => 'Hot Cold Shower',
+                'free_wifi' => 'Free Wifi',
+                'fully_furnished' => 'Fully Furnished',
             ],
             'bedroom_bedding' => [
-                'beddings_pillows_duvet' => 'Beddings, Pillows, Duvet',
-                'sofa_bed' => 'Sofa Bed',
+                'bunk_bed_mattress' => 'Bunk Bed Mattress',
+                'closet_cabinet' => 'Closet Cabinet',
             ],
             'kitchen_dining' => [
                 'refrigerator' => 'Refrigerator',
-                'microwave_oven' => 'Microwave Oven',
-                'oven_toaster' => 'Oven Toaster',
+                'microwave' => 'Microwave',
                 'water_kettle' => 'Water Kettle',
-                'coffee_table_chairs' => 'Coffee Table & Chairs',
+                'rice_cooker' => 'Rice Cooker',
+                'dining_table' => 'Dining Table',
+                'induction_cooker' => 'Induction Cooker',
             ],
             'entertainment' => [
-                'smart_tv_disney_plus' => '43" Smart TV With Free Disney+ Access',
+                // This category is now empty
             ],
             'additional_items' => [
-                'flat_iron' => 'Flat Iron',
-                'blower' => 'Blower',
+                'electric_fan' => 'Electric Fan',
+                'washing_machine' => 'Washing Machine',
             ],
             'consumables_provided' => [
-                'toothpaste_1' => 'Toothpaste',
-                'bath_soap' => 'Bath Soap',
-                'bathroom_tissue' => 'Bathroom Tissue',
-                'slippers' => 'Slippers',
-                'toothpaste_2' => 'Toothpaste',
-                'hand_soap' => 'Hand Soap',
-                'bath_towels' => 'Bath Towels',
+                // This category is now empty
             ],
             'property_amenities' => [
-                'pool_access' => 'Pool Access',
-                '247_cctv_security' => '24/7 CCTV Security',
-                'gym_access' => 'Gym Access',
-                'laundry_access' => 'Laundry Access',
+                'access_pool' => 'Access Pool',
+                'access_gym' => 'Access Gym',
+                'housekeeping' => 'Housekeeping',
             ],
         ];
 

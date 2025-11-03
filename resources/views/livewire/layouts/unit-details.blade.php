@@ -1,18 +1,9 @@
-{{-- 
-  MODIFIED: 
-  This file is completely rebuilt to match the new screenshot.
-  It uses h-full and flex flex-col to fill the parent container
-  (the h-[750px] div in property.blade.php).
---}}
+
 <div class="bg-white rounded-2xl shadow-md h-full flex flex-col">
     @if ($unit)
-    {{-- 
-      Unit Header (Fixed at the top) 
-      MODIFIED: Replaced with the new blue header design.
-    --}}
+
     <div class="bg-blue-600 text-white p-4 md:p-6 rounded-t-2xl">
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
-            {{-- Left Side: Unit Info --}}
             <div>
                 <p class="text-xs md:text-sm opacity-80">{{ $unit['building'] }}</p>
                 <h1 class="text-2xl md:text-3xl font-bold">{{ $unit['unit_number'] }}</h1>
@@ -33,16 +24,9 @@
         </div>
     </div>
 
-    {{-- 
-      Main Content Area (Scrollable) 
-      MODIFIED: Kept the scrollable container logic.
-    --}}
+
     <div class="p-4 md:p-6 space-y-6 flex-1 overflow-y-auto">
 
-        {{-- 
-          Unit Specifications Section 
-          MODIFIED: Rebuilt with the new 2x3 grid.
-        --}}
         <div>
             <div class="flex items-center gap-3 mb-4">
                 <div class="text-blue-600">
@@ -55,7 +39,7 @@
 
             {{-- New 2x3 Grid --}}
             <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-                
+
                 {{-- Loop through the specifications data from the component --}}
                 @foreach ($unit['specifications'] as $spec)
                 <div class="bg-[#F4F7FC] rounded-lg p-3.5 flex items-center gap-3">
@@ -70,13 +54,13 @@
                     </div>
                 </div>
                 @endforeach
-                
+
             </div>
         </div>
-        
-        {{-- 
-          MODIFIED: 
-          Removed the @include for 'tenant-information-tab' as it's not 
+
+        {{--
+          MODIFIED:
+          Removed the @include for 'tenant-information-tab' as it's not
           in the new design.
         --}}
 
