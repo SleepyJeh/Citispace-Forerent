@@ -28,16 +28,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && docker-php-ext-enable redis \
     && apt-get autoremove -y && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-# Install Python 3 and pip
-# We add 'apt-get update' here to refresh package lists
-RUN apt-get update && apt-get install -y python3 python3-pip
 
-# Copy your Python requirements file into the container
-COPY docker/common/php-fpm/requirements.txt /tmp/requirements.txt
-
-# Install the Python libraries
-RUN pip3 install --no-cache-dir --break-system-packages -r /tmp/requirements.txt
-# --- END PYTHON SECTION ---
 
 
 # Set the working directory inside the container

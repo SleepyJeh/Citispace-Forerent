@@ -3,35 +3,36 @@
 namespace App\Livewire\Layouts;
 
 use Livewire\Component;
+use App\Models\Property;
+use App\Models\Unit;
+use Illuminate\Support\Facades\Http;
 
 class AddUnit extends Component
 {
-    // Property to track the current step, initialized to 1
     public $currentStep = 1;
-
-    // REVISED: Steps array changed to 3 steps
     public $steps = [
-        1 => 'Basic Info',
-        2 => 'Amenities',
-        3 => 'Price Prediction',
+        1 => 'Unit Details',
+        2 => 'Model Amenities',
+        3 => 'Review & Predict',
     ];
 
-    // Form properties for Step 1
-    public $building_name;
-    public $address;
+    // --- Step 1 Properties ---
+    public $properties = [];
+    public $property_id;
     public $floor_number;
-    public $unit_number;
-    public $room_number;
-    public $dorm_type;
-    public $room_type;
+    public $m_f = 'Co-ed';
     public $bed_type;
     public $bed_number;
     public $utility_subsidy = false; // This property already exists for "Utility Subsidy"
     public $unit_capacity;
     public $room_capacity;
+    public $room_type;
+    public $room_cap;
+    public $unit_cap;
 
-    // 💡 NEW: Property for the editable price in Step 3
-    public $predicted_price = 29000;
+    // --- Step 2 Properties ---
+    public $model_amenities = [];
+    public $amenity_labels = [];
 
     // 💡 REVISED: Form properties for Step 2 based on your new list
     public $amenities_features = [
@@ -69,19 +70,106 @@ class AddUnit extends Component
         'access_gym' => false,
         'housekeeping' => false,
     ];
+    // --- Step 3 Properties ---
+    public $predicted_price = null;
+    public $actual_price;
 
-    // Public property to hold the dynamic amenity count
-    public $amenityCount = 0;
+    public $is_predicting = false;
 
+    // --- Validation Rules ---
+    protected $step1Rules = [
+        'property_id' => 'required|integer|exists:properties,property_id',
+        'floor_number' => 'required|integer|min:0',
+        'm_f' => 'required|in:Male,Female,Co-ed',
+        'bed_type' => 'required|in:Single,Bunk,Twin',
+        'room_type' => 'required|in:Standard,Deluxe,Suite',
+        'room_cap' => 'required|integer|min:1',
+        'unit_cap' => 'required|integer|min:1',
+    ];
+
+    public function mount()
+    {
+        try {
+            $this->properties = Property::all(['property_id', 'building_name']);
+        } catch (\Exception $e) {
+            $this->properties = collect([
+                (object)['property_id' => 1, 'building_name' => 'Demo Property (Please Migrate)']
+            ]);
+        }
+        $this->initializeAmenities();
+    }
+
+    private function initializeAmenities()
+    {
+        $amenity_keys = [
+            'Fully_furnished',
+            'Free_Wifi',
+            'Hot_Cold_Shower',
+            'Electric_Fan',
+            'Water_Kettle',
+            'Closet_Cabinet',
+            'Housekeeping',
+            'Refrigerator',
+            'Microwave',
+            'Rice_Cooker',
+            'Dining_Table',
+            'Utility_Subsidy',
+            'AC_Unit',
+            'Induction_Cooker',
+            'Washing_Machine',
+            'Access_Pool',
+            'Access_Gym',
+            'Bunk_Bed_Mattress'
+        ];
+        $labels = [];
+        foreach ($amenity_keys as $key) {
+            $labels[$key] = ucwords(str_replace('_', ' ', $key));
+        }
+        $this->amenity_labels = $labels;
+        $this->model_amenities = array_fill_keys($amenity_keys, false);
+    }
+
+    // --- REMOVED: The updatedCurrentStep() hook is gone ---
 
     /**
      * Function to handle "Select All" for a specific group.
+     * This contains the prediction logic
      */
-    public function selectAll($property, $checked)
+    private function runPrediction()
     {
-        if (property_exists($this, $property) && is_array($this->$property)) {
-            $this->$property = array_fill_keys(array_keys($this->$property), (bool)$checked);
+        $this->is_predicting = true;
+
+        $dataForModel = [
+            'Floor' => (int) $this->floor_number,
+            'M/F' => $this->m_f,
+            'Bed type' => $this->bed_type,
+            'Room type' => $this->room_type,
+            'Room capacity' => (int) $this->room_cap,
+            'Unit capacity' => (int) $this->unit_cap,
+        ];
+        $dataForModel = array_merge($dataForModel, $this->model_amenities);
+
+        try {
+            // 💡 THE CRITICAL CHANGE 💡
+            // We now use the Docker service name 'price_api' as the hostname.
+            // Port 8000 is the port *inside* the container.
+            $response = Http::post('http://price_api:8000/predict', $dataForModel);
+
+            if ($response->successful()) {
+                session()->flash('success', 'Prediction model success.');
+                $this->predicted_price = $response->json('predicted_price');
+            } else {
+                session()->flash('error', 'Prediction model returned an error.');
+                $this->predicted_price = 0;
+            }
+        } catch (\Exception $e) {
+            // This now catches errors if the 'price_api' container is down
+            session()->flash('error', 'Prediction service is offline. Using estimate.');
+            $this->predicted_price = rand(5000, 15000); // Fallback to mock
         }
+
+        $this->actual_price = $this->predicted_price;
+        $this->is_predicting = false;
     }
 
     /**
@@ -102,61 +190,78 @@ class AddUnit extends Component
 
     /**
      * Move to the next step.
+     * UPDATED: nextStep()
      */
     public function nextStep()
     {
+        // 1. Validate if we are on Step 1
+        if ($this->currentStep == 1) {
+            $this->validate($this->step1Rules);
+        }
+
+        // 2. NEW: If we are on Step 2, run the prediction
+        // before we move to Step 3.
+        if ($this->currentStep == 2) {
+            $this->runPrediction();
+        }
+
+        // 3. Go to the next step
         if ($this->currentStep < count($this->steps)) {
             $this->currentStep++;
         }
     }
 
     /**
-     * Move to the previous step.
+     * UPDATED: previousStep()
      */
     public function previousStep()
     {
+        // Reset prices when going back
+        $this->predicted_price = null;
+        $this->actual_price = null;
+
         if ($this->currentStep > 1) {
             $this->currentStep--;
         }
     }
 
     /**
-     * Handle the final step submission.
+     * UPDATED: saveUnit()
      */
-    public function finish()
+    public function saveUnit()
     {
-        // You can now access the final price with $this->predicted_price
-        session()->flash('message', 'Unit successfully added with price: ' . $this->predicted_price);
-    }
+        // 1. Validate Step 1 data AND the new actual_price
+        $this->validate(array_merge($this->step1Rules, [
+            'actual_price' => 'required|numeric|min:0|max:999999.99'
+        ]));
 
-    /**
-     * Private helper function to calculate the total selected amenities.
-     */
-    private function calculateAmenityCount()
-    {
-        $count = 0;
-        $amenityArrays = [
-            'amenities_features',
-            'bedroom_bedding',
-            'kitchen_dining',
-            'entertainment',
-            'additional_items',
-            'consumables_provided',
-            'property_amenities',
-        ];
-
-        foreach ($amenityArrays as $group) {
-            if (property_exists($this, $group) && is_array($this->$group)) {
-                $count += count(array_filter($this->$group));
-            }
+        if (is_null($this->predicted_price)) {
+            session()->flash('error', 'Price prediction is missing.');
+            return;
         }
-        $this->amenityCount = $count;
+
+        $checkedAmenityNames = array_keys(array_filter($this->model_amenities));
+
+        try {
+            Unit::create([
+                'property_id' => $this->property_id,
+                'floor_number' => $this->floor_number,
+                'm/f' => $this->m_f,
+                'bed_type' => $this->bed_type,
+                'room_type' => $this->room_type,
+                'room_cap' => $this->room_cap,
+                'unit_cap' => $this->unit_cap,
+                'price' => $this->actual_price, // Save the landlord's price
+                'amenities' => json_encode($checkedAmenityNames),
+            ]);
+
+            session()->flash('success', 'New unit has been created successfully!');
+            return redirect()->to('/property');
+        } catch (\Exception $e) {
+            session()->flash('error', 'Error saving unit: ' . $e->getMessage());
+        }
     }
 
-
-    /**
-     * Renders the component's view.
-     */
     public function render()
     {
         // 💡 REVISED: Helper array for display labels based on your new list

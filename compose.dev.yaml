@@ -15,7 +15,7 @@ services:
       - laravel-development
     depends_on:
       php-fpm:
-        condition: service_started  # Wait for php-fpm to start
+        condition: service_started # Wait for php-fpm to start
 
   php-fpm:
     # For the php-fpm service, we will create a custom image to install the necessary PHP extensions and setup proper permissions.
@@ -44,7 +44,20 @@ services:
       - laravel-development
     depends_on:
       mysql:
-        condition: service_healthy  # Wait for mysql to be healthy
+        condition: service_healthy # Wait for mysql to be healthy
+
+  # 💡 ADD THIS NEW SERVICE 💡
+  price_api:
+    build:
+      context: ./price_api
+    volumes:
+      - ./price_api:/app
+    ports:
+      # This exposes your API on http://localhost:8001 for testing
+      - "8001:8000"
+    networks:
+      - laravel-development
+    restart: unless-stopped
 
   workspace:
     # For the workspace service, we will also create a custom image to install and setup all the necessary stuff.
@@ -61,9 +74,9 @@ services:
         XDEBUG_LOG: /dev/stdout
         XDEBUG_LOG_LEVEL: 0
     ports:
-      - '${VITE_PORT:-5173}:5173'
-    tty: true  # Enables an interactive terminal
-    stdin_open: true  # Keeps standard input open for 'docker exec'
+      - "${VITE_PORT:-5173}:5173"
+    tty: true # Enables an interactive terminal
+    stdin_open: true # Keeps standard input open for 'docker exec'
     env_file:
       - .env
     volumes:
@@ -87,7 +100,17 @@ services:
     networks:
       - laravel-development
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-root}"]
+      test:
+        [
+          "CMD",
+          "mysqladmin",
+          "ping",
+          "-h",
+          "localhost",
+          "-u",
+          "root",
+          "-p${MYSQL_ROOT_PASSWORD:-root}",
+        ]
       interval: 10s
       timeout: 5s
       retries: 5

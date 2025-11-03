@@ -1,5 +1,10 @@
 <div>
+<<<<<<< HEAD
 
+=======
+    
+    {{-- Stepper Navigation --}}
+>>>>>>> 29d4319 (modified docker compose for api)
     <ol class="flex items-start justify-between w-full pt-4 pb-12 px-4 md:px-8">
         @foreach ($steps as $step => $label)
             @php
@@ -23,10 +28,20 @@
             @endif
         @endforeach
     </ol>
+<<<<<<< HEAD
 
 
 
     <div class="bg-white rounded-xl shadow-lg border border-gray-200">
+=======
+    
+    {{-- Main Content Area --}}
+    <div class="bg-white rounded-xl shadow-lg border border-gray-200">
+        {{-- 
+          This logic now loads your NEW step files
+          which match your new schema.
+        --}}
+>>>>>>> 29d4319 (modified docker compose for api)
         @if ($currentStep == 1)
             @include('livewire.layouts.stepper1')
         @elseif ($currentStep == 2)

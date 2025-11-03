@@ -13,12 +13,12 @@ return new class extends Migration
     {
         Schema::create('properties', function (Blueprint $table) {
             $table->id('property_id')->primary();
-            $table->foreignId('user_id')
+            $table->foreignId('manager_id')
                 ->nullable() // <-- Make sure to allow null
                 ->constrained('users', 'user_id')
                 ->onDelete('set null');
+            $table->string('building_name', 255);
             $table->string('address', 255);
-            $table->integer('total_units');
             $table->text('prop_description')->nullable();
         });
     }
