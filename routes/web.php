@@ -7,32 +7,25 @@ use App\Http\Controllers\Admin\UnitController;
 use App\Http\Controllers\PropertyController;
 
 Route::get('/', function () {
-    return view('common/index');
-})->name('home');
+    $user = Auth::user();
 
-Route::get('/login', function () {
-    return view('common/login');
-})->middleware('guest')->name('login');
+    if (!$user) {
+        return redirect()->route('login');
+    }
 
-Route::get('/dashboard', function () {
-    return view('users/admin/owner/settings'); // This loads resources/views/settings.blade.php
-})->middleware('auth')->name('settings'); // Make sure it's protected!
+    return match ($user->role) {
+        'landlord' => redirect()->route('landlord.dashboard'),
+        'manager'  => redirect()->route('manager.dashboard'),
+        'tenant'   => redirect()->route('tenant.dashboard'),
+        default    => redirect()->route('login'),
+    };
+});
 
-Route::get('/addunit', function () {
-    return view('users/admin/addunit');
-})->name('addunit');
 
-Route::get('/revenue', function () {
-    return view('users/admin/owner/revenue');
-})->name('revenue');
 
-Route::get('/manager', function () {
-    return view('users/admin/owner/managerdetails');
-})->name('manager');
 
-Route::get('/property', function () {
-    return view('users/admin/property');
-})->name('property');
+
+
 Route::middleware('auth')->group(function () {
     // ... your other routes
 
@@ -47,6 +40,18 @@ Route::get('/revenue', function () {
     return view('users.admin.owner.revenue');
 })->name('revenue');
 
-require __DIR__ . '/auth.php';
+// Messages
+Route::get('/messages', function () {
+    return view('users.messages');
+})->name('message');
 
-// The extra '}' has been removed.
+// Settings
+Route::get('/settings', function () {
+    return view('users.settings');
+})->middleware('auth')->name('settings');
+
+require __DIR__ . '/auth.php';
+require __DIR__ . '/modules/landing.php';
+require __DIR__ . '/modules/landlord.php';
+require __DIR__ . '/modules/manager.php';
+require __DIR__ . '/modules/tenant.php';

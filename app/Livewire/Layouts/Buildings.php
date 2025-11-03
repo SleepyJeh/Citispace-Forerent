@@ -1,6 +1,5 @@
 <?php
 
-// Example modification for app/Livewire/Layouts/Buildings.php
 namespace App\Livewire\Layouts;
 
 use App\Models\Property;

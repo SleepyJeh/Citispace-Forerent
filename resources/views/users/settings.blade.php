@@ -2,9 +2,8 @@
 
 @section('content')
 <div class="flex flex-row min-h-screen">
-    <nav class="w-0 md:w-60">
-        @include('livewire.layouts.adminnav')
-    </nav>
+    <!-- Navigations -->
+    <livewire:navbars.side-bar />
 
     <section id="main-container" class="flex-1 h-screen flex flex-col overflow-hidden">
         <div class="flex-shrink-0 bg-white z-30">

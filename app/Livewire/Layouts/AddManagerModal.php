@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Layouts;
 
+use App\Livewire\Forms\AddUserForm;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use App\Models\User;
@@ -17,6 +18,8 @@ class AddManagerModal extends Component
 
     // Profile fields
     public $profilePicture = null;
+
+    public AddUserForm $userForm;
     public $firstName = '';
     public $lastName = '';
     public $phone = '';
