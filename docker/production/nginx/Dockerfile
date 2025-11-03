@@ -1,21 +1,20 @@
 # Stage 1: Build assets
-FROM debian AS builder
-
-# Install Node.js and build tools
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    curl \
-    nodejs \
-    npm \
-    && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+FROM node:22-alpine AS builder
 
 # Set working directory
 WORKDIR /var/www
 
+# Copy package files first for better caching
+COPY package*.json ./
+
+# Install Node.js dependencies
+RUN npm ci --only=production
+
 # Copy Laravel application code
 COPY . /var/www
 
-# Install Node.js dependencies and build assets
-RUN npm install && npm run build
+# Build assets
+RUN npm run build
 
 # Stage 2: Nginx production image
 FROM nginx:alpine
