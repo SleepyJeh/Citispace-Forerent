@@ -29,10 +29,6 @@ class AddUserForm extends Form
                 'regex:/^[0-9]{10}$/',
                 Rule::unique('users', 'contact')
                     ->ignore($this->userId, 'user_id')
-                    ->where(function ($query) {
-                        // Check against the full phone number with +63 prefix
-                        $query->where('contact', '+63' . $this->phoneNumber);
-                    })
             ],
             'email' => [
                 'required',
