@@ -84,7 +84,7 @@
                                     <div class="flex-1 flex flex-col gap-4">
                                         <div class="relative">
                                             <input
-                                                wire:model.blur="userForm.firstName"
+                                                wire:model.defer="userForm.firstName"
                                                 type="text"
                                                 id="firstName-{{ $modalId }}"
                                                 class="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-transparent rounded-lg border border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-[#0030C5] peer"
@@ -103,7 +103,7 @@
 
                                         <div class="relative">
                                             <input
-                                                wire:model.blur="userForm.lastName"
+                                                wire:model.defer="userForm.lastName"
                                                 type="text"
                                                 id="lastName-{{ $modalId }}"
                                                 class="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-transparent rounded-lg border border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-[#0030C5] peer"
@@ -139,7 +139,7 @@
                                     <div class="relative">
                                         <!-- Input -->
                                         <input
-                                            wire:model.blur="userForm.phoneNumber"
+                                            wire:model.defer="userForm.phoneNumber"
                                             type="text"
                                             id="phone-{{ $modalId }}"
                                             class="block pb-2.5 pt-4 w-full text-sm text-gray-900 bg-transparent rounded-lg border border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-[#0030C5] pr-2.5 pl-16"
@@ -166,7 +166,7 @@
 
                                     <div class="relative">
                                         <input
-                                            wire:model.blur="userForm.email"
+                                            wire:model.defer="userForm.email"
                                             type="email"
                                             id="email-{{ $modalId }}"
                                             class="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-transparent rounded-lg border border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-[#0030C5] peer"

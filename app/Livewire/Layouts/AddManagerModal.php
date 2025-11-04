@@ -3,6 +3,8 @@
 namespace App\Livewire\Layouts;
 
 use App\Livewire\Forms\AddUserForm;
+use App\Notifications\NewAccount;
+use Illuminate\Support\Facades\Notification;
 use App\Models\{Property, Unit, User};
 use App\Services\PasswordGenerator;
 use Illuminate\Support\Facades\Hash;
@@ -173,16 +175,17 @@ class AddManagerModal extends Component
     ----------------------------------*/
     public function save(): void
     {
-        $this->userForm->userId = $this->managerId;
         $this->userForm->validate();
 
+        // 2️⃣ Then validate this component’s own fields
         $this->validate([
-            'profilePicture' => 'nullable|image|max:2048',
+            'profilePicture'   => 'nullable|image|max:2048',
             'selectedBuilding' => 'nullable',
-            'selectedFloor' => 'nullable',
-            'selectedUnits' => 'nullable|array',
+            'selectedFloor'    => 'nullable',
+            'selectedUnits'    => 'nullable|array',
         ]);
 
+        // Validation passed; continue with your save logic
         $profilePath = null;
         if ($this->profilePicture) {
             $profilePath = is_string($this->profilePicture)
@@ -190,65 +193,59 @@ class AddManagerModal extends Component
                 : $this->profilePicture->store('profile-pictures', 'public');
         }
 
-        // ============================================
-        // UPDATE EXISTING MANAGER
-        // ============================================
         if ($this->managerId) {
+            // ============================================
+            // UPDATE MANAGER
+            // ============================================
             $manager = User::findOrFail($this->managerId);
 
             $manager->update([
-                'first_name' => $this->userForm->firstName,
-                'last_name' => $this->userForm->lastName,
-                'contact' => $this->userForm->phoneNumber,
-                'email' => $this->userForm->email,
+                'first_name'  => $this->userForm->firstName,
+                'last_name'   => $this->userForm->lastName,
+                'contact'     => $this->userForm->phoneNumber,
+                'email'       => $this->userForm->email,
                 'profile_img' => $profilePath ?? $manager->profile_img,
             ]);
 
             if ($this->selectedBuilding && $this->selectedFloor) {
-                // Unassign all previous units (within landlord’s ownership)
+                // Unassign previous units (only under landlord)
                 Unit::where('manager_id', $manager->user_id)
                     ->where('property_id', $this->selectedBuilding)
                     ->where('floor_number', $this->selectedFloor)
-                    ->whereHas('property', function ($q) {
-                        $q->where('owner_id', auth()->id());
-                    })
+                    ->whereHas('property', fn($q) => $q->where('owner_id', auth()->id()))
                     ->update(['manager_id' => null]);
 
-                // Assign newly selected units
+                // Assign selected units
                 if (!empty($this->selectedUnits)) {
                     Unit::whereIn('unit_id', $this->selectedUnits)
-                        ->whereHas('property', function ($q) {
-                            $q->where('owner_id', auth()->id());
-                        })
+                        ->whereHas('property', fn($q) => $q->where('owner_id', auth()->id()))
                         ->update(['manager_id' => $manager->user_id]);
                 }
             }
 
             session()->flash('message', 'Manager updated successfully.');
             $this->dispatch('managerUpdated', $manager->user_id);
-        }
-
-        // ============================================
-        // CREATE NEW MANAGER
-        // ============================================
-        else {
+        } else {
+            // ============================================
+            // CREATE NEW MANAGER
+            // ============================================
             $password = PasswordGenerator::generate(12);
 
             $manager = User::create([
-                'first_name' => $this->userForm->firstName,
-                'last_name' => $this->userForm->lastName,
-                'contact' => $this->userForm->phoneNumber,
-                'email' => $this->userForm->email,
-                'password' => Hash::make($password),
+                'first_name'  => $this->userForm->firstName,
+                'last_name'   => $this->userForm->lastName,
+                'contact'     => $this->userForm->phoneNumber,
+                'email'       => $this->userForm->email,
+                'password'    => Hash::make($password),
                 'profile_img' => $profilePath,
-                'role' => 'manager',
+                'role'        => 'manager',
             ]);
+
+            Notification::send($manager, new NewAccount($this->userForm->email, $password, 'manager'));
 
             if (!empty($this->selectedUnits)) {
                 Unit::whereIn('unit_id', $this->selectedUnits)
-                    ->whereHas('property', function ($q) {
-                        $q->where('owner_id', auth()->id());
-                    })
+                    ->whereHas('property', fn($q) => $q->where('owner_id', auth()->id()))
                     ->update(['manager_id' => $manager->user_id]);
             }
 
