@@ -23,8 +23,9 @@ class Unit extends Model
      */
     protected $fillable = [
         'property_id',
+        'manager_id',
         'floor_number',
-        'm/f',
+        'occupants',
         'bed_type',
         'room_type',
         'room_cap',
@@ -39,5 +40,15 @@ class Unit extends Model
     public function property()
     {
         return $this->belongsTo(Property::class, 'property_id', 'property_id');
+    }
+
+    public function beds()
+    {
+        return $this->hasMany(Bed::class, 'unit_id', 'unit_id');
+    }
+
+    public function manager()
+    {
+        return $this->belongsTo(User::class, 'manager_id', 'user_id');
     }
 }

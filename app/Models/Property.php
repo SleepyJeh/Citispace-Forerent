@@ -30,19 +30,18 @@ class Property extends Model
      * @var array
      */
     protected $fillable = [
-        'user_id',
+        'owner_id',
         'building_name',
         'address',
-        'total_units',
         'prop_description',
     ];
 
     /**
      * Get the user (owner) that owns the property.
      */
-    public function user()
+    public function owner()
     {
-        return $this->belongsTo(User::class, 'user_id', 'user_id');
+        return $this->belongsTo(User::class, 'owner_id', 'user_id');
     }
 
     /**

@@ -2,146 +2,144 @@
 
 namespace App\Livewire\Layouts;
 
+use App\Models\Unit;
+use App\Models\User;
+use Illuminate\Database\Eloquent\Collection;
 use Livewire\Component;
 use Livewire\Attributes\On;
 
 class ManagerDetail extends Component
 {
-    public array $manager;
-    public array $buildings;
-    public array $units;
+    public $currentManagerId = null;
+    public $currentManager = null;
+    public $buildings = [];
+    public $units = [];
+    public $beds = [];
     public $selectedBuildingId = null;
     public $totalBuildings = 0;
     public $totalUnits = 0;
 
-    // Dummy data for demonstration
-    private $allManagerData = [
-        1 => [
-            'manager' => [
-                'name' => 'Ninole Candelaria',
-                'email' => 'Ninole@Gmail.Com',
-                'phone' => '09456400004', // <-- Correct phone number
-            ],
-            'buildings' => [
-                ['id' => 1, 'name' => 'Building 1', 'address' => 'Fame Residences, Mandaluyong City'],
-                ['id' => 2, 'name' => 'Building 2', 'address' => 'Vibrant Towers, QC'],
-            ],
-            'units' => [
-                1 => [
-                    // Total 9 units here now
-                    ['unit_number' => 'Unit 101', 'available_beds' => '3 of 4', 'bed_type' => 'All Female', 'status' => 'Full'],
-                    ['unit_number' => 'Unit 102', 'available_beds' => '2 of 4', 'bed_type' => 'All Female', 'status' => 'Vacant'],
-                    ['unit_number' => 'Unit 103', 'available_beds' => '3 of 4', 'bed_type' => 'All Female', 'status' => 'Full'],
-                    // --- Added these for testing ---
-                    ['unit_number' => 'Unit 104', 'available_beds' => '1 of 4', 'bed_type' => 'Mixed', 'status' => 'Full'],
-                    ['unit_number' => 'Unit 105', 'available_beds' => '4 of 4', 'bed_type' => 'All Male', 'status' => 'Vacant'],
-                    ['unit_number' => 'Unit 106', 'available_beds' => '2 of 4', 'bed_type' => 'All Female', 'status' => 'Vacant'],
-                    ['unit_number' => 'Unit 107', 'available_beds' => '3 of 4', 'bed_type' => 'All Female', 'status' => 'Full'],
-                    ['unit_number' => 'Unit 108', 'available_beds' => '1 of 4', 'bed_type' => 'Mixed', 'status' => 'Full'],
-                    ['unit_number' => 'Unit 109', 'available_beds' => '4 of 4', 'bed_type' => 'All Male', 'status' => 'Vacant'],
-                ],
-                2 => [
-                    // Total 2 units here (for a grand total of 5)
-                    ['unit_number' => 'Unit 201', 'available_beds' => '4 of 4', 'bed_type' => 'Mixed', 'status' => 'Vacant'],
-                    ['unit_number' => 'Unit 202', 'available_beds' => '1 of 4', 'bed_type' => 'All Male', 'status' => 'Full'],
-                ]
-            ]
-        ],
-        2 => [
-            'manager' => [
-                'name' => 'Conrad Rivera',
-                'email' => 'conrad@example.com',
-                'phone' => '09123456789',
-            ],
-            'buildings' => [
-                ['id' => 3, 'name' => 'Building 3', 'address' => 'Jazz Residences, Makati'],
-            ],
-            'units' => [
-                3 => [
-                    ['unit_number' => 'Unit 301', 'available_beds' => '4 of 4', 'bed_type' => 'All Female', 'status' => 'Vacant'],
-                    ['unit_number' => 'Unit 302', 'available_beds' => '2 of 4', 'bed_type' => 'All Male', 'status' => 'Full'],
-                    ['unit_number' => 'Unit 303', 'available_beds' => '3 of 4', 'bed_type' => 'Mixed', 'status' => 'Vacant'],
-                    ['unit_number' => 'Unit 304', 'available_beds' => '1 of 4', 'bed_type' => 'All Female', 'status' => 'Full'],
-                ]
-            ]
-        ],
-    ];
-
-    public function mount()
+    /*----------------------------------
+    | LIFECYCLE HOOKS
+    ----------------------------------*/
+    public function mount(): void
     {
-        // Load the first manager by default
-        $this->loadManager(1);
+        // No need to store modalId anymore
     }
 
-    /**
-     * Listen for the 'managerSelected' event to load manager data
-     */
+    /*----------------------------------
+    | LISTENERS
+    ----------------------------------*/
     #[On('managerSelected')]
-    public function loadManager(int $managerId)
+    public function loadManager(?int $managerId): void
     {
-        // In a real app:
-        // $manager = User::with(['buildings.units'])->find($managerId);
-        // $this->manager = $manager->only(['name', 'email', 'phone']);
-        // $this->buildings = $manager->buildings->toArray();
-        // etc.
+        // Guard against null manager ID
+        if (!$managerId) {
+            $this->resetManagerData();
+            return;
+        }
 
-        $data = $this->allManagerData[$managerId] ?? $this->allManagerData[1];
+        $this->currentManagerId = $managerId;
+        $this->currentManager = User::find($managerId);
 
-        $this->manager = $data['manager'];
-        $this->buildings = $data['buildings'];
+        // If manager not found, reset data
+        if (!$this->currentManager) {
+            $this->resetManagerData();
+            return;
+        }
 
-        // Calculate totals
+        // Only load units that belong to properties owned by the authenticated landlord
+        $this->units = $this->getManagedUnits($managerId);
+        $this->totalUnits = count($this->units);
+
+        $this->buildings = $this->getBuildingsManaged($this->units);
         $this->totalBuildings = count($this->buildings);
-        $this->totalUnits = 0;
-        foreach ($data['units'] as $buildingUnits) {
-            $this->totalUnits += count($buildingUnits);
-        }
 
-        // Set the active building and its units
-        if (count($this->buildings) > 0) {
-            $this->selectedBuildingId = $this->buildings[0]['id'];
-            $this->units = $data['units'][$this->selectedBuildingId] ?? [];
-        } else {
-            $this->selectedBuildingId = null;
-            $this->units = [];
+        // Reset selected building when switching managers
+        $this->selectedBuildingId = null;
+    }
+
+    #[On('managerUpdated')]
+    public function refreshManagerData($managerId): void
+    {
+        // Reload the manager data after edit
+        $this->loadManager($managerId);
+    }
+
+    #[On('managerModalClosed')]
+    public function refreshOnModalClose(): void
+    {
+        // Reload current manager data when modal is closed (including cancel)
+        if ($this->currentManagerId) {
+            $this->loadManager($this->currentManagerId);
         }
     }
 
-    /**
-     * Select a building and load its units
-     */
-    public function selectBuilding(int $buildingId)
+    /*----------------------------------
+    | UI ACTIONS
+    ----------------------------------*/
+    public function selectBuilding(int $buildingId): void
     {
+        if (!$this->currentManagerId) {
+            return;
+        }
+
         $this->selectedBuildingId = $buildingId;
-
-        // In a real app:
-        // $this->units = Unit::where('building_id', $buildingId)
-        //     ->select('unit_number', 'available_beds', 'bed_type', 'status')
-        //     ->get()
-        //     ->toArray();
-
-        // Find the current manager's data
-        $managerId = null;
-        foreach ($this->allManagerData as $id => $data) {
-            if ($data['manager']['name'] === $this->manager['name']) {
-                $managerId = $id;
-                break;
-            }
-        }
-
-        $this->units = $this->allManagerData[$managerId]['units'][$buildingId] ?? [];
+        $this->units = $this->getManagedUnits($this->currentManagerId, $buildingId);
     }
 
-    /**
-     * Open edit properties modal/page
-     */
-    public function openEditProperties()
+    public function editManager(): void
     {
-        // Dispatch event to open edit modal
-        $this->dispatch('openEditPropertiesModal', managerId: array_search($this->manager, array_column($this->allManagerData, 'manager')));
+        if ($this->currentManagerId) {
+            // Use the same modalId as your "Add Manager" button
+            $this->dispatch('openEditManagerModal_manager-dashboard', managerId: $this->currentManagerId);
+        }
+    }
 
-        // Or redirect to edit page:
-        // return redirect()->route('manager.edit-properties', ['id' => $managerId]);
+    /*----------------------------------
+    | HELPERS
+    ----------------------------------*/
+    private function resetManagerData(): void
+    {
+        $this->currentManagerId = null;
+        $this->currentManager = null;
+        $this->units = [];
+        $this->buildings = [];
+        $this->totalBuildings = 0;
+        $this->totalUnits = 0;
+        $this->selectedBuildingId = null;
+    }
+
+    private function getManagedUnits(int $managerId, ?int $propertyId = null): Collection
+    {
+        $query = Unit::where('manager_id', $managerId)
+            ->with(['property', 'beds'])
+            ->whereHas('property', function ($query) {
+                // Only show units from properties owned by the authenticated landlord
+                $query->where('owner_id', auth()->id());
+            })
+            ->select('units.*'); // Make sure all unit columns are selected
+
+        if ($propertyId) {
+            $query->where('property_id', $propertyId);
+        }
+
+        return $query->get()->each(function ($unit) {
+            $unit->total_beds = $unit->beds->count();
+            $unit->available_beds = $unit->beds->where('status', 'Vacant')->count();
+            $unit->status = $unit->available_beds === 0 ? 'Full' : 'Vacant';
+
+            // If bed_type is on the units table, it should already be loaded
+            // If it's on the beds table, get it from the first bed
+            if (!isset($unit->bed_type) || empty($unit->bed_type)) {
+                $unit->bed_type = $unit->beds->first()?->bed_type ?? 'N/A';
+            }
+        });
+    }
+
+    private function getBuildingsManaged(Collection $units): Collection
+    {
+        return new Collection($units->pluck('property')->unique('property_id')->values()->sortBy('property_id'));
     }
 
     public function render()
