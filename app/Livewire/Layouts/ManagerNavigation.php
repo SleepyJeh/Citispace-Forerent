@@ -2,63 +2,98 @@
 
 namespace App\Livewire\Layouts;
 
+use App\Models\User;
+use App\Models\Unit;
 use Livewire\Component;
 use Livewire\Attributes\On;
 
 class ManagerNavigation extends Component
 {
-    /**
-     * @var array
-     */
-    public array $managers;
-
-    /**
-     * @var int|null
-     */
+    /*----------------------------------
+    | PUBLIC PROPERTIES
+    ----------------------------------*/
+    public $managers = [];
     public $activeManagerId = null;
 
-    public function mount()
+    /*----------------------------------
+    | LIFECYCLE HOOKS
+    ----------------------------------*/
+    public function mount(): void
     {
         $this->loadManagers();
     }
 
-
-    public function loadManagers()
+    public function booted(): void
     {
-
-        $this->managers = [
-            ['id' => 1, 'name' => 'Ninole Candelaria'],
-            ['id' => 2, 'name' => 'Conrad Rivera'],
-            ['id' => 3, 'name' => 'Conrad Rivera'],
-            ['id' => 4, 'name' => 'Ninole Candelaria'],
-            ['id' => 5, 'name' => 'Ninole Candelaria'],
-            ['id' => 6, 'name' => 'Conrad Rivera'],
-        ];
-
-        if (count($this->managers) > 0 && $this->activeManagerId === null) {
-            $this->activeManagerId = $this->managers[0]['id'];
+        // Only dispatch if a manager is already active
+        if ($this->activeManagerId && $this->managers->isNotEmpty()) {
+            $this->dispatch('managerSelected', managerId: $this->activeManagerId);
         }
     }
 
-
+    /*----------------------------------
+    | LISTENERS
+    ----------------------------------*/
     #[On('refresh-manager-list')]
-    public function refreshManagerList()
+    public function refreshManagerList(): void
     {
         $this->loadManagers();
+
+        if ($this->activeManagerId) {
+            $this->dispatch('managerSelected', managerId: $this->activeManagerId);
+        }
     }
 
-    /**
-     *
-     * @param int $managerId
-     * @return void
-     */
-    public function selectManager(int $managerId)
+    #[On('managerActivated')]
+    public function activateManager(int $managerId): void
     {
         $this->activeManagerId = $managerId;
+    }
 
+    /*----------------------------------
+    | DATA LOADING
+    ----------------------------------*/
+    private function loadManagers(): void
+    {
+        $landlordId = auth()->id();
+
+        // Managers assigned to units in properties owned by this landlord
+        $assignedManagerIds = Unit::whereHas('property', function ($query) use ($landlordId) {
+            $query->where('owner_id', $landlordId);
+        })
+            ->whereNotNull('manager_id')
+            ->pluck('manager_id')
+            ->unique();
+
+        // Managers who currently have no assigned units at all
+        $unassignedManagerIds = User::where('role', 'manager')
+            ->whereDoesntHave('unitsManaged') // assumes User model has relation managedUnits()
+            ->pluck('user_id');
+
+        // Combine both assigned and unassigned manager IDs
+        $allManagerIds = $assignedManagerIds->merge($unassignedManagerIds)->unique();
+
+        // Load all relevant managers
+        $this->managers = User::whereIn('user_id', $allManagerIds)
+            ->where('role', 'manager')
+            ->get();
+
+        // ❌ Do NOT auto-select any manager initially
+        $this->activeManagerId = null;
+    }
+
+    /*----------------------------------
+    | UI ACTIONS
+    ----------------------------------*/
+    public function selectManager(int $managerId): void
+    {
+        $this->activeManagerId = $managerId;
         $this->dispatch('managerSelected', managerId: $managerId);
     }
 
+    /*----------------------------------
+    | RENDER
+    ----------------------------------*/
     public function render()
     {
         return view('livewire.layouts.manager-navigation');
