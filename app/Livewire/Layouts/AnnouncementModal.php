@@ -4,6 +4,9 @@ namespace App\Livewire\Layouts;
 
 use App\Models\Announcement;
 use App\Models\Property;
+use App\Models\User;
+use App\Notifications\NewAnnouncement;
+use Illuminate\Support\Facades\Notification;
 use Livewire\Component;
 
 class AnnouncementModal extends Component
@@ -19,11 +22,13 @@ class AnnouncementModal extends Component
     protected $rules = [
         'headline' => 'required|min:3|max:200',
         'details' => 'required|min:10|max:1000',
+        'selectedProperty' => 'required',
     ];
 
     protected $messages = [
         'headline.required' => 'Please enter a headline for your announcement.',
         'details.required' => 'Please enter details for your announcement.',
+        'selectedProperty.required' => 'Please select a property for your announcement.',
     ];
 
     protected $listeners = ['open-announcement-modal' => 'openModal'];
@@ -63,15 +68,65 @@ class AnnouncementModal extends Component
     {
         $this->validate();
 
-        Announcement::create([
-            'user_id' => auth()->id(),
-            'title' => $this->headline,
-            'description' => $this->details,
-            'property_id' => $this->selectedProperty,
+        $isAll = false;
+
+        if ($this->selectedProperty === 'all') {
+            $this->selectedProperty = null;
+            $isAll = true;
+        }
+
+        $recipient_role = auth()->user()->role === 'manager' ? 'tenant' : 'manager';
+
+        // Create announcement
+        $announcement = Announcement::create([
+            'author_id'      => auth()->id(),
+            'title'          => $this->headline,
+            'description'    => $this->details,
+            'property_id'    => $this->selectedProperty,
+            'recipient_role' => $recipient_role,
         ]);
 
-        session()->flash('message', 'Announcement posted successfully!');
+        // Fetch properties based on sender role
+        $query = Property::query();
 
+        if (auth()->user()->role === 'landlord') {
+            $query->where('owner_id', auth()->id());
+        } elseif (auth()->user()->role === 'manager') {
+            $query->whereHas('units', fn($q) => $q->where('manager_id', auth()->id()));
+        }
+
+        if (! $isAll) {
+            $query->where('property_id', $this->selectedProperty);
+        }
+
+        // Determine recipients
+        if ($recipient_role === 'manager') {
+            $properties = $query->with('units.manager')->get();
+
+            $recipients = $properties->flatMap(fn ($property) =>
+            $property->units->pluck('manager')
+            )->filter()->unique('user_id')->values();
+
+        } else {
+            $properties = $query->with('units.beds.leases.tenant')->get();
+
+            $recipients = $properties->flatMap(fn ($property) =>
+            $property->units
+                ->flatMap(fn ($unit) =>
+                $unit->beds
+                    ->flatMap(fn ($bed) =>
+                    $bed->leases->pluck('tenant')
+                    )
+                )
+            )->filter()->unique('user_id')->values();
+        }
+
+        // Send notifications
+        if ($recipients->isNotEmpty()) {
+            Notification::send($recipients, new NewAnnouncement($announcement));
+        }
+
+        session()->flash('message', 'Announcement posted successfully!');
         $this->closeModal();
         $this->dispatch('announcement-posted');
     }
