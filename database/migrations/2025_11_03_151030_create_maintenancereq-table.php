@@ -12,7 +12,16 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('maintenance_request', function (Blueprint $table) {
-            $table->id();
+            $table->id('request_id')->primary();
+            $table->foreignId('lease_id')
+                ->constrained('lease', 'lease_id')
+                ->onDelete('cascade');
+            $table->enum('status', ['Pending', 'Ongoing', 'Completed']);
+            $table->string('logged_by');
+            $table->string('ticket_number');
+            $table->date('log_date');
+            $table->string('problem');
+            $table->enum('urgency', ['Level 1', 'Level 2', 'Level 3', 'Level 4']);
             $table->timestamps();
         });
     }
