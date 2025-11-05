@@ -6,7 +6,6 @@ use Laravel\Fortify\Features;
 use Livewire\Volt\Volt;
 use App\Http\Controllers\Admin\UnitController;
 use App\Http\Controllers\PropertyController;
-use Illuminate\Support\Facades\Auth;
 
 Route::get('/', function () {
     $user = Auth::user();
