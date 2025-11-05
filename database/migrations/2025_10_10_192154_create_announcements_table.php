@@ -17,6 +17,7 @@ return new class extends Migration
             $table->foreignId('property_id')->nullable()->constrained('properties', 'property_id')->nullOnDelete();
             $table->string('title');
             $table->text('description');
+            $table->enum('recipient_role', ['manager', 'tenant'])->default('manager');
             $table->timestamps();
             $table->softDeletes();
         });

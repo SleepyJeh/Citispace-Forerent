@@ -20,7 +20,7 @@ Route::get('/', function () {
         'tenant'   => redirect()->route('tenant.dashboard'),
         default    => redirect()->route('login'),
     };
-});
+})->name('home');
 
 
 

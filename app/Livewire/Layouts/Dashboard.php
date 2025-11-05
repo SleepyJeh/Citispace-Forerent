@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Layouts;
 
+use App\Models\Announcement;
 use Livewire\Component;
 use Carbon\Carbon;
 
@@ -41,22 +42,64 @@ class Dashboard extends Component
 
     public function getAnnouncementsProperty()
     {
-        // Replace with actual database query
-        return [
-            ['date' => 'October 1, 2025', 'title' => 'Rent Increase Notification', 'description' => 'This is a notification that the monthly rent for all units will be increased effective December 1, 2025.'],
-            ['date' => 'October 15, 2025', 'title' => 'Rent Increase Notification', 'description' => 'This is a notification that the monthly rent for all units will be increased effective December 1, 2025.'],
-        ];
+        return Announcement::query()
+            ->leftJoin('properties', 'announcements.property_id', '=', 'properties.property_id')
+            ->where('announcements.author_id', auth()->id()) // ✅ only the author's announcements
+            ->selectRaw('
+        COALESCE(properties.building_name, "All Properties") as property,
+        announcements.title,
+        announcements.description,
+        announcements.created_at
+    ')
+            ->orderByDesc('announcements.created_at')
+            ->get()
+            ->map(function ($announcement) {
+                return [
+                    'property' => $announcement->property,
+                    'date' => Carbon::parse($announcement->created_at)->format('F j, Y'),
+                    'title' => $announcement->title,
+                    'description' => $announcement->description,
+                ];
+            });
+
     }
 
     public function getDailyEventsProperty()
     {
-        // Replace with actual database query filtered by selectedDate
-        return [
-            ['title' => 'Rent Increase Notification', 'description' => 'This is a notification that the monthly rent for all units will be increased effective December 1, 2025.'],
-            ['title' => 'Rent Increase Notification', 'description' => 'This is a notification that the monthly rent for all units will be increased effective December 1, 2025.'],
-            ['title' => 'Rent Increase Notification', 'description' => 'This is a notification that the monthly rent for all units will be increased effective December 1, 2025.'],
-        ];
+        return Announcement::query()
+            ->leftJoin('properties', 'announcements.property_id', '=', 'properties.property_id')
+            ->selectRaw('
+            COALESCE(properties.building_name, "All Properties") as property,
+            announcements.title,
+            announcements.description,
+            announcements.created_at
+        ')
+            ->whereDate('announcements.created_at', $this->selectedDate)
+            ->orderByDesc('announcements.created_at')
+            ->get()
+            ->map(function ($announcement) {
+                return [
+                    'property' => $announcement->property,
+                    'date' => Carbon::parse($announcement->created_at)->format('F j, Y'),
+                    'title' => $announcement->title,
+                    'description' => $announcement->description,
+                ];
+            });
     }
+
+    public function getAnnouncementDaysProperty()
+    {
+        return Announcement::query()
+            ->where('author_id', auth()->id())
+            ->whereMonth('created_at', now()->month)
+            ->whereYear('created_at', now()->year)
+            ->selectRaw('DATE(created_at) as date')
+            ->pluck('date')
+            ->map(fn($date) => Carbon::parse($date)->day)
+            ->toArray();
+    }
+
+
 
     public function getCalendarDaysProperty()
     {
