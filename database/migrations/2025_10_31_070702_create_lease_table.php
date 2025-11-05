@@ -30,6 +30,7 @@ return new class extends Migration
             $table->decimal('security_deposit', 8, 2); // <-- Auto-generate receipt on Lease Creation
             /* */
             $table->date('move_in');
+            $table->timestamps();
         });
     }
 

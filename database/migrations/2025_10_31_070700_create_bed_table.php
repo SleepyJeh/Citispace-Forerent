@@ -18,6 +18,7 @@ return new class extends Migration
                 ->onDelete('cascade');
             $table->integer('bed_number');
             $table->enum('status', ['Vacant', 'Occupied'])->default('Vacant');
+            $table->timestamps();
         });
     }
 

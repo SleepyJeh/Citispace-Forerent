@@ -15,34 +15,37 @@ class UserSeeder extends Seeder
      */
     public function run(): void
     {
-        // 2. Create a specific Tenant for testing
         User::factory()->create([
-            'first_name' => 'Test',
+            'first_name' => 'Tricia',
             'last_name' => 'Tenant',
             'email' => 'tenant@example.com',
             'role' => 'tenant',
             'password' => 'password',
         ]);
 
-        // 3. Create a specific Manager for testing
         User::factory()->create([
-            'first_name' => 'Test',
+            'first_name' => 'Marcus',
             'last_name' => 'Manager',
             'email' => 'manager@example.com',
             'role' => 'manager',
             'password' => 'password',
         ]);
 
-        // 4. Create a specific Landlord for testing
         User::factory()->create([
-            'first_name' => 'Test',
+            'first_name' => 'Liam',
             'last_name' => 'Landlord',
             'email' => 'landlord@example.com',
             'role' => 'landlord',
             'password' => 'password',
         ]);
 
-        // 5. Create 20 more random users
-        User::factory()->count(20)->create();
+        // 2 Random Landlord
+        User::factory()->count(2)->create(['role' => 'landlord']);
+
+        // 4 Random Manager
+        User::factory()->count(4)->create(['role' => 'manager']);
+
+        // 6 Random Tenant
+        User::factory()->count(6)->create(['role' => 'tenant']);
     }
 }

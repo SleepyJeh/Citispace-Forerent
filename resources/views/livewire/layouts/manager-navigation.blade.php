@@ -11,7 +11,7 @@
 
         $baseClasses = 'w-full text-left font-semibold p-4 rounded-lg border-2 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-400';
 
-        $isActive = ($manager['id'] == $this->activeManagerId);
+        $isActive = ($manager['user_id'] == $this->activeManagerId);
 
 
         if ($isActive) {
@@ -25,9 +25,9 @@
 
         <button
             type="button"
-            wire:click="selectManager({{ $manager['id'] }})"
+            wire:click="selectManager({{ $manager['user_id'] }})"
             class="{{ $baseClasses }} {{ $buttonClasses }}">
-            {{ $manager['name'] }}
+            {{ $manager['first_name'] }} {{ $manager['last_name'] }}
         </button>
         @empty
         <p class="text-gray-500">No managers found.</p>

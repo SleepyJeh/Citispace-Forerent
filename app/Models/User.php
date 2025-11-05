@@ -26,11 +26,13 @@ class User extends Authenticatable
      * @var list<string>
      */
     protected $fillable = [
-        'first_name', // <-- ADD THIS
-        'last_name',  // <-- ADD THIS
-        'contact',    // <-- ADD THIS
+        'first_name',
+        'last_name',
         'email',
+        'contact',
         'password',
+        'profile_img',
+        'role'
     ];
 
     /**
@@ -54,5 +56,10 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed', // This automatically hashes passwords
         ];
+    }
+
+    public function unitsManaged()
+    {
+        return $this->hasMany(Unit::class, 'manager_id', 'user_id');
     }
 }

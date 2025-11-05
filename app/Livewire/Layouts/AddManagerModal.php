@@ -3,223 +3,325 @@
 namespace App\Livewire\Layouts;
 
 use App\Livewire\Forms\AddUserForm;
-use Livewire\Component;
-use Livewire\WithFileUploads;
-use App\Models\User;
+use App\Notifications\NewAccount;
+use Illuminate\Support\Facades\Notification;
+use App\Models\{Property, Unit, User};
+use App\Services\PasswordGenerator;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
+use Livewire\{Component, WithFileUploads};
+use Livewire\Attributes\Validate;
 
 class AddManagerModal extends Component
 {
     use WithFileUploads;
 
+    /** Modal visibility */
     public $isOpen = false;
+
+    /** Unique modal instance */
     public $modalId;
 
-    // Profile fields
+    /** Profile upload */
+    #[Validate('nullable|image|max:2048')]
     public $profilePicture = null;
 
+    /** User info form */
     public AddUserForm $userForm;
-    public $firstName = '';
-    public $lastName = '';
-    public $phone = '';
-    public $email = '';
 
-    // Property assignment fields
+    /** Property assignment fields */
+    #[Validate('nullable')]
     public $selectedBuilding = '';
+
+    #[Validate('nullable')]
     public $selectedFloor = '';
+
+    #[Validate('nullable')]
     public $selectedUnits = [];
 
-    // Data arrays
+    /** Data collections */
     public $buildings = [];
     public $floors = [];
     public $availableUnits = [];
 
-    // Dummy data for demonstration
-    private $allBuildings = [
-        ['id' => 1, 'name' => 'Ridgewood Tower 3'],
-        ['id' => 2, 'name' => 'Sunset Plaza'],
-        ['id' => 3, 'name' => 'Ocean View Apartments'],
-    ];
+    public ?int $managerId = null;
+    public bool $isEditing = false;
 
-    private $buildingFloors = [
-        1 => ['15', '16', '17', '18', '19', '20'],
-        2 => ['10', '11', '12', '13', '14'],
-        3 => ['5', '6', '7', '8', '9'],
-    ];
 
-    private $floorUnits = [
-        // Building 1
-        '1-15' => [
-            ['id' => 101, 'number' => 'Unit 101'],
-            ['id' => 102, 'number' => 'Unit 102'],
-            ['id' => 103, 'number' => 'Unit 103'],
-            ['id' => 104, 'number' => 'Unit 104'],
-            ['id' => 105, 'number' => 'Unit 105'],
-            ['id' => 106, 'number' => 'Unit 106'],
-            ['id' => 107, 'number' => 'Unit 107'],
-            ['id' => 108, 'number' => 'Unit 108'],
-        ],
-        '1-16' => [
-            ['id' => 201, 'number' => 'Unit 201'],
-            ['id' => 202, 'number' => 'Unit 202'],
-            ['id' => 203, 'number' => 'Unit 203'],
-            ['id' => 204, 'number' => 'Unit 204'],
-        ],
-        // Building 2
-        '2-10' => [
-            ['id' => 301, 'number' => 'Unit 301'],
-            ['id' => 302, 'number' => 'Unit 302'],
-            ['id' => 303, 'number' => 'Unit 303'],
-            ['id' => 304, 'number' => 'Unit 304'],
-        ],
-    ];
-
-    protected function rules()
-    {
-        return [
-            'firstName' => 'required|string|max:255',
-            'lastName' => 'required|string|max:255',
-            'phone' => ['required', 'string', 'regex:/^9\d{9}$/'],
-            'email' => 'required|email|max:255|unique:users,email',
-            'profilePicture' => 'nullable|image|max:2048',
-            'selectedBuilding' => 'nullable|string',
-            'selectedFloor' => 'nullable|string',
-            'selectedUnits' => 'nullable|array',
-        ];
-    }
-
-    protected $messages = [
-        'phone.regex' => 'Please enter a valid phone number starting with 9 (e.g., 9123456789)',
-        'phone.required' => 'Phone number is required',
-    ];
-
+    /*----------------------------------
+    | LIFECYCLE
+    ----------------------------------*/
     public function mount($modalId = null)
     {
         $this->modalId = $modalId ?? uniqid('add_manager_modal_');
-        $this->buildings = $this->allBuildings;
+        $this->loadBuildings();
     }
 
-    protected function getListeners()
+    protected function getListeners(): array
     {
         return [
             "openAddManagerModal_{$this->modalId}" => 'open',
+            "openEditManagerModal_{$this->modalId}" => 'edit',
         ];
     }
 
-    public function open()
+    /*----------------------------------
+    | UI ACTIONS
+    ----------------------------------*/
+    public function open(): void
     {
         $this->resetForm();
-        $this->buildings = $this->allBuildings;
         $this->isOpen = true;
     }
 
-    public function close()
+    public function close(): void
     {
-        $this->isOpen = false;
         $this->resetForm();
         $this->resetValidation();
+        $this->userForm->resetValidation();
+        $this->isOpen = false;
+
+        $this->dispatch('managerModalClosed');
     }
 
-    public function updatedProfilePicture()
+    public function edit(int $managerId): void
     {
-        $this->validate([
-            'profilePicture' => 'nullable|image|max:2048',
-        ]);
+        $this->resetForm();
+        $this->managerId = $managerId;
+        $this->isEditing = true;
+
+        $manager = User::findOrFail($managerId);
+
+        // Populate user form
+        $this->userForm->userId = $managerId;
+        $this->userForm->firstName = $manager->first_name;
+        $this->userForm->lastName = $manager->last_name;
+        $this->userForm->email = $manager->email;
+        $this->userForm->phoneNumber = str_replace('+63', '', $manager->contact);
+        $this->profilePicture = $manager->profile_img;
+
+        // Load units managed by this manager (limited to landlord’s properties)
+        $assignedUnits = Unit::where('manager_id', $managerId)
+            ->whereHas('property', function ($q) {
+                $q->where('owner_id', auth()->id());
+            })
+            ->get();
+
+        if ($assignedUnits->isNotEmpty()) {
+            $firstUnit = $assignedUnits->first();
+            $this->selectedBuilding = $firstUnit->property_id;
+            $this->floors = $this->getFloorsForProperty($firstUnit->property_id);
+            $this->selectedFloor = $firstUnit->floor_number;
+
+            $this->selectedUnits = $assignedUnits
+                ->where('property_id', $firstUnit->property_id)
+                ->where('floor_number', $firstUnit->floor_number)
+                ->pluck('unit_id')
+                ->toArray();
+
+            $this->availableUnits = $this->getUnitsForFloor(
+                $firstUnit->property_id,
+                $firstUnit->floor_number,
+                $managerId
+            );
+        }
+
+        $this->isOpen = true;
     }
 
-    public function updatedSelectedBuilding($value)
+    /*----------------------------------
+    | DATA UPDATES
+    ----------------------------------*/
+    public function updatedProfilePicture(): void
+    {
+        $this->validateOnly('profilePicture');
+    }
+
+    public function updatedSelectedBuilding($propertyId): void
     {
         $this->selectedFloor = '';
         $this->selectedUnits = [];
         $this->availableUnits = [];
 
-        if ($value) {
-            // In a real app: $this->floors = Building::find($value)->floors->pluck('number')->toArray();
-            $this->floors = $this->buildingFloors[$value] ?? [];
-        } else {
-            $this->floors = [];
-        }
+        $this->floors = $propertyId
+            ? $this->getFloorsForProperty($propertyId)
+            : [];
     }
 
-    public function updatedSelectedFloor($value)
+    public function updatedSelectedFloor($floorNumber): void
     {
         $this->selectedUnits = [];
 
-        if ($this->selectedBuilding && $value) {
-            $key = $this->selectedBuilding . '-' . $value;
-            // In a real app: $this->availableUnits = Unit::where('building_id', $this->selectedBuilding)->where('floor', $value)->get()->toArray();
-            $this->availableUnits = $this->floorUnits[$key] ?? [];
+        if ($this->selectedBuilding && $floorNumber) {
+            $this->availableUnits = $this->getUnitsForFloor(
+                $this->selectedBuilding,
+                $floorNumber,
+                $this->managerId
+            );
+
+            if ($this->managerId) {
+                $this->selectedUnits = Unit::where('manager_id', $this->managerId)
+                    ->where('property_id', $this->selectedBuilding)
+                    ->where('floor_number', $floorNumber)
+                    ->pluck('unit_id')
+                    ->toArray();
+            }
         } else {
             $this->availableUnits = [];
         }
     }
 
-    public function save()
+    /*----------------------------------
+    | SAVE LOGIC
+    ----------------------------------*/
+    public function save(): void
     {
-        $this->validate();
+        $this->userForm->validate();
 
-        // Generate random password
-        $password = Str::random(12);
-
-        // Add +63 prefix to phone number for storage
-        $fullPhoneNumber = '+63' . $this->phone;
-
-        // Store profile picture if uploaded
-        $profilePicturePath = null;
-        if ($this->profilePicture) {
-            $profilePicturePath = $this->profilePicture->store('profile-pictures', 'public');
-        }
-
-        // Create the manager user
-        $user = User::create([
-            'first_name' => $this->firstName,
-            'last_name' => $this->lastName,
-            'phone' => $fullPhoneNumber,
-            'email' => $this->email,
-            'password' => Hash::make($password),
-            'profile_picture' => $profilePicturePath,
-            'role' => 'manager',
+        // 2️⃣ Then validate this component’s own fields
+        $this->validate([
+            'profilePicture'   => 'nullable|image|max:2048',
+            'selectedBuilding' => 'nullable',
+            'selectedFloor'    => 'nullable',
+            'selectedUnits'    => 'nullable|array',
         ]);
 
-        // Assign properties to manager
-        if (!empty($this->selectedUnits)) {
-            // In a real app, you would create relationships here
-            // $user->units()->attach($this->selectedUnits);
-            // or
-            // foreach ($this->selectedUnits as $unitId) {
-            //     PropertyAssignment::create([
-            //         'user_id' => $user->id,
-            //         'unit_id' => $unitId,
-            //     ]);
-            // }
+        // Validation passed; continue with your save logic
+        $profilePath = null;
+        if ($this->profilePicture) {
+            $profilePath = is_string($this->profilePicture)
+                ? $this->profilePicture
+                : $this->profilePicture->store('profile-pictures', 'public');
         }
 
-        // TODO: Send email with login credentials
-        // Mail::to($this->email)->send(new ManagerCredentialsMail($user, $password));
+        if ($this->managerId) {
+            // ============================================
+            // UPDATE MANAGER
+            // ============================================
+            $manager = User::findOrFail($this->managerId);
 
-        session()->flash('message', 'Manager created successfully. Login credentials have been sent to their email.');
+            $manager->update([
+                'first_name'  => $this->userForm->firstName,
+                'last_name'   => $this->userForm->lastName,
+                'contact'     => $this->userForm->phoneNumber,
+                'email'       => $this->userForm->email,
+                'profile_img' => $profilePath ?? $manager->profile_img,
+            ]);
 
-        $this->dispatch('managerCreated');
-        $this->dispatch('refresh-manager-list');
+            if ($this->selectedBuilding && $this->selectedFloor) {
+                // Unassign previous units (only under landlord)
+                Unit::where('manager_id', $manager->user_id)
+                    ->where('property_id', $this->selectedBuilding)
+                    ->where('floor_number', $this->selectedFloor)
+                    ->whereHas('property', fn($q) => $q->where('owner_id', auth()->id()))
+                    ->update(['manager_id' => null]);
+
+                // Assign selected units
+                if (!empty($this->selectedUnits)) {
+                    Unit::whereIn('unit_id', $this->selectedUnits)
+                        ->whereHas('property', fn($q) => $q->where('owner_id', auth()->id()))
+                        ->update(['manager_id' => $manager->user_id]);
+                }
+            }
+
+            session()->flash('message', 'Manager updated successfully.');
+            $this->dispatch('managerUpdated', $manager->user_id);
+        } else {
+            // ============================================
+            // CREATE NEW MANAGER
+            // ============================================
+            $password = PasswordGenerator::generate(12);
+
+            $manager = User::create([
+                'first_name'  => $this->userForm->firstName,
+                'last_name'   => $this->userForm->lastName,
+                'contact'     => $this->userForm->phoneNumber,
+                'email'       => $this->userForm->email,
+                'password'    => Hash::make($password),
+                'profile_img' => $profilePath,
+                'role'        => 'manager',
+            ]);
+
+            Notification::send($manager, new NewAccount($this->userForm->email, $password, 'manager'));
+
+            if (!empty($this->selectedUnits)) {
+                Unit::whereIn('unit_id', $this->selectedUnits)
+                    ->whereHas('property', fn($q) => $q->where('owner_id', auth()->id()))
+                    ->update(['manager_id' => $manager->user_id]);
+            }
+
+            session()->flash('message', 'Manager created successfully.');
+            $this->dispatch('managerCreated', $manager->user_id);
+        }
 
         $this->close();
+        $this->dispatch('refresh-manager-list');
     }
 
-    private function resetForm()
+    /*----------------------------------
+    | HELPER METHODS
+    ----------------------------------*/
+    private function loadBuildings(): void
     {
-        $this->firstName = '';
-        $this->lastName = '';
-        $this->phone = '';
-        $this->email = '';
-        $this->profilePicture = null;
-        $this->selectedBuilding = '';
-        $this->selectedFloor = '';
-        $this->selectedUnits = [];
-        $this->floors = [];
-        $this->availableUnits = [];
+        $this->buildings = Property::where('owner_id', auth()->id())->get();
     }
 
+    private function getFloorsForProperty($propertyId): array
+    {
+        return Unit::where('property_id', $propertyId)
+            ->whereHas('property', function ($q) {
+                $q->where('owner_id', auth()->id());
+            })
+            ->distinct()
+            ->pluck('floor_number')
+            ->sort()
+            ->values()
+            ->toArray();
+    }
+
+    private function getUnitsForFloor($propertyId, $floor, $managerId = null): array
+    {
+        // Only units owned by this landlord
+        $units = Unit::where('property_id', $propertyId)
+            ->where('floor_number', $floor)
+            ->whereHas('property', function ($q) {
+                $q->where('owner_id', auth()->id());
+            })
+            ->where(function ($query) use ($managerId) {
+                $query->whereNull('manager_id');
+                if (!is_null($managerId)) {
+                    $query->orWhere('manager_id', $managerId);
+                }
+            })
+            ->orderBy('unit_id')
+            ->get(['unit_id', 'manager_id']);
+
+        return $units->map(fn($unit) => [
+            'id' => $unit->unit_id,
+            'number' => "Unit {$unit->unit_id}",
+            'checked' => false,
+        ])->toArray();
+    }
+
+    private function resetForm(): void
+    {
+        $this->reset([
+            'profilePicture',
+            'selectedBuilding',
+            'selectedFloor',
+            'selectedUnits',
+            'floors',
+            'availableUnits',
+            'managerId',
+            'isEditing',
+        ]);
+
+        $this->userForm->reset();
+        $this->resetValidation();
+    }
+
+    /*----------------------------------
+    | RENDER
+    ----------------------------------*/
     public function render()
     {
         return view('livewire.layouts.add-manager-modal');

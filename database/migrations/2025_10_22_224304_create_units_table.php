@@ -16,7 +16,9 @@ return new class extends Migration
             $table->id('unit_id')->primary();
             $table->foreignId('property_id')
                 ->constrained('properties', 'property_id')
-                ->onDelete('cascade'); // <-- OnDelete delete all units related to Property ID
+                ->onDelete('cascade');
+            $table->foreignId('manager_id')->nullable()
+                ->constrained('users', 'user_id')->nullOnDelete();
             $table->integer('floor_number');
             $table->enum('occupants', ['Male', 'Female', 'Co-ed'])->default('Co-ed');
             $table->enum('bed_type', ['Single', 'Bunk', 'Twin']);
@@ -25,6 +27,7 @@ return new class extends Migration
             $table->integer('unit_cap');
             $table->decimal('price', 8, 2);
             $table->string('amenities', 255)->nullable();
+            $table->timestamps();
         });
     }
 
