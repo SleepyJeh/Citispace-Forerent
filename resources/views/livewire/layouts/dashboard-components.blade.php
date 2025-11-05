@@ -2,7 +2,7 @@
     {{-- Announcement Widget --}}
     <div class="bg-white rounded-xl shadow-md overflow-hidden">
         <div class="bg-blue-800 px-6 py-4 flex justify-between items-center">
-            <h3 class="text-white text-lg font-semibold">Announcement</h3>
+            <h3 class="text-white text-lg font-semibold">Announcements</h3>
             <button
                 wire:click="$dispatch('open-announcement-modal')"
                 type="button"
@@ -12,15 +12,21 @@
                 </svg>
             </button>
         </div>
+
         <div class="p-6 space-y-4 max-h-64 overflow-y-auto">
             @forelse($this->announcements as $announcement)
-            <div class="border-b border-gray-200 pb-4 last:border-0 last:pb-0">
-                <div class="text-sm text-blue-700 font-semibold mb-1">{{ $announcement['date'] }}</div>
-                <h4 class="text-base font-bold text-gray-900 mb-1">{{ $announcement['title'] }}</h4>
-                <p class="text-sm text-gray-600">{{ $announcement['description'] }}</p>
-            </div>
+                <div class="border-b border-gray-200 pb-4 last:border-0 last:pb-0">
+                    <div class="flex justify-between items-center mb-1">
+                        <div class="text-sm text-blue-700 font-semibold">{{ $announcement['date'] }}</div>
+                        <div class="text-xs bg-blue-100 text-blue-800 font-medium px-2 py-0.5 rounded-md">
+                            {{ $announcement['property'] }}
+                        </div>
+                    </div>
+                    <h4 class="text-base font-bold text-gray-900 mb-1">{{ $announcement['title'] }}</h4>
+                    <p class="text-sm text-gray-600">{{ $announcement['description'] }}</p>
+                </div>
             @empty
-            <p class="text-gray-500 text-center py-4">No announcements yet</p>
+                <p class="text-gray-500 text-center py-4">No announcements yet</p>
             @endforelse
         </div>
     </div>
@@ -41,14 +47,26 @@
                     @if($day === null)
                         <div class="aspect-square"></div>
                     @else
-                        <button
-                            wire:click="selectDate('{{ $currentYear }}-{{ date('m', strtotime($currentMonth)) }}-{{ $day }}')"
-                            class="aspect-square flex items-center justify-center rounded-lg text-sm
-                                {{ $selectedDate->day == $day && $selectedDate->format('F Y') == $currentMonth
-                                    ? 'bg-blue-700 text-white font-bold'
-                                    : 'hover:bg-gray-100 text-gray-700' }}">
-                            {{ $day }}
-                        </button>
+                        @php
+                            $hasAnnouncement = in_array($day, $this->announcementDays);
+                            $isSelected = $selectedDate->day == $day && $selectedDate->format('F Y') == $currentMonth;
+                        @endphp
+
+                        <div class="relative flex items-center justify-center">
+                            <button
+                                wire:click="selectDate('{{ $currentYear }}-{{ date('m', strtotime($currentMonth)) }}-{{ $day }}')"
+                                class="aspect-square w-full flex flex-col items-center justify-center rounded-lg text-sm transition
+                    {{ $isSelected
+                        ? 'bg-blue-700 text-white font-semibold shadow-md'
+                        : 'hover:bg-gray-100 text-gray-700' }}">
+                                <span>{{ $day }}</span>
+
+                                {{-- 🔵 Blue dot indicator for announcements --}}
+                                @if($hasAnnouncement)
+                                    <span class="mt-1 w-1.5 h-1.5 rounded-full bg-blue-600"></span>
+                                @endif
+                            </button>
+                        </div>
                     @endif
                 @endforeach
             </div>
@@ -61,12 +79,18 @@
             </div>
             <div class="p-6 space-y-4 max-h-80 overflow-y-auto">
                 @forelse($this->dailyEvents as $event)
-                <div class="border-b border-gray-200 pb-4 last:border-0 last:pb-0">
-                    <h4 class="text-base font-bold text-gray-900 mb-1">{{ $event['title'] }}</h4>
-                    <p class="text-sm text-gray-600">{{ $event['description'] }}</p>
-                </div>
+                    <div class="border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow bg-gray-50 w-full">
+                        <div class="flex flex-col h-full justify-between">
+                            <div>
+                                <h4 class="text-base font-bold text-gray-900 mb-1 break-words">{{ $event['title'] }}</h4>
+                                <p class="text-sm text-gray-600 leading-relaxed break-words">
+                                    {{ $event['description'] }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
                 @empty
-                <p class="text-gray-500 text-center py-4">No events for this day</p>
+                    <p class="text-gray-500 text-center py-4">No events for this day</p>
                 @endforelse
             </div>
         </div>
