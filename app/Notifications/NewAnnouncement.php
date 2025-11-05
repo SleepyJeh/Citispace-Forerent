@@ -37,7 +37,7 @@ class NewAnnouncement extends Notification
     {
         // Property name or global scope
         $propertyName = $this->announcement->property_id
-            ? Property::find($this->announcement->property_id)?->name
+            ? Property::find($this->announcement->property_id)?->building_name
             : 'All Properties';
 
         $role = strtolower($this->announcement->recipient_role ?? 'all');
