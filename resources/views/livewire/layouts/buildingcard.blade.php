@@ -2,8 +2,7 @@
     <!-- Image Container -->
     <div class="relative h-48 overflow-hidden">
         <img
-            src="{{ Str::startsWith($image, ['http://', 'https://']) ? $image : asset($image) }}"
-            alt="{{ $title }}"
+            src="{{ $image ?? 'default.jpg' }}"
             class="w-64 h-full object-cover"
         >
     </div>
@@ -11,10 +10,10 @@
     <!-- Content Container -->
     <div class="p-4">
         <h3 class="text-lg font-semibold text-gray-900 mb-1">
-            {{ $title }}
+            {{ $property->building_name }}
         </h3>
         <p class="text-sm text-gray-600">
-            {{ $address }}
+            {{ $property->address }}
         </p>
     </div>
 </div>

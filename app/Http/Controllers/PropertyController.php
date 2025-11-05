@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Auth; // <-- Import Auth
 
 class PropertyController extends Controller
 {
-        /**
+    /**
      * Display a listing of the user's properties.
      */
     public function index()
