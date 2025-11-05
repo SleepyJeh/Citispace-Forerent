@@ -13,8 +13,13 @@ return new class extends Migration
     {
         Schema::create('receipts', function (Blueprint $table) {
             $table->id('receipt_id')->primary();
-            
+            $table->string('reference_no')->unique();
+            $table->foreignId('billing_id')->constrained('billings', 'billing_id')->onDelete('cascade');
+            $table->foreignId('manager_id')->constrained('users', 'user_id')->onDelete('cascade');
+            $table->enum('purpose', ['Lease', 'Deposit', 'Advance']);
+            $table->date('date_issued');
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

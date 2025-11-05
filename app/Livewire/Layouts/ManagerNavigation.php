@@ -67,7 +67,7 @@ class ManagerNavigation extends Component
 
         // Managers who currently have no assigned units at all
         $unassignedManagerIds = User::where('role', 'manager')
-            ->whereDoesntHave('unitsManaged') // assumes User model has relation managedUnits()
+            ->whereDoesntHave('managedUnits') // assumes User model has relation managedUnits()
             ->pluck('user_id');
 
         // Combine both assigned and unassigned manager IDs

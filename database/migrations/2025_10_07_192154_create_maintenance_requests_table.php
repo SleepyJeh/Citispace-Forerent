@@ -11,10 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('maintenance_request', function (Blueprint $table) {
+        Schema::create('maintenance_requests', function (Blueprint $table) {
             $table->id('request_id')->primary();
             $table->foreignId('lease_id')
-                ->constrained('lease', 'lease_id')
+                ->constrained('leases', 'lease_id')
                 ->onDelete('cascade');
             $table->enum('status', ['Pending', 'Ongoing', 'Completed']);
             $table->string('logged_by');
@@ -23,6 +23,7 @@ return new class extends Migration
             $table->string('problem');
             $table->enum('urgency', ['Level 1', 'Level 2', 'Level 3', 'Level 4']);
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

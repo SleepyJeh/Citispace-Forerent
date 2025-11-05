@@ -18,19 +18,18 @@ return new class extends Migration
                 ->onDelete('cascade');
             $table->foreignId('bed_id')
                 ->constrained('beds', 'bed_id')
-                ->onDelete('cascade'); // <-- Insert for Bed Assigment
+                ->onDelete('cascade');
             $table->enum('status',['Active', 'Expired']);
             $table->integer('term');
             $table->boolean('auto_renew');
             $table->date('start_date');
             $table->date('end_date');
             $table->decimal('contract_rate', 8, 2);
-            /* Optional Feild */
             $table->decimal('advance_amount', 8, 2); //
             $table->decimal('security_deposit', 8, 2); // <-- Auto-generate receipt on Lease Creation
-            /* */
             $table->date('move_in');
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

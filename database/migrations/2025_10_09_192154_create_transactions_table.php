@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('transactions', function (Blueprint $table) {
-            $table->id('transaction_id');
+            $table->id('transaction_id')->primary();
             $table->string('name')->nullable();
             $table->string('reference_number');
             // For forecasting training feature, check if value is cash inflow or outflow //
@@ -22,6 +22,7 @@ return new class extends Migration
             $table->decimal('amount', 8, 2)->unsigned();
             $table->boolean('is_recurring')->default(false);
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 
