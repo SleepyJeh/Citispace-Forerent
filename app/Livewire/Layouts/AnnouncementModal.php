@@ -2,6 +2,8 @@
 
 namespace App\Livewire\Layouts;
 
+use App\Models\Announcement;
+use App\Models\Property;
 use Livewire\Component;
 
 class AnnouncementModal extends Component
@@ -10,6 +12,9 @@ class AnnouncementModal extends Component
     public $showConfirmation = false;
     public $headline = '';
     public $details = '';
+    public $selectedProperty = '';
+
+    public $properties = [];
 
     protected $rules = [
         'headline' => 'required|min:3|max:200',
@@ -58,17 +63,22 @@ class AnnouncementModal extends Component
     {
         $this->validate();
 
-        // Save to database
-        // Announcement::create([
-        //     'headline' => $this->headline,
-        //     'details' => $this->details,
-        //     'posted_at' => now(),
-        // ]);
+        Announcement::create([
+            'user_id' => auth()->id(),
+            'title' => $this->headline,
+            'description' => $this->details,
+            'property_id' => $this->selectedProperty,
+        ]);
 
         session()->flash('message', 'Announcement posted successfully!');
 
         $this->closeModal();
         $this->dispatch('announcement-posted');
+    }
+
+    public function mount()
+    {
+        $this->properties = Property::where('owner_id', auth()->id())->get();
     }
 
     public function render()

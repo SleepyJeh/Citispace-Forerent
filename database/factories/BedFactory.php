@@ -14,16 +14,18 @@ class BedFactory extends Factory
     {
         return [
             'unit_id' => $this->getUnitId(),
-            'bed_number' => $this->faker->randomNumber(),
-            'status' => $this->faker->boolean(70) ? 'Occupied' : 'Vacant',
+            'bed_number' => $this->faker->numberBetween(1, 10), // realistic bed numbers
+            'status' => $this->faker->randomElement(['Vacant', 'Occupied']), // matches enum
+            'created_at' => now(),
+            'updated_at' => now(),
         ];
     }
 
-    public function getUnitId(): int
+    private function getUnitId(): int
     {
         $unit = Unit::inRandomOrder()->first();
 
-        if(!$unit){
+        if (!$unit) {
             $unit = Unit::factory()->create();
         }
 

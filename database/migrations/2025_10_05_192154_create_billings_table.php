@@ -11,10 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('billing', function (Blueprint $table) {
-            $table->id('billing_id');
+        Schema::create('billings', function (Blueprint $table) {
+            $table->id('billing_id')->primary();
             $table->foreignId('lease_id')
-                ->constrained('lease', 'lease_id')
+                ->constrained('leases', 'lease_id')
                 ->onDelete('cascade');
             $table->date('billing_date');
             $table->date('next_billing');
@@ -24,6 +24,7 @@ return new class extends Migration
             // Chech daily using job-schedule to update status based on current date
             $table->enum('status', ['Unpaid', 'Overdue', 'Paid']);
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 
