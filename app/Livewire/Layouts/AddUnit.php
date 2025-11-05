@@ -302,7 +302,7 @@ class AddUnit extends Component
         ];
 
         // Calculate the amenity count every time the component renders
-        $this->calculateAmenityCount();
+        //$this->calculateAmenityCount();
 
         return view('livewire.layouts.add-unit', [
             'labels' => $labels
