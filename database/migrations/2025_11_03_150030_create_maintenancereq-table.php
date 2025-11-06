@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('maintenance_request', function (Blueprint $table) {
             $table->id('request_id')->primary();
             $table->foreignId('lease_id')
-                ->constrained('lease', 'lease_id')
+                ->constrained('leases', 'lease_id')
                 ->onDelete('cascade');
             $table->enum('status', ['Pending', 'Ongoing', 'Completed']);
             $table->string('logged_by');

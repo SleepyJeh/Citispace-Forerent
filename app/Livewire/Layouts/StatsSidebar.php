@@ -3,85 +3,104 @@
 namespace App\Livewire\Layouts;
 
 use Livewire\Component;
+use App\Models\Unit;
 
 class StatsSidebar extends Component
 {
-    public int $totalUnits = 200;
+    // Unit Status Data
+    public int $totalUnits = 0;
+    public int $occupied = 0;
+    public int $occupiedPercent = 0;
+    public int $vacant = 0;
+    public int $vacantPercent = 0;
+    public int $maintenance = 0;
+    public int $maintenancePercent = 0;
+    public int $moveInReady = 0;
+    public int $moveInReadyPercent = 0;
+    public float $occupancyRate = 0.0;
+    public int $availableUnits = 0;
 
-    public int $occupied = 120;
-    public int $occupiedPercent = 64;
-    public int $vacant = 5;
-    public int $vacantPercent = 10;
-    public int $maintenance = 3;
-    public int $maintenancePercent = 6;
-    public int $moveInReady = 10;
-    public int $moveInReadyPercent = 20;
-    public float $occupancyRate = 64.0;
-    public int $availableUnits = 15;
-
-    public float $vacancyRate = 7.5;
-    public int $avgDaysOnMarket = 45;
-    public array $longestVacant = [];
-    public array $leaseExpirations = [];
-    public array $maintenanceStats = [];
-
+    // Donut chart data
+    public array $unitStatusData = [];
 
     public function mount()
     {
         $this->loadUnitStats();
-        $this->loadVacancyMetrics();
-        $this->loadLeaseExpirations();
-        $this->loadMaintenanceStatus();
     }
 
     private function loadUnitStats()
     {
+        // Calculate unit status based on bed occupancy
+        $this->totalUnits = Unit::count();
 
-        $this->totalUnits = 200;
-        $this->occupied = 120;
-        $this->occupiedPercent = 64;
-        $this->vacant = 5;
-        $this->vacantPercent = 10;
-        $this->maintenance = 3;
-        $this->maintenancePercent = 6;
-        $this->moveInReady = 10;
-        $this->moveInReadyPercent = 20;
-        $this->occupancyRate = 64.0;
-        $this->availableUnits = 15;
-    }
+        // For demo purposes, we'll calculate based on bed status
+        // In real implementation, you might want to track unit status separately
+        $units = Unit::withCount(['beds', 'beds as occupied_beds_count' => function($query) {
+            $query->where('status', 'Occupied');
+        }])->get();
 
-    private function loadVacancyMetrics()
-    {
-        $this->longestVacant = [
-            ['name' => 'Unit 103', 'days' => 60],
-            ['name' => 'Unit 205', 'days' => 48],
-            ['name' => 'Unit 112', 'days' => 45],
+        $occupiedUnits = 0;
+        $vacantUnits = 0;
+        $maintenanceUnits = 0;
+        $moveInReadyUnits = 0;
+
+        foreach ($units as $unit) {
+            $totalBeds = $unit->beds_count;
+            $occupiedBeds = $unit->occupied_beds_count;
+
+            if ($occupiedBeds == $totalBeds) {
+                $occupiedUnits++;
+            } elseif ($occupiedBeds == 0) {
+                // Simple logic for demo - you might have actual maintenance status
+                if ($totalBeds > 2) { // Example condition for maintenance
+                    $maintenanceUnits++;
+                } else {
+                    $vacantUnits++;
+                }
+            } else {
+                $moveInReadyUnits++; // Partially occupied or ready
+            }
+        }
+
+        $this->occupied = $occupiedUnits;
+        $this->vacant = $vacantUnits;
+        $this->maintenance = $maintenanceUnits;
+        $this->moveInReady = $moveInReadyUnits;
+
+        // Calculate percentages
+        if ($this->totalUnits > 0) {
+            $this->occupiedPercent = round(($this->occupied / $this->totalUnits) * 100);
+            $this->vacantPercent = round(($this->vacant / $this->totalUnits) * 100);
+            $this->maintenancePercent = round(($this->maintenance / $this->totalUnits) * 100);
+            $this->moveInReadyPercent = round(($this->moveInReady / $this->totalUnits) * 100);
+
+            $this->occupancyRate = round(($this->occupied / $this->totalUnits) * 100, 1);
+            $this->availableUnits = $this->totalUnits - $this->occupied;
+        }
+
+        // Prepare data for donut chart
+        $this->unitStatusData = [
+            ['label' => 'Occupied', 'value' => $this->occupiedPercent, 'count' => $this->occupied],
+            ['label' => 'Vacant', 'value' => $this->vacantPercent, 'count' => $this->vacant],
+            ['label' => 'Maintenance', 'value' => $this->maintenancePercent, 'count' => $this->maintenance],
+            ['label' => 'Move-In Ready', 'value' => $this->moveInReadyPercent, 'count' => $this->moveInReady]
         ];
     }
 
-    private function loadLeaseExpirations()
+    public function getUnitStatusChartData()
     {
-        $this->leaseExpirations = [
-            ['label' => 'Today', 'count' => 2],
-            ['label' => 'This Week', 'count' => 5],
-            ['label' => 'This Month', 'count' => 18],
-            ['label' => 'Next Month', 'count' => 25],
+        return [
+            ['label' => 'Occupied', 'value' => $this->occupiedPercent, 'count' => $this->occupied],
+            ['label' => 'Vacant', 'value' => $this->vacantPercent, 'count' => $this->vacant],
+            ['label' => 'Maintenance', 'value' => $this->maintenancePercent, 'count' => $this->maintenance],
+            ['label' => 'Move-In Ready', 'value' => $this->moveInReadyPercent, 'count' => $this->moveInReady]
         ];
     }
-
-    private function loadMaintenanceStatus()
-    {
-        $this->maintenanceStats = [
-            ['label' => 'New Requests', 'count' => 3],
-            ['label' => 'Work in Progress', 'count' => 5],
-            ['label' => 'On Hold (Parts)', 'count' => 1],
-            ['label' => 'Avg. Resolution Time', 'count' => '3 Days'],
-        ];
-    }
-
 
     public function render()
     {
-        return view('livewire.layouts.stats-sidebar');
+        return view('livewire.layouts.stats-sidebar', [
+            'unitStatusData' => $this->getUnitStatusChartData()
+        ]);
     }
 }
