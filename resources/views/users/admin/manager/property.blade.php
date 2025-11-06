@@ -24,6 +24,7 @@
 
                 @include('livewire.layouts.admingreeting')
 
+
             </div>
         </div>
     </section>

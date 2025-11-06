@@ -39,13 +39,8 @@ class UserSeeder extends Seeder
             'password' => 'password',
         ]);
 
-        // 2 Random Landlord
-        User::factory()->count(2)->create(['role' => 'landlord']);
-
         // 4 Random Manager
         User::factory()->count(4)->create(['role' => 'manager']);
 
-        // 6 Random Tenant
-        User::factory()->count(6)->create(['role' => 'tenant']);
     }
 }

@@ -1,96 +1,119 @@
-{{--
-  1. MAIN CONTAINER:
-   - Fixed responsive height (h-[70vh])
-   - Flexbox column layout (flex flex-col)
---}}
-<div x-data="{ openUnitId: @entangle('openUnitId') }" class="w-full bg-white rounded-2xl shadow-lg p-4 md:p-6 h-[70vh] flex flex-col">
+<div class="w-full bg-white rounded-2xl shadow-lg p-4 md:p-6 flex flex-col h-full">
+    {{-- Header --}}
+    <div class="flex justify-between items-center mb-6 flex-shrink-0">
+        <h3 class="text-xl font-bold text-gray-900">Units</h3>
+        <button wire:click="$dispatch('openAddUnitModal_property-dashboard')"
+        class="py-2 px-4 text-sm font-medium text-white bg-[#2360E8] rounded-lg hover:bg-[#1d4eb8] transition-colors">
+            + Add Unit
+        </button>
+    </div>
 
-    {{-- This title is the first flex item --}}
-    <span class="com-header text-lg md:text-xl text-blue-900 font-bold mb-4">UNITS</span>
+    {{-- Scrollable Container for ALL accordion items --}}
+    <div class="flex-1 overflow-y-auto space-y-4">
+        @forelse ($units as $unit)
+            @php
+                $status = $this->calculateUnitStatus($unit);
+                $isOpen = $openUnitId === $unit->unit_id;
+                $isHovered = $hoveredUnitId === $unit->unit_id;
+            @endphp
 
-    {{--
-      2. SCROLLABLE CONTAINER:
-       - Fills remaining space (flex-1)
-       - Becomes scrollable if content overflows (overflow-y-auto)
-    --}}
-    <div class="flex-1 overflow-y-auto pr-2">
+            <div wire:key="unit-{{ $unit->unit_id }}"
+                 class="rounded-lg transition-all duration-200"
+                 :class="{ 'ring-2 ring-blue-300': {{ $isHovered ? 'true' : 'false' }} }">
 
-        {{--
-          !!! THIS IS THE MISSING PART !!!
-          This @foreach loop renders the accordion items.
-        --}}
-        <div class="space-y-4">
-            @foreach ($units as $unit)
-                {{-- This div holds the Livewire key and contains both states --}}
-                <div wire:key="{{ $unit['id'] }}">
-
-                    {{-- 1. INACTIVE (Collapsed) State --}}
+                {{-- COLLAPSED STATE (Visible when unit is NOT open) --}}
+                @if (!$isOpen)
                     <button
-                        x-show="openUnitId !== {{ $unit['id'] }}"
-                        wire:click="toggleUnit({{ $unit['id'] }})"
+                        wire:click="toggleUnit({{ $unit->unit_id }})"
+                        wire:mouseenter="setHover({{ $unit->unit_id }})"
+                        wire:mouseleave="clearHover"
                         type="button"
-                        class="w-full flex justify-between items-center p-4 bg-white border border-blue-200 rounded-2xl text-blue-700 shadow-none"
-                        x-cloak
+                        class="w-full flex justify-between items-center p-4 rounded-lg text-gray-700 transition-all duration-200"
+                        :class="{
+                            'bg-[#EFF6FF] border border-blue-200': {{ $isHovered ? 'true' : 'false' }},
+                            'bg-white border border-gray-200': {{ !$isHovered ? 'true' : 'false' }}
+                        }"
                     >
-                        <span class="font-medium text-lg">{{ $unit['name'] }}</span>
-                        <svg class="w-6 h-6 text-blue-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                        <div class="flex items-center gap-3">
+                            <span class="font-semibold text-base">Unit #{{ $unit->unit_id }}</span>
+                            {{-- Status Badge for collapsed state --}}
+                            <span class="rounded-full px-3 py-1 text-xs font-semibold flex items-center gap-2 bg-white border border-gray-200">
+                                <div class="w-2 h-2 rounded-full {{ $this->getStatusDotClass($status) }}"></div>
+                                <span class="{{ $this->getStatusTextClass($status) }}">{{ $status }}</span>
+                            </span>
+                        </div>
+                        <svg class="w-5 h-5 text-gray-500 transition-transform"
+                             :class="{ 'rotate-180': {{ $isHovered ? 'true' : 'false' }} }"
+                             fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                         </svg>
                     </button>
+                @endif
 
-                    {{-- 2. ACTIVE (Expanded) State --}}
-                    <div
-                        x-show="openUnitId === {{ $unit['id'] }}"
-                        class="bg-white rounded-2xl shadow-lg"
-                        x-cloak
-                    >
-                        {{-- Active Header (also a button to close) --}}
-                        <button
-                            wire:click="toggleUnit({{ $unit['id'] }})"
-                            type="button"
-                            class="w-full p-4 md:p-6 text-left bg-blue-600 text-white rounded-t-2xl"
-                        >
-                            <div class="flex justify-between items-center">
-                                {{-- Left Side: Title and Location --}}
-                                <div class="flex flex-col">
-                                    <span class="text-sm text-blue-100">{{ $unit['building'] }}</span>
-                                    <span class="text-2xl font-bold text-white">{{ $unit['name'] }}</span>
-                                    <div class="flex items-center gap-1.5 text-sm text-blue-100 mt-1">
-                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
-                                            <path fill-rule="evenodd" d="M9.69 18.933l.003.001C9.89 19.02 10 19 10 19s.11.02.308-.066l.002-.001.006-.003.018-.008a5.741 5.741 0 00.281-.14c.186-.096.446-.24.757-.433.62-.384 1.445-.966 2.274-1.765C15.302 14.988 17 12.493 17 9A7 7 0 103 9c0 3.492 1.698 5.988 3.355 7.584a13.731 13.731 0 002.274 1.765 11.842 11.842 0 00.757.433.62.62 0 00.28.14l.018.008.006.003zM10 11.25a2.25 2.25 0 100-4.5 2.25 2.25 0 000 4.5z" clip-rule="evenodd" />
+                {{-- EXPANDED STATE (Visible when unit IS open) --}}
+                @if ($isOpen)
+                    <div class="bg-white rounded-lg shadow-lg border border-gray-200">
+                        {{-- Blue Header Strip --}}
+                        <div id="unit-header" class="w-full p-4 bg-[#2360E8] text-white">
+                            <div class="flex justify-between items-start gap-4">
+                                <div class="flex-1 min-w-0">
+                                    {{-- Building Name & Floor --}}
+                                    <p class="text-xs text-blue-100 mb-1">
+                                        {{ $unit->property->building_name ?? 'N/A' }} - {{ $this->getFloorSuffix($unit->floor_number) }} Floor
+                                    </p>
+                                    {{-- Unit Number --}}
+                                    <h4 class="text-xl font-bold mb-2">Unit #{{ $unit->unit_id }}</h4>
+                                    {{-- Location Address --}}
+                                    <div class="flex items-center gap-1.5 text-sm text-blue-100">
+                                        <svg class="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/>
                                         </svg>
-                                        <span>{{ $unit['address'] }}</span>
+                                        <span class="truncate">{{ $unit->property->address ?? 'N/A' }}</span>
                                     </div>
                                 </div>
-                                {{-- Right Side: Badge and Chevron --}}
-                                <div class="flex items-center gap-4 flex-shrink-0">
-                                    <span class="bg-white rounded-full px-4 py-1.5 text-sm font-semibold flex items-center gap-2">
-                                        <div class="w-2 h-2 rounded-full {{ $this->getStatusDotClass($unit['status']) }}"></div>
-                                        <span class="{{ $this->getStatusTextClass($unit['status']) }}">{{ $unit['status'] }}</span>
+                                <div class="flex items-center gap-3 flex-shrink-0">
+                                    {{-- Status Badge --}}
+                                    <span class="bg-white rounded-full px-3 py-1.5 text-xs font-semibold flex items-center gap-2">
+                                        <div class="w-2 h-2 rounded-full {{ $this->getStatusDotClass($status) }}"></div>
+                                        <span class="{{ $this->getStatusTextClass($status) }}">{{ $status }}</span>
                                     </span>
-                                    <svg class="w-6 h-6 text-white transition-transform rotate-180" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
-                                    </svg>
+
+                                    {{-- Edit Button --}}
+                                     <button wire:click="$dispatch('openAddUnitModal_property-dashboard')"
+
+                                            class="flex items-center gap-1.5 bg-white text-[#2360E8] rounded-lg px-3 py-1.5 text-xs font-semibold hover:bg-blue-50 transition-colors border border-white">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                        </svg>
+                                        Edit
+                                    </button>
+
+                                    {{-- Close Button --}}
+                                    <button wire:click="toggleUnit({{ $unit->unit_id }})"
+                                            class="text-white hover:text-blue-100 transition-colors">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                        </svg>
+                                    </button>
                                 </div>
                             </div>
-                        </button>
+                        </div>
 
-                        {{-- Active Body (Data) --}}
-                        <div class="rounded-b-2xl">
-                            {{-- Specs Title Bar --}}
-                            <div class="p-4 md:p-6 flex items-center gap-2 border-b border-gray-200">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 text-blue-600">
-                                    <path d="M11.47 3.841a.75.75 0 011.06 0l8.69 8.69a.75.75 0 101.06-1.061l-8.689-8.69a2.25 2.25 0 00-3.182 0l-8.69 8.69a.75.75 0 101.061 1.06l8.69-8.689z" />
-                                    <path d="M12 5.432l8.159 8.159c.03.03.06.058.091.086v6.198c0 1.035-.84 1.875-1.875 1.875H15a.75.75 0 01-.75-.75v-4.5a.75.75 0 00-.75-.75h-3a.75.75 0 00-.75.75V21a.75.75 0 01-.75.75H5.625a1.875 1.875 0 01-1.875-1.875v-6.198a2.29 2.29 0 00.091-.086L12 5.43z" />
+                        {{-- Unit Content (No scroll here) --}}
+                        <div class="p-4">
+                            {{-- Section Title --}}
+                            <div class="flex items-center gap-2 mb-4">
+                                <svg class="w-5 h-5 text-[#2360E8]" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M11.47 3.841a.75.75 0 011.06 0l8.69 8.69a.75.75 0 101.06-1.061l-8.689-8.69a2.25 2.25 0 00-3.182 0l-8.69 8.69a.75.75 0 101.061 1.06l8.69-8.689z"/>
+                                    <path d="M12 5.432l8.159 8.159c.03.03.06.058.091.086v6.198c0 1.035-.84 1.875-1.875 1.875H15a.75.75 0 01-.75-.75v-4.5a.75.75 0 00-.75-.75h-3a.75.75 0 00-.75.75V21a.75.75 0 01-.75.75H5.625a1.875 1.875 0 01-1.875-1.875v-6.198a2.29 2.29 0 00.091-.086L12 5.43z"/>
                                 </svg>
-                                <h3 class="font-bold text-blue-700 text-lg">Unit Specifications</h3>
+                                <h3 class="font-bold text-[#2360E8]">Unit Specifications</h3>
                             </div>
 
-                            {{-- Data Table --}}
-                            @if ($openUnitId === $unit['id'] && !empty($specifications))
-                            <div class="p-4 md:p-6">
+                            {{-- Specifications Table --}}
+                            <div class="mb-6">
                                 {{-- Table Header --}}
-                                <div class="bg-indigo-900 text-white font-medium text-sm p-3 grid grid-cols-4 md:grid-cols-7 gap-x-4 rounded-t-lg">
+                                <div class="bg-[#263093] text-white text-xs font-medium p-3 grid grid-cols-7 gap-2 rounded-t-lg">
                                     <span>Room Capacity</span>
                                     <span>Unit Capacity</span>
                                     <span>Room Type</span>
@@ -100,74 +123,85 @@
                                     <span>Base Rate</span>
                                 </div>
                                 {{-- Table Body --}}
-                                <div class="bg-white text-gray-800 text-sm p-3 grid grid-cols-4 md:grid-cols-7 gap-x-4 border border-t-0 border-gray-200 rounded-b-lg">
-                                    <span class="font-medium">{{ $specifications['room_capacity'] ?? 'N/A' }}</span>
-                                    <span class="font-medium">{{ $specifications['unit_capacity'] ?? 'N/A' }}</span>
-                                    <span class="font-medium">{{ $specifications['room_type'] ?? 'N/A' }}</span>
-                                    <span class="font-medium">{{ $specifications['bed_type'] ?? 'N/A' }}</span>
-                                    <span class="font-medium">{{ $specifications['utility_subsidy'] ?? 'N/A' }}</span>
+                                <div class="bg-gray-50 text-gray-800 text-sm p-3 grid grid-cols-7 gap-2 border border-t-0 border-gray-200 rounded-b-lg">
+                                    <span>{{ $specifications['room_capacity'] ?? 'N/A' }}</span>
+                                    <span>{{ $specifications['unit_capacity'] ?? 'N/A' }}</span>
+                                    <span>{{ $specifications['room_type'] ?? 'N/A' }}</span>
+                                    <span>{{ $specifications['bed_type'] ?? 'N/A' }}</span>
+                                    <span>{{ $specifications['utility_subsidy'] ?? 'N/A' }}</span>
                                     <div>
                                         <span class="font-medium">{{ $specifications['occupied_unit'] ?? 'N/A' }}</span>
-                                        <span class="block text-xs text-gray-500">{{ $specifications['occupied_unit_sub'] ?? '' }}</span>
+                                        @if(!empty($specifications['occupied_unit_sub']))
+                                        <span class="block text-xs text-gray-500">{{ $specifications['occupied_unit_sub'] }}</span>
+                                        @endif
                                     </div>
                                     <span class="font-bold text-base">{{ $specifications['base_rate'] ?? 'N/A' }}</span>
                                 </div>
                             </div>
-                            @endif
+
+                           {{-- Amenities Section --}}
+                        <livewire:layouts.amenities-grid :amenities="$this->getUnitAmenities($unit)" />
+
+
                         </div>
                     </div>
-
-                </div>
-            @endforeach
-
-        </div>
-        {{-- *** END OF ACCORDION LIST *** --}}
-
-
-        {{-- Pagination is INSIDE the scrollable div --}}
-        <div class="mt-8 pt-4 border-t border-gray-200">
-            @if ($units->lastPage() > 1)
-            <div class="flex justify-center items-center gap-2 mt-6 md:mt-8 flex-shrink-0">
-
-                {{-- Previous Page Button --}}
-                @if ($units->currentPage() > 1)
-                <button
-                    wire:click="previousPage"
-                    class="p-2 w-8 h-8 md:w-10 md:h-10 border-2 border-[#0039C6] bg-[#0039C6] text-white rounded-lg hover:bg-[#002A8F] transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 md:h-5 md:w-5" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
-                    </svg>
-                </button>
                 @endif
-
-                {{-- Page Number Buttons --}}
-                <div class="flex gap-2">
-                    @for ($page = 1; $page <= $units->lastPage(); $page++)
-                        <button
-                        wire:click="gotoPage({{ $page }})"
-                        class="py-2 px-3 md:px-4 w-8 h-8 md:w-10 md:h-10 flex items-center justify-center font-bold rounded-lg transition-colors text-sm md:text-base
-                                {{ $units->currentPage() === $page ? 'bg-[#0039C6] text-white' : 'border-2 border-gray-300 text-gray-700 hover:bg-gray-100' }}">
-                        {{ $page }}
-                        </button>
-                        @endfor
-                </div>
-
-                {{-- Next Page Button --}}
-                @if ($units->currentPage() < $units->lastPage())
-                    <button
-                    wire:click="nextPage"
-                    class="p-2 w-8 h-8 md:w-10 md:h-10 border-2 border-[#0039C6] bg-[#0039C6] text-white rounded-lg hover:bg-[#002A8F] transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 md:h-5 md:w-5" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
-                    </svg>
-                    </button>
-                    @endif
             </div>
-            @endif
-        </div>
-        {{-- *** END OF PAGINATION BLOCK *** --}}
- 
+        @empty
+            {{-- Empty State --}}
+            <div class="text-center py-12 text-gray-500 bg-white rounded-lg border-2 border-dashed border-gray-300">
+                <svg class="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                </svg>
+                <p class="font-medium text-lg text-gray-700 mb-2">No units available</p>
+                <p class="text-sm text-gray-500">Select a building to view its units</p>
+            </div>
+        @endforelse
     </div>
-    {{-- *** END OF SCROLLABLE CONTAINER *** --}}
 
+   {{-- Pagination --}}
+@if (method_exists($units, 'hasPages') && $units->hasPages() && $units->total() > 0)
+<div class="flex justify-center items-center gap-2 mt-6 pt-4 border-t border-gray-200 flex-shrink-0">
+    {{-- Previous Page --}}
+    @if ($units->onFirstPage())
+        <button disabled class="w-9 h-9 flex items-center justify-center border-2 border-gray-300 bg-gray-300 text-gray-500 rounded-lg cursor-not-allowed">
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd"/>
+            </svg>
+        </button>
+    @else
+        <button wire:click="previousPage" wire:loading.attr="disabled"
+                class="w-9 h-9 flex items-center justify-center border-2 border-[#2360E8] bg-[#2360E8] text-white rounded-lg hover:bg-[#1d4eb8] transition-colors">
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd"/>
+            </svg>
+        </button>
+    @endif
+
+    {{-- Page Numbers --}}
+    @for ($page = 1; $page <= $units->lastPage(); $page++)
+        <button wire:click="gotoPage({{ $page }})"
+                class="w-9 h-9 flex items-center justify-center font-bold rounded-lg transition-colors
+                {{ $units->currentPage() === $page ? 'bg-[#2360E8] text-white' : 'border-2 border-gray-300 text-gray-700 hover:bg-gray-100' }}">
+            {{ $page }}
+        </button>
+    @endfor
+
+    {{-- Next Page --}}
+    @if ($units->hasMorePages())
+        <button wire:click="nextPage" wire:loading.attr="disabled"
+                class="w-9 h-9 flex items-center justify-center border-2 border-[#2360E8] bg-[#2360E8] text-white rounded-lg hover:bg-[#1d4eb8] transition-colors">
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
+            </svg>
+        </button>
+    @else
+        <button disabled class="w-9 h-9 flex items-center justify-center border-2 border-gray-300 bg-gray-300 text-gray-500 rounded-lg cursor-not-allowed">
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
+            </svg>
+        </button>
+    @endif
+</div>
+@endif
 </div>

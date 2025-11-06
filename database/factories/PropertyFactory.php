@@ -17,6 +17,8 @@ class PropertyFactory extends Factory
             'building_name'     => $this->faker->company . ' Apartments',
             'address'           => $this->faker->address,
             'prop_description'  => $this->faker->optional()->paragraph(3),
+            'created_at'        => now(),
+            'updated_at'        => now(),
         ];
     }
 
