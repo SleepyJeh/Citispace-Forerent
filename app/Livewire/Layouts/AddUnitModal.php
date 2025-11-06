@@ -7,8 +7,12 @@ use App\Models\Property;
 use App\Models\Unit;
 use Illuminate\Support\Facades\Http;
 
-class AddUnit extends Component
+class AddUnitModal extends Component
 {
+    public $isOpen = false;
+    public $modalId;
+
+    // All existing AddUnit properties and methods remain the same
     public $currentStep = 1;
     public $steps = [
         1 => 'Unit Details',
@@ -23,7 +27,7 @@ class AddUnit extends Component
     public $m_f = 'Co-ed';
     public $bed_type;
     public $bed_number;
-    public $utility_subsidy = false; // This property already exists for "Utility Subsidy"
+    public $utility_subsidy = false;
     public $unit_capacity;
     public $room_capacity;
     public $room_type;
@@ -34,7 +38,7 @@ class AddUnit extends Component
     public $model_amenities = [];
     public $amenity_labels = [];
 
-    // 💡 REVISED: Form properties for Step 2 based on your new list
+    // All other properties from AddUnit...
     public $amenities_features = [
         'ac_unit' => false,
         'hot_cold_shower' => false,
@@ -53,27 +57,21 @@ class AddUnit extends Component
         'dining_table' => false,
         'induction_cooker' => false,
     ];
-    public $entertainment = [
-        // This category is now empty based on your new list
-    ];
+    public $entertainment = [];
     public $additional_items = [
         'electric_fan' => false,
         'washing_machine' => false,
     ];
-    public $consumables_provided = [
-        // This category is now empty based on your new list
-    ];
-
-    // 💡 REVISED: Form properties for Property Amenities (Step 2)
+    public $consumables_provided = [];
     public $property_amenities = [
         'access_pool' => false,
         'access_gym' => false,
         'housekeeping' => false,
     ];
+
     // --- Step 3 Properties ---
     public $predicted_price = null;
     public $actual_price;
-
     public $is_predicting = false;
 
     // --- Validation Rules ---
@@ -87,8 +85,13 @@ class AddUnit extends Component
         'unit_cap' => 'required|integer|min:1',
     ];
 
-    public function mount()
+    /*----------------------------------
+    | LIFECYCLE
+    ----------------------------------*/
+    public function mount($modalId = null)
     {
+        $this->modalId = $modalId ?? uniqid('add_unit_modal_');
+
         try {
             $this->properties = Property::all(['property_id', 'building_name']);
         } catch (\Exception $e) {
@@ -99,6 +102,31 @@ class AddUnit extends Component
         $this->initializeAmenities();
     }
 
+    protected function getListeners(): array
+    {
+        return [
+            "openAddUnitModal_{$this->modalId}" => 'open',
+        ];
+    }
+
+    /*----------------------------------
+    | UI ACTIONS
+    ----------------------------------*/
+    public function open(): void
+    {
+        $this->resetForm();
+        $this->isOpen = true;
+    }
+
+    public function close(): void
+    {
+        $this->resetForm();
+        $this->resetValidation();
+        $this->isOpen = false;
+        $this->dispatch('unitModalClosed');
+    }
+
+    // All existing methods remain exactly the same...
     private function initializeAmenities()
     {
         $amenity_keys = [
@@ -129,12 +157,6 @@ class AddUnit extends Component
         $this->model_amenities = array_fill_keys($amenity_keys, false);
     }
 
-    // --- REMOVED: The updatedCurrentStep() hook is gone ---
-
-    /**
-     * Function to handle "Select All" for a specific group.
-     * This contains the prediction logic
-     */
     private function runPrediction()
     {
         $this->is_predicting = true;
@@ -150,9 +172,6 @@ class AddUnit extends Component
         $dataForModel = array_merge($dataForModel, $this->model_amenities);
 
         try {
-            // 💡 THE CRITICAL CHANGE 💡
-            // We now use the Docker service name 'price_api' as the hostname.
-            // Port 8000 is the port *inside* the container.
             $response = Http::post('http://price_api:8000/predict', $dataForModel);
 
             if ($response->successful()) {
@@ -163,19 +182,14 @@ class AddUnit extends Component
                 $this->predicted_price = 0;
             }
         } catch (\Exception $e) {
-            // This now catches errors if the 'price_api' container is down
             session()->flash('error', 'Prediction service is offline. Using estimate.');
-            $this->predicted_price = rand(5000, 15000); // Fallback to mock
+            $this->predicted_price = rand(5000, 15000);
         }
 
         $this->actual_price = $this->predicted_price;
         $this->is_predicting = false;
     }
 
-    /**
-     * Function to handle the MASTER "Select All" checkbox from Step 2.
-     * This iterates and uses the existing selectAll function for each group.
-     */
     public function masterSelectAll($checked)
     {
         $checked = (bool)$checked;
@@ -188,35 +202,23 @@ class AddUnit extends Component
         $this->selectAll('property_amenities', $checked);
     }
 
-    /**
-     * Move to the next step.
-     * UPDATED: nextStep()
-     */
     public function nextStep()
     {
-        // 1. Validate if we are on Step 1
         if ($this->currentStep == 1) {
             $this->validate($this->step1Rules);
         }
 
-        // 2. NEW: If we are on Step 2, run the prediction
-        // before we move to Step 3.
         if ($this->currentStep == 2) {
             $this->runPrediction();
         }
 
-        // 3. Go to the next step
         if ($this->currentStep < count($this->steps)) {
             $this->currentStep++;
         }
     }
 
-    /**
-     * UPDATED: previousStep()
-     */
     public function previousStep()
     {
-        // Reset prices when going back
         $this->predicted_price = null;
         $this->actual_price = null;
 
@@ -225,12 +227,8 @@ class AddUnit extends Component
         }
     }
 
-    /**
-     * UPDATED: saveUnit()
-     */
     public function saveUnit()
     {
-        // 1. Validate Step 1 data AND the new actual_price
         $this->validate(array_merge($this->step1Rules, [
             'actual_price' => 'required|numeric|min:0|max:999999.99'
         ]));
@@ -251,20 +249,67 @@ class AddUnit extends Component
                 'room_type' => $this->room_type,
                 'room_cap' => $this->room_cap,
                 'unit_cap' => $this->unit_cap,
-                'price' => $this->actual_price, // Save the landlord's price
+                'price' => $this->actual_price,
                 'amenities' => json_encode($checkedAmenityNames),
             ]);
 
             session()->flash('success', 'New unit has been created successfully!');
-            return redirect()->to('/property');
+            $this->close();
+            $this->dispatch('unitCreated');
+            $this->dispatch('refresh-unit-list');
         } catch (\Exception $e) {
             session()->flash('error', 'Error saving unit: ' . $e->getMessage());
         }
     }
 
+    /*----------------------------------
+    | HELPER METHODS
+    ----------------------------------*/
+    private function resetForm(): void
+    {
+        $this->reset([
+            'currentStep',
+            'property_id',
+            'floor_number',
+            'm_f',
+            'bed_type',
+            'bed_number',
+            'utility_subsidy',
+            'unit_capacity',
+            'room_capacity',
+            'room_type',
+            'room_cap',
+            'unit_cap',
+            'model_amenities',
+            'predicted_price',
+            'actual_price',
+            'is_predicting',
+            'amenities_features',
+            'bedroom_bedding',
+            'kitchen_dining',
+            'entertainment',
+            'additional_items',
+            'consumables_provided',
+            'property_amenities',
+        ]);
+
+        // Re-initialize amenities
+        $this->initializeAmenities();
+        $this->m_f = 'Co-ed';
+    }
+
+    public function selectAll($group, $checked)
+    {
+        foreach ($this->$group as $key => $value) {
+            $this->$group[$key] = $checked;
+        }
+    }
+
+    /*----------------------------------
+    | RENDER
+    ----------------------------------*/
     public function render()
     {
-        // 💡 REVISED: Helper array for display labels based on your new list
         $labels = [
             'amenities_features' => [
                 'ac_unit' => 'AC Unit',
@@ -284,16 +329,12 @@ class AddUnit extends Component
                 'dining_table' => 'Dining Table',
                 'induction_cooker' => 'Induction Cooker',
             ],
-            'entertainment' => [
-                // This category is now empty
-            ],
+            'entertainment' => [],
             'additional_items' => [
                 'electric_fan' => 'Electric Fan',
                 'washing_machine' => 'Washing Machine',
             ],
-            'consumables_provided' => [
-                // This category is now empty
-            ],
+            'consumables_provided' => [],
             'property_amenities' => [
                 'access_pool' => 'Access Pool',
                 'access_gym' => 'Access Gym',
@@ -301,10 +342,7 @@ class AddUnit extends Component
             ],
         ];
 
-        // Calculate the amenity count every time the component renders
-        //$this->calculateAmenityCount();
-
-        return view('livewire.layouts.add-unit', [
+        return view('livewire.layouts.add-unit-modal', [
             'labels' => $labels
         ]);
     }

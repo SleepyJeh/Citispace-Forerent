@@ -1,12 +1,16 @@
-<div
-    wire:click="$emitUp('selectProperty', {{ $property->property_id }})"
-    class="bg-white rounded-2xl shadow-lg overflow-hidden flex-shrink-0 w-72 cursor-pointer border transition-colors duration-200
-        {{ $selectedPropertyId === $property->property_id ? 'border-blue-600 ring-2 ring-blue-200' : 'border-transparent' }}">
-<!-- Image Container -->
+{{--
+    ADDED 'cursor-pointer' AND the 'onclick' event dispatcher.
+    This now sends the event that UnitAccordion is listening for.
+--}}
+<div class="bg-white rounded-lg shadow-md overflow-hidden flex-shrink-0 w-64 transition-all hover:shadow-lg cursor-pointer"
+     onclick="Livewire.dispatch('buildingSelected', { buildingId: {{ $property->property_id }} })">
+
+    {{-- Image Container --}}
     <div class="relative h-48 overflow-hidden">
         <img
-            src="{{ $image ?? 'default.jpg' }}"
-            class="w-64 h-full object-cover"
+            src="{{ $property->image ?? asset('images/default-building.jpg') }}"
+            alt="{{ $property->building_name }}"
+            class="w-full h-full object-cover"
         >
     </div>
 
