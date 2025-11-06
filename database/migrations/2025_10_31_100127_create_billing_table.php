@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('billing', function (Blueprint $table) {
             $table->id('billing_id');
             $table->foreignId('lease_id')
-                ->constrained('lease', 'lease_id')
+                ->constrained('leases', 'lease_id')
                 ->onDelete('cascade');
             $table->date('billing_date');
             $table->date('next_billing');
