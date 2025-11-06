@@ -60,11 +60,43 @@ class Dashboard extends Component
 
     public function loadMaintenanceData()
     {
-        // TODO: Replace with actual database queries
-        // Example:
-        // $this->totalMaintenanceCost = MaintenanceRequest::whereMonth('created_at', now()->month)->sum('cost');
-        // $this->newRequests = MaintenanceRequest::where('status', 'new')->whereWeek('created_at')->count();
-        // $this->pendingRequests = MaintenanceRequest::where('status', 'pending')->whereWeek('created_at')->count();
+        $userId = auth()->id();
+
+        // Base query: all maintenance requests for units managed by this manager
+        $maintenanceQuery = \App\Models\MaintenanceRequest::query()
+            ->join('leases', 'maintenance_requests.lease_id', '=', 'leases.lease_id')
+            ->join('beds', 'leases.bed_id', '=', 'beds.bed_id')
+            ->join('units', 'beds.unit_id', '=', 'units.unit_id')
+            ->where('units.manager_id', $userId);
+
+        // Total Maintenance Cost - This month
+        $this->totalMaintenanceCost = \App\Models\MaintenanceLog::query()
+            ->join('maintenance_requests', 'maintenance_logs.request_id', '=', 'maintenance_requests.request_id')
+            ->join('leases', 'maintenance_requests.lease_id', '=', 'leases.lease_id')
+            ->join('beds', 'leases.bed_id', '=', 'beds.bed_id')
+            ->join('units', 'beds.unit_id', '=', 'units.unit_id')
+            ->where('units.manager_id', $userId)
+            ->whereMonth('maintenance_logs.completion_date', now()->month)
+            ->whereYear('maintenance_logs.completion_date', now()->year)
+            ->sum('maintenance_logs.cost');
+
+        // New Requests - Status 'Pending' created this week
+        $this->newRequests = (clone $maintenanceQuery)
+            ->where('maintenance_requests.status', 'Pending')
+            ->whereBetween('maintenance_requests.created_at', [
+                now()->startOfWeek(),
+                now()->endOfWeek()
+            ])
+            ->count();
+
+        // Pending Requests - Status 'Pending' or 'Ongoing' created this week
+        $this->pendingRequests = (clone $maintenanceQuery)
+            ->whereIn('maintenance_requests.status', ['Pending', 'Ongoing'])
+            ->whereBetween('maintenance_requests.created_at', [
+                now()->startOfWeek(),
+                now()->endOfWeek()
+            ])
+            ->count();
     }
 
     public function selectDate($date)
@@ -74,16 +106,36 @@ class Dashboard extends Component
 
     public function getAnnouncementsProperty()
     {
-        return Announcement::query()
+        $query = Announcement::query()
             ->leftJoin('properties', 'announcements.property_id', '=', 'properties.property_id')
-            ->where('announcements.author_id', auth()->id())
             ->selectRaw('
                 COALESCE(properties.building_name, "All Properties") as property,
                 announcements.title,
                 announcements.description,
                 announcements.created_at
-            ')
-            ->orderByDesc('announcements.created_at')
+            ');
+
+        if ($this->userRole === 'landlord') {
+            // Landlord: Only announcements authored by them
+            $query->where('announcements.author_id', auth()->id());
+        } elseif ($this->userRole === 'manager') {
+            // Manager: Announcements authored by them OR
+            // announcements from their managed properties targeted at managers
+            $query->where(function($q) {
+                $q->where('announcements.author_id', auth()->id())
+                    ->orWhere(function($subQuery) {
+                        $subQuery->whereIn('announcements.property_id', function($propertyQuery) {
+                            // Get properties where the manager has units
+                            $propertyQuery->select('property_id')
+                                ->from('units')
+                                ->where('manager_id', auth()->id());
+                        })
+                            ->where('announcements.recipient_role', 'manager');
+                    });
+            });
+        }
+
+        return $query->orderByDesc('announcements.created_at')
             ->get()
             ->map(function ($announcement) {
                 return [
@@ -97,7 +149,7 @@ class Dashboard extends Component
 
     public function getDailyEventsProperty()
     {
-        return Announcement::query()
+        $query = Announcement::query()
             ->leftJoin('properties', 'announcements.property_id', '=', 'properties.property_id')
             ->selectRaw('
                 COALESCE(properties.building_name, "All Properties") as property,
@@ -105,8 +157,29 @@ class Dashboard extends Component
                 announcements.description,
                 announcements.created_at
             ')
-            ->whereDate('announcements.created_at', $this->selectedDate)
-            ->orderByDesc('announcements.created_at')
+            ->whereDate('announcements.created_at', $this->selectedDate);
+
+        if ($this->userRole === 'landlord') {
+            // Landlord: Only announcements authored by them
+            $query->where('announcements.author_id', auth()->id());
+        } elseif ($this->userRole === 'manager') {
+            // Manager: Announcements authored by them OR
+            // announcements from their managed properties targeted at managers
+            $query->where(function($q) {
+                $q->where('announcements.author_id', auth()->id())
+                    ->orWhere(function($subQuery) {
+                        $subQuery->whereIn('announcements.property_id', function($propertyQuery) {
+                            // Get properties where the manager has units
+                            $propertyQuery->select('property_id')
+                                ->from('units')
+                                ->where('manager_id', auth()->id());
+                        })
+                            ->where('announcements.recipient_role', 'manager');
+                    });
+            });
+        }
+
+        return $query->orderByDesc('announcements.created_at')
             ->get()
             ->map(function ($announcement) {
                 return [
@@ -120,11 +193,31 @@ class Dashboard extends Component
 
     public function getAnnouncementDaysProperty()
     {
-        return Announcement::query()
-            ->where('author_id', auth()->id())
+        $query = Announcement::query()
             ->whereMonth('created_at', now()->month)
-            ->whereYear('created_at', now()->year)
-            ->selectRaw('DATE(created_at) as date')
+            ->whereYear('created_at', now()->year);
+
+        if ($this->userRole === 'landlord') {
+            // Landlord: Only announcements authored by them
+            $query->where('author_id', auth()->id());
+        } elseif ($this->userRole === 'manager') {
+            // Manager: Announcements authored by them OR
+            // announcements from their managed properties targeted at managers
+            $query->where(function($q) {
+                $q->where('author_id', auth()->id())
+                    ->orWhere(function($subQuery) {
+                        $subQuery->whereIn('property_id', function($propertyQuery) {
+                            // Get properties where the manager has units
+                            $propertyQuery->select('property_id')
+                                ->from('units')
+                                ->where('manager_id', auth()->id());
+                        })
+                            ->where('recipient_role', 'manager');
+                    });
+            });
+        }
+
+        return $query->selectRaw('DATE(created_at) as date')
             ->pluck('date')
             ->map(fn($date) => Carbon::parse($date)->day)
             ->toArray();
