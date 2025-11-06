@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Fortify\Features;
 use Livewire\Volt\Volt;
@@ -21,6 +22,31 @@ Route::get('/', function () {
         default    => redirect()->route('login'),
     };
 })->name('home');
+
+// Add to routes/web.php temporarily
+Route::get('/test-maintenance-endpoint', function () {
+    try {
+        $url = env('FASTAPI_URL', 'http://localhost:8000') . '/api/forecast/maintenance';
+        echo "Testing maintenance endpoint: " . $url . "<br>";
+        
+        // Test if endpoint exists
+        $response = Http::timeout(10)->get($url);
+        echo "GET Status: " . $response->status() . "<br>";
+        
+        // Test with POST (the actual method)
+        $testData = [
+            'csv_data' => "log_id,request_id,category,urgency,log_date,completion_date,cost,month,year\n1,1,Plumbing,Level 1,2021-01-15,2021-01-16,5000,1,2021",
+            'year' => 2025
+        ];
+        
+        $postResponse = Http::timeout(10)->post($url, $testData);
+        echo "POST Status: " . $postResponse->status() . "<br>";
+        echo "POST Response: " . $postResponse->body() . "<br>";
+        
+    } catch (Exception $e) {
+        echo "Error: " . $e->getMessage() . "<br>";
+    }
+});
 
 
 

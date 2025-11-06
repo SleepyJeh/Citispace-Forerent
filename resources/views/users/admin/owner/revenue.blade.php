@@ -22,6 +22,8 @@
 
                 {{-- Revenue Container Component --}}
                 <livewire:layouts.revenue-container />
+                <livewire:layouts.revenue-forecast />
+                <livewire:layouts.maint-forecast />
             </div>
         </div>
     </section>
