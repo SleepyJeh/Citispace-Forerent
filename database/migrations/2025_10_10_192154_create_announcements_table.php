@@ -13,14 +13,11 @@ return new class extends Migration
     {
         Schema::create('announcements', function (Blueprint $table) {
             $table->id('announcement_id')->primary();
-            $table->foreignId('user_id')
-                ->constrained('users', 'user_id')
-                ->onDelete('cascade');
-            $table->foreignId('property_id')
-                ->constrained('properties', 'property_id')
-                ->onDelete('cascade');
+            $table->foreignId('author_id')->constrained('users', 'user_id')->onDelete('cascade');
+            $table->foreignId('property_id')->nullable()->constrained('properties', 'property_id')->nullOnDelete();
             $table->string('title');
             $table->text('description');
+            $table->enum('recipient_role', ['manager', 'tenant'])->default('manager');
             $table->timestamps();
             $table->softDeletes();
         });

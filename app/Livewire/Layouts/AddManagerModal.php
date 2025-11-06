@@ -293,11 +293,11 @@ class AddManagerModal extends Component
                 }
             })
             ->orderBy('unit_id')
-            ->get(['unit_id', 'manager_id']);
+            ->get(['unit_id', 'manager_id', 'unit_number']);
 
         return $units->map(fn($unit) => [
             'id' => $unit->unit_id,
-            'number' => "Unit {$unit->unit_id}",
+            'number' => "Unit {$unit->unit_number}",
             'checked' => false,
         ])->toArray();
     }

@@ -108,7 +108,7 @@
             <div class="flex-1 overflow-y-auto custom-vertical-scrollbar bg-white rounded-b-xl border-2 border-t-0 border-gray-200">
                 @forelse ($units as $unit)
                     <div class="flex justify-between items-center px-6 py-4 border-b border-dotted border-gray-300 last:border-b-0 hover:bg-gray-50 transition-colors">
-                        <span class="w-1/3 text-base font-bold text-gray-900">{{ $unit->unit_id }}</span>
+                        <span class="w-1/3 text-base font-bold text-gray-900">{{ $unit->unit_number }}</span>
                         <span class="w-1/3">
                         <div class="text-base font-semibold text-gray-900">{{ $unit->available_beds }} of {{ $unit->total_beds }}</div>
                         <div class="text-xs text-gray-500">{{ $unit->occupants }}</div>

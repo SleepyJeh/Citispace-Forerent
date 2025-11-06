@@ -12,13 +12,14 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('beds', function (Blueprint $table) {
-            $table->id('bed_id');
+            $table->id('bed_id')->primary();
             $table->foreignId('unit_id')
                 ->constrained('units', 'unit_id')
                 ->onDelete('cascade');
             $table->integer('bed_number');
             $table->enum('status', ['Vacant', 'Occupied'])->default('Vacant');
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 
