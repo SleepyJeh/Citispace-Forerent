@@ -17,14 +17,15 @@ class AnnouncementFactory extends Factory
     {
         $authorId = $this->getAuthorId();
         $author = User::find($authorId);
-        $propertyId = $this->getPropertyId();
+        $property = $this->getProperty(); // get full property
+        $propertyName = $property->building_name;
 
         // Generate title and description based on context
-        [$title, $description] = $this->generateTitleAndDescription($propertyId);
+        [$title, $description] = $this->generateTitleAndDescription($propertyName);
 
         return [
             'author_id'      => $authorId,
-            'property_id'    => $propertyId,
+            'property_id'    => $property->property_id,
             'title'          => $title,
             'description'    => $description,
             'recipient_role' => $this->determineRecipientRole($author->role),
@@ -69,7 +70,7 @@ class AnnouncementFactory extends Factory
         };
     }
 
-    private function getPropertyId(): ?int
+    private function getProperty(): Property
     {
         $property = Property::inRandomOrder()->first();
 
@@ -77,10 +78,10 @@ class AnnouncementFactory extends Factory
             $property = Property::factory()->create();
         }
 
-        return $property->property_id;
+        return $property;
     }
 
-    private function generateTitleAndDescription(?int $propertyId): array
+    private function generateTitleAndDescription(string $propertyName): array
     {
         $titles = [
             'Maintenance' => [
@@ -110,21 +111,21 @@ class AnnouncementFactory extends Factory
         $title = $this->faker->randomElement($titles[$category]);
 
         $description = match ($title) {
-            'Scheduled Maintenance Notice' => "Property #$propertyId: General maintenance will be conducted on all units on " . $this->faker->dateTimeBetween('now', '+2 weeks')->format('F j, Y') . ". Expect temporary service interruptions.",
-            'Laundry Room Maintenance' => "Property #$propertyId: The laundry room will be unavailable from " . $this->faker->time('H:i') . " to " . $this->faker->time('H:i') . " on " . $this->faker->dateTimeBetween('now', '+10 days')->format('F j, Y') . " for equipment servicing.",
-            'Pool Area Cleaning' => "Property #$propertyId: Pool maintenance is scheduled for " . $this->faker->dayOfWeek . ". Please refrain from using the pool area during this time.",
-            'Electrical System Upgrade' => "Property #$propertyId: Electrical system upgrade on " . $this->faker->dateTimeBetween('now', '+3 weeks')->format('F j, Y') . ". Expect brief power outages.",
-            'HVAC Inspection Notice' => "Property #$propertyId: Routine HVAC inspection scheduled on " . $this->faker->dateTimeBetween('now', '+1 month')->format('F j, Y') . ". Please ensure access to units.",
-            'Water Outage Alert' => "Property #$propertyId: Temporary water outage affecting certain floors on " . $this->faker->dateTimeBetween('now', '+7 days')->format('F j, Y') . " from " . $this->faker->time('H:i') . " to " . $this->faker->time('H:i') . ".",
-            'Parking Lot Closure' => "Property #$propertyId: Parking lot closed on " . $this->faker->dateTimeBetween('now', '+14 days')->format('F j, Y') . " for resurfacing.",
-            'Security Upgrade Announcement' => "Property #$propertyId: Security upgrades on " . $this->faker->dateTimeBetween('now', '+2 weeks')->format('F j, Y') . ". Minor access delays expected.",
-            'Fire Drill Reminder' => "Property #$propertyId: Fire drill scheduled for " . $this->faker->dayOfWeek . " at " . $this->faker->time('H:i') . ". Follow safety instructions.",
-            'Pest Control Schedule' => "Property #$propertyId: Pest control treatment in common areas on " . $this->faker->dateTimeBetween('now', '+10 days')->format('F j, Y') . ". Keep areas accessible.",
-            'New Community Rules' => "Property #$propertyId: New community rules effective immediately. All tenants must comply.",
-            'Tenant Meeting Reminder' => "Property #$propertyId: Tenant meeting scheduled for " . $this->faker->dateTimeBetween('now', '+2 weeks')->format('F j, Y') . " at " . $this->faker->time('H:i') . ". Attendance recommended.",
-            'Recycling Program Update' => "Property #$propertyId: Recycling program updates effective " . $this->faker->dateTimeBetween('now', '+5 days')->format('F j, Y') . ". Follow new guidelines.",
-            'Community Event Announcement' => "Property #$propertyId: Community event on " . $this->faker->dateTimeBetween('now', '+1 month')->format('F j, Y') . " at the common hall. Fun activities planned!",
-            'Welcome New Tenants' => "Property #$propertyId: Welcome to our new tenants joining this month. Make them feel at home!",
+            'Scheduled Maintenance Notice' => "$propertyName: General maintenance will be conducted on all units on " . $this->faker->dateTimeBetween('now', '+2 weeks')->format('F j, Y') . ". Expect temporary service interruptions.",
+            'Laundry Room Maintenance' => "$propertyName: The laundry room will be unavailable from " . $this->faker->time('H:i') . " to " . $this->faker->time('H:i') . " on " . $this->faker->dateTimeBetween('now', '+10 days')->format('F j, Y') . " for equipment servicing.",
+            'Pool Area Cleaning' => "$propertyName: Pool maintenance is scheduled for " . $this->faker->dayOfWeek . ". Please refrain from using the pool area during this time.",
+            'Electrical System Upgrade' => "$propertyName: Electrical system upgrade on " . $this->faker->dateTimeBetween('now', '+3 weeks')->format('F j, Y') . ". Expect brief power outages.",
+            'HVAC Inspection Notice' => "$propertyName: Routine HVAC inspection scheduled on " . $this->faker->dateTimeBetween('now', '+1 month')->format('F j, Y') . ". Please ensure access to units.",
+            'Water Outage Alert' => "$propertyName: Temporary water outage affecting certain floors on " . $this->faker->dateTimeBetween('now', '+7 days')->format('F j, Y') . " from " . $this->faker->time('H:i') . " to " . $this->faker->time('H:i') . ".",
+            'Parking Lot Closure' => "$propertyName: Parking lot closed on " . $this->faker->dateTimeBetween('now', '+14 days')->format('F j, Y') . " for resurfacing.",
+            'Security Upgrade Announcement' => "$propertyName: Security upgrades on " . $this->faker->dateTimeBetween('now', '+2 weeks')->format('F j, Y') . ". Minor access delays expected.",
+            'Fire Drill Reminder' => "$propertyName: Fire drill scheduled for " . $this->faker->dayOfWeek . " at " . $this->faker->time('H:i') . ". Follow safety instructions.",
+            'Pest Control Schedule' => "$propertyName: Pest control treatment in common areas on " . $this->faker->dateTimeBetween('now', '+10 days')->format('F j, Y') . ". Keep areas accessible.",
+            'New Community Rules' => "$propertyName: New community rules effective immediately. All tenants must comply.",
+            'Tenant Meeting Reminder' => "$propertyName: Tenant meeting scheduled for " . $this->faker->dateTimeBetween('now', '+2 weeks')->format('F j, Y') . " at " . $this->faker->time('H:i') . ". Attendance recommended.",
+            'Recycling Program Update' => "$propertyName: Recycling program updates effective " . $this->faker->dateTimeBetween('now', '+5 days')->format('F j, Y') . ". Follow new guidelines.",
+            'Community Event Announcement' => "$propertyName: Community event on " . $this->faker->dateTimeBetween('now', '+1 month')->format('F j, Y') . " at the common hall. Fun activities planned!",
+            'Welcome New Tenants' => "$propertyName: Welcome to our new tenants joining this month. Make them feel at home!",
             default => $this->faker->paragraph(3)
         };
 

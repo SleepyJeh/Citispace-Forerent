@@ -10,7 +10,7 @@
             <div class="border border-gray-200 rounded-lg overflow-hidden shadow-sm">
                 {{-- Unit Header --}}
                 <div class="p-4 bg-gray-100 border-b border-gray-200">
-                    <span class="font-semibold text-gray-800">🏢 {{ $unit['unit_number'] ?? 'Unnamed Unit' }}</span>
+                    <span class="font-semibold text-gray-800">{{ $unit['unit_number'] ?? 'Unnamed Unit' }}</span>
                 </div>
 
                 {{-- Beds --}}
@@ -34,7 +34,7 @@
                                     class="text-left font-medium px-3 py-2 rounded-lg border transition-all duration-200 {{ $bedButtonClasses }}"
                                     title="Click to view bed details"
                                 >
-                                    🛏️ {{ $bed['bed_number'] ?? 'Bed' }}
+                                    {{ $bed['bed_number'] ?? 'Bed' }}
                                 </button>
 
                                 {{-- Tenant Button (optional) --}}
@@ -54,7 +54,7 @@
                                         class="text-left font-semibold px-4 py-2 rounded-lg border-2 transition-all duration-200 {{ $tenantButtonClasses }}"
                                         title="Click to view {{ $tenant['first_name'] }}'s details"
                                     >
-                                        👤 {{ $tenant['first_name'] }} {{ $tenant['last_name'] }}
+                                        {{ $tenant['first_name'] }} {{ $tenant['last_name'] }}
                                     </button>
                                 @else
                                     <span class="text-gray-400 italic px-4 py-2">No tenant assigned</span>
