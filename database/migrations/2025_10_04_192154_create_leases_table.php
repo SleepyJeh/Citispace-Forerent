@@ -21,6 +21,7 @@ return new class extends Migration
                 ->onDelete('cascade');
             $table->enum('status',['Active', 'Expired']);
             $table->integer('term');
+            $table->enum('shift', ['Night', 'Morning']);
             $table->boolean('auto_renew');
             $table->date('start_date');
             $table->date('end_date');
@@ -28,6 +29,7 @@ return new class extends Migration
             $table->decimal('advance_amount', 8, 2); //
             $table->decimal('security_deposit', 8, 2); // <-- Auto-generate receipt on Lease Creation
             $table->date('move_in');
+            $table->date('move_out')->nullable();
             $table->timestamps();
             $table->softDeletes();
         });

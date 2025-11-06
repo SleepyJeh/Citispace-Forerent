@@ -15,7 +15,9 @@ class Lease extends Model
     protected $fillable = [
         'tenant_id', 'bed_id', 'status', 'term', 'auto_renew',
         'start_date', 'end_date', 'contract_rate', 'advance_amount',
-        'security_deposit', 'move_in'
+        'security_deposit', 'move_in',
+        'shift',
+        'move_out'
     ];
 
     protected $casts = [

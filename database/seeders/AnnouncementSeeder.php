@@ -13,6 +13,7 @@ class AnnouncementSeeder extends Seeder
      */
     public function run(): void
     {
-        Announcement::factory(50)->create();
+        Announcement::factory(15)->authorRole('landlord')->create(['author_id' => 3]);
+        Announcement::factory(15)->authorRole('manager')->create();
     }
 }

@@ -7,11 +7,33 @@ use Livewire\Component;
 
 class Buildings extends Component
 {
-    public Property $property; // <-- Accept the Property model
-    // public $image; // You might need this if you add images
+    public Property $property;
+    public $image;
+    public $selectedPropertyId;
+
+    public function mount(Property $property, $selectedPropertyId = null)
+    {
+        $this->property = $property;
+        $this->selectedPropertyId = $selectedPropertyId;
+        $this->image = asset('images/building_placeholder.png');
+    }
+
+    public function selectThisProperty()
+    {
+        \Log::info('🏢 Buildings CHILD COMPONENT dispatching', [
+            'property_id' => $this->property->id,
+            'property_name' => $this->property->property_name
+        ]);
+
+        // Dispatch to parent component
+        $this->dispatch('property-selected', propertyId: $this->property->id);
+
+        // Also try the parent-specific event
+        $this->dispatch('propertySelectedFromChild', propertyId: $this->property->id);
+    }
+
     public function render()
     {
-        // Access data like $this->property->building_name in the view
         return view('livewire.layouts.buildingcard');
     }
 }
