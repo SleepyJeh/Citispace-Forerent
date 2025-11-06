@@ -13,6 +13,9 @@ return new class extends Migration
     {
         Schema::create('transactions', function (Blueprint $table) {
             $table->id('transaction_id')->primary();
+            $table->foreignId('billing_id')
+                ->nullable()
+                ->constrained('billing', 'billing_id');
             $table->string('name')->nullable();
             $table->string('reference_number');
             // For forecasting training feature, check if value is cash inflow or outflow //

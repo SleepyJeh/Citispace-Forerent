@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Lease extends Model
@@ -21,10 +23,13 @@ class Lease extends Model
     ];
 
     protected $casts = [
-        'auto_renew' => 'boolean',
         'start_date' => 'date',
         'end_date' => 'date',
         'move_in' => 'date',
+        'auto_renew' => 'boolean',
+        'contract_rate' => 'decimal:2',
+        'advance_amount' => 'decimal:2',
+        'security_deposit' => 'decimal:2',
     ];
 
     public function tenant()

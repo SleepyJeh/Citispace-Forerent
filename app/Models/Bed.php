@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Bed extends Model
@@ -13,7 +15,9 @@ class Bed extends Model
     protected $primaryKey = 'bed_id';
 
     protected $fillable = [
-        'unit_id', 'bed_number', 'status'
+        'unit_id',
+        'bed_number',
+        'status',
     ];
 
     public function unit()

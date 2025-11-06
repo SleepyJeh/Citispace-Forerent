@@ -22,6 +22,13 @@ return new class extends Migration
             $table->date('log_date');
             $table->string('problem');
             $table->enum('urgency', ['Level 1', 'Level 2', 'Level 3', 'Level 4']);
+            $table->enum('category', [
+                'Plumbing',
+                'Electrical',
+                'Structural',
+                'Appliance',
+                'Pest Control'
+            ]);
             $table->timestamps();
             $table->softDeletes();
         });
