@@ -15,15 +15,24 @@ class PropertySeeder extends Seeder
     {
         // Create 6 Properties
         Property::factory()
-            ->count(6)
-            ->create()
+            ->count(3)
+            ->create(['owner_id' => 3])
             ->each(function ($property) {
-                // Create 2-5 Units per Property
-                Unit::factory()
-                    ->count(rand(5, 20))
-                    ->for($property) // automatically sets property_id
-                    ->create();
-                // Beds are automatically generated via UnitFactory's afterCreating()
+                // Each property has 1–10 floors
+                $floors = rand(1, 5);
+
+                for ($floor = 1; $floor <= $floors; $floor++) {
+                    // Each floor has at least 5 units (can randomize upper limit)
+                    $unitsPerFloor = rand(5, 8);
+
+                    Unit::factory()
+                        ->count($unitsPerFloor)
+                        ->create([
+                            'property_id' => $property->property_id,
+                            'floor_number' => $floor, // assuming you have this column
+                        ]);
+                }
             });
+
     }
 }

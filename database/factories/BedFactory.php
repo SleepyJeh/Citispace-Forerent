@@ -14,7 +14,7 @@ class BedFactory extends Factory
     {
         return [
             'unit_id' => $this->getUnitId(),
-            'bed_number' => $this->faker->numberBetween(1, 10), // realistic bed numbers
+            'bed_number' => $this->faker->numberBetween(1, 8), // realistic bed numbers
             'status' => $this->faker->randomElement(['Vacant', 'Occupied']), // matches enum
             'created_at' => now(),
             'updated_at' => now(),

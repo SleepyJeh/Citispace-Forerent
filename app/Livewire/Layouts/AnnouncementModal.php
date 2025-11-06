@@ -133,7 +133,25 @@ class AnnouncementModal extends Component
 
     public function mount()
     {
-        $this->properties = Property::where('owner_id', auth()->id())->get();
+        $user = auth()->user();
+
+        if ($user->role === 'landlord') {
+            $this->properties = Property::where('owner_id', $user->id)
+                ->with('units')
+                ->get();
+        } elseif ($user->role === 'manager') {
+            $this->properties = Property::with('units')
+                ->get()
+                ->filter(fn ($property) =>
+                $property->units->contains(fn ($unit) =>
+                    $unit->manager_id === $user->id
+                )
+                )
+                ->values();
+        } else {
+            $this->properties = collect();
+        }
+
     }
 
     public function render()
