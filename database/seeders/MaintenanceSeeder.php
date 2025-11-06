@@ -6,70 +6,64 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
-use Illuminate\Support\Str;
 
 class MaintenanceSeeder extends Seeder
 {
     public function run()
     {
         $maintenanceCategories = [
-            'Plumbing',
-            'Electrical',
-            'Structural',
-            'Appliance',
-            'Pest Control'
+            'Plumbing', 'Electrical', 'Structural', 'Appliance', 'Pest Control'
         ];
 
-        $urgencyLevels = ['Level 1', 'Level 2', 'Level 3', 'Level 4'];
-
-        // Get existing lease IDs or create minimal dummy data
-        $leaseIds = $this->getOrCreateLeaseIds();
-
-        $maintenanceRequests = [];
-        $maintenanceLogs = [];
-
-        // Create exactly 3 years of data: 2021, 2022, 2023
         $startDate = Carbon::create(2021, 1, 1);
         $endDate = Carbon::now();
+        $currentYear = Carbon::now()->year;
 
         $requestId = 1;
         $logId = 1;
 
-        $this->command->info("Generating 3 years of maintenance data from {$startDate->format('Y')} to {$endDate->format('Y')}...");
+        $maintenanceRequests = [];
+        $maintenanceLogs = [];
+
+        // Fetch existing leases for the current year
+        $existingLeaseIds = DB::table('leases')->pluck('lease_id')->toArray();
+        if (empty($existingLeaseIds)) {
+            $this->command->info("No existing leases found. Please create leases first.");
+        }
 
         $currentDate = $startDate->copy();
         while ($currentDate->lte($endDate)) {
-            // Generate 2-8 maintenance requests per month (creates realistic volume)
             $requestsThisMonth = rand(2, 8);
 
             for ($i = 0; $i < $requestsThisMonth; $i++) {
                 $category = $maintenanceCategories[array_rand($maintenanceCategories)];
                 $urgency = $this->getWeightedUrgency($category);
-                $leaseId = $leaseIds[array_rand($leaseIds)];
 
-                // Determine status - mix of completed and ongoing/pending
-                // For historical data, most should be completed
+                // Decide lease_id
+                if ($currentDate->year === $currentYear && !empty($existingLeaseIds)) {
+                    // Current year: use real lease_id
+                    $leaseId = $existingLeaseIds[array_rand($existingLeaseIds)];
+                } else {
+                    // Historical: generate dummy lease_id (or null if you prefer)
+                    $leaseId = null;
+                }
+
                 $statusWeights = ['Completed' => 0.85, 'Ongoing' => 0.1, 'Pending' => 0.05];
                 $status = $this->getWeightedRandom($statusWeights);
 
                 $costRange = $this->getCostRange($category);
                 $baseCost = rand($costRange[0], $costRange[1]);
 
-                // Add seasonal variation
                 $seasonalFactor = $this->getSeasonalFactor($category, $currentDate->month);
                 $finalCost = $baseCost * $seasonalFactor * (0.8 + (rand(0, 40) / 100));
 
                 $completionDays = $this->getCompletionDays($category, $urgency);
                 $completionDate = $currentDate->copy()->addDays($completionDays);
-
-                // Ensure completion date doesn't exceed current date for realistic data
                 if ($completionDate->gt(Carbon::now())) {
                     $completionDate = $currentDate->copy()->addDays(rand(1, 5));
                 }
 
-                // Create maintenance request
                 $maintenanceRequests[] = [
-                    'request_id' => $requestId,
                     'lease_id' => $leaseId,
                     'status' => $status,
                     'logged_by' => $this->getRandomStaffName(),
@@ -81,10 +75,8 @@ class MaintenanceSeeder extends Seeder
                     'updated_at' => $currentDate->format('Y-m-d H:i:s'),
                 ];
 
-                // Only create log entry for completed requests
                 if ($status === 'Completed') {
                     $maintenanceLogs[] = [
-                        'log_id' => $logId,
                         'request_id' => $requestId,
                         'completion_date' => $completionDate->format('Y-m-d'),
                         'cost' => round($finalCost, 2),
@@ -96,48 +88,30 @@ class MaintenanceSeeder extends Seeder
 
                 $requestId++;
 
-                // Add some random days between requests in the same month for more realistic distribution
                 if ($i < $requestsThisMonth - 1) {
                     $currentDate = $currentDate->copy()->addDays(rand(1, 5));
-                    // Ensure we don't go beyond the current month
                     if ($currentDate->month != $startDate->month) {
                         $currentDate = $currentDate->copy()->subDays(rand(1, 5));
                     }
                 }
             }
 
-            // Move to next month
             $currentDate = $currentDate->copy()->addMonth()->day(1);
-
-            // Show progress for each year
-            if ($currentDate->month == 1) {
-                $this->command->info("Generated data for year: " . ($currentDate->year - 1));
-            }
         }
 
-        // Insert requests in chunks
         $this->command->info("Inserting " . count($maintenanceRequests) . " maintenance requests...");
         foreach (array_chunk($maintenanceRequests, 100) as $chunk) {
             DB::table('maintenance_requests')->insert($chunk);
         }
 
-        // Insert logs in chunks
         $this->command->info("Inserting " . count($maintenanceLogs) . " maintenance logs...");
         foreach (array_chunk($maintenanceLogs, 100) as $chunk) {
             DB::table('maintenance_logs')->insert($chunk);
         }
 
-        // Calculate statistics
         $totalCost = array_sum(array_column($maintenanceLogs, 'cost'));
-        $avgMonthlyRequests = count($maintenanceRequests) / 36; // 36 months in 3 years
-
-        $this->command->info("✅ Successfully seeded 3 years of maintenance data!");
-        $this->command->info("📊 Statistics:");
-        $this->command->info("   • Total Maintenance Requests: " . number_format(count($maintenanceRequests)));
-        $this->command->info("   • Completed Requests (with logs): " . number_format(count($maintenanceLogs)));
-        $this->command->info("   • Date Range: 2021-01-01 to 2023-12-31");
-        $this->command->info("   • Total Maintenance Cost: ₱" . number_format($totalCost, 2));
-        $this->command->info("   • Average Monthly Requests: " . number_format($avgMonthlyRequests, 1));
+        $this->command->info("✅ Successfully seeded maintenance data!");
+        $this->command->info("📊 Total Maintenance Cost: ₱" . number_format($totalCost, 2));
     }
 
     private function getOrCreateLeaseIds()

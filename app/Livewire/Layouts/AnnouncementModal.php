@@ -96,6 +96,7 @@ class AnnouncementModal extends Component
         }
 
         if (! $isAll) {
+            // Fixed: Use property_id (the primary key stored in selectedProperty)
             $query->where('property_id', $this->selectedProperty);
         }
 
@@ -136,22 +137,20 @@ class AnnouncementModal extends Component
         $user = auth()->user();
 
         if ($user->role === 'landlord') {
-            $this->properties = Property::where('owner_id', $user->id)
+            // Get all properties owned by the landlord
+            $this->properties = Property::where('owner_id', $user->user_id)
                 ->with('units')
                 ->get();
         } elseif ($user->role === 'manager') {
-            $this->properties = Property::with('units')
-                ->get()
-                ->filter(fn ($property) =>
-                $property->units->contains(fn ($unit) =>
-                    $unit->manager_id === $user->id
-                )
-                )
-                ->values();
+            // Get all properties where the manager manages at least one unit
+            $this->properties = Property::whereHas('units', function($query) use ($user) {
+                $query->where('manager_id', $user->user_id);
+            })
+                ->with('units')
+                ->get();
         } else {
             $this->properties = collect();
         }
-
     }
 
     public function render()
