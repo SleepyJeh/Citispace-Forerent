@@ -244,7 +244,7 @@
                                         <label
                                             for="floor-{{ $modalId }}"
                                             class="absolute text-sm text-gray-500 duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-white px-2 peer-focus:px-2 peer-focus:text-[#0030C5] start-1"
-                                        >Q
+                                        >
                                             Floor
                                         </label>
                                         <svg class="absolute right-3 top-4 w-4 h-4 text-gray-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">

@@ -12,18 +12,20 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('transactions', function (Blueprint $table) {
-            $table->id('transaction_id');
+            $table->id('transaction_id')->primary();
             $table->foreignId('billing_id')
                 ->nullable()
-                ->constrained('billing', 'billing_id'); 
+                ->constrained('billing', 'billing_id');
             $table->string('name')->nullable();
             $table->string('reference_number');
             // For forecasting training feature, check if value is cash inflow or outflow //
             $table->enum('transaction_type', ['Debit', 'Credit'])->default('Credit');
             $table->enum('category', ['Rent Payment', 'Deposit', 'Advance', 'Maintenance', 'Vendor Payment']);
             $table->date('transaction_date');
-            $table->decimal('amount', 8, 2);
+            $table->decimal('amount', 8, 2)->unsigned();
+            $table->boolean('is_recurring')->default(false);
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

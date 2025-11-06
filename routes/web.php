@@ -21,7 +21,7 @@ Route::get('/', function () {
         'tenant'   => redirect()->route('tenant.dashboard'),
         default    => redirect()->route('login'),
     };
-});
+})->name('home');
 
 // Add to routes/web.php temporarily
 Route::get('/test-maintenance-endpoint', function () {

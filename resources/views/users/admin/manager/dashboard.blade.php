@@ -24,6 +24,15 @@
 
                 @include('livewire.layouts.admingreeting')
 
+                {{-- Success Message --}}
+                @if (session()->has('message'))
+                    <div class="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg relative" role="alert">
+                        <span class="block sm:inline">{{ session('message') }}</span>
+                    </div>
+                @endif
+
+                {{-- Dashboard Component --}}
+                <livewire:layouts.dashboard />
             </div>
         </div>
     </section>

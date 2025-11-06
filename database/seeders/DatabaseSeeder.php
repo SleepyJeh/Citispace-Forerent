@@ -21,7 +21,9 @@ class DatabaseSeeder extends Seeder
             PropertySeeder::class,
             UnitSeeder::class,
             BedSeeder::class,
-            MaintenanceSeeder::class
+            MaintenanceSeeder::class,
+            AnnouncementSeeder::class,
+            LeaseSeeder::class,
         ]);
     }
 }

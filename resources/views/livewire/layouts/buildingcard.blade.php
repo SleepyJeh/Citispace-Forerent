@@ -1,5 +1,8 @@
-<div class="bg-white rounded-lg shadow-md overflow-hidden flex-shrink-0">
-    <!-- Image Container -->
+<div
+    wire:click="$emitUp('selectProperty', {{ $property->property_id }})"
+    class="bg-white rounded-2xl shadow-lg overflow-hidden flex-shrink-0 w-72 cursor-pointer border transition-colors duration-200
+        {{ $selectedPropertyId === $property->property_id ? 'border-blue-600 ring-2 ring-blue-200' : 'border-transparent' }}">
+<!-- Image Container -->
     <div class="relative h-48 overflow-hidden">
         <img
             src="{{ $image ?? 'default.jpg' }}"

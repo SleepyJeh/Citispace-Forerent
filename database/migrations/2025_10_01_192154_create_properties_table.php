@@ -16,11 +16,12 @@ return new class extends Migration
             $table->foreignId('owner_id')
                 ->nullable()
                 ->constrained('users', 'user_id')
-                ->onDelete('set null');
+                ->nullOnDelete();
             $table->string('building_name', 255);
             $table->string('address', 255);
             $table->text('prop_description')->nullable();
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

@@ -5,10 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Transaction extends Model
 {
-    use HasFactory;
+    use SoftDeletes, HasFactory;
 
     protected $primaryKey = 'transaction_id';
 
@@ -19,12 +20,14 @@ class Transaction extends Model
         'transaction_type',
         'category',
         'transaction_date',
-        'amount'
+        'amount',
+        'is_recurring'
     ];
 
     protected $casts = [
         'transaction_date' => 'date',
         'amount' => 'decimal:2',
+        'is_recurring' => 'boolean'
     ];
 
     /**

@@ -6,25 +6,20 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Lease extends Model
 {
-    use HasFactory;
+    use SoftDeletes, HasFactory;
 
     protected $primaryKey = 'lease_id';
 
     protected $fillable = [
-        'tenant_id',
-        'bed_id',
-        'status',
-        'term',
-        'auto_renew',
-        'start_date',
-        'end_date',
-        'contract_rate',
-        'advance_amount',
-        'security_deposit',
-        'move_in'
+        'tenant_id', 'bed_id', 'status', 'term', 'auto_renew',
+        'start_date', 'end_date', 'contract_rate', 'advance_amount',
+        'security_deposit', 'move_in',
+        'shift',
+        'move_out'
     ];
 
     protected $casts = [
@@ -37,27 +32,23 @@ class Lease extends Model
         'security_deposit' => 'decimal:2',
     ];
 
-    /**
-     * Relationship with tenant (user)
-     */
-    public function tenant(): BelongsTo
+    public function tenant()
     {
         return $this->belongsTo(User::class, 'tenant_id', 'user_id');
     }
 
-    /**
-     * Relationship with bed
-     */
-    public function bed(): BelongsTo
+    public function bed()
     {
         return $this->belongsTo(Bed::class, 'bed_id', 'bed_id');
     }
 
-    /**
-     * Relationship with billing
-     */
-    public function billings(): HasMany
+    public function billings()
     {
         return $this->hasMany(Billing::class, 'lease_id', 'lease_id');
+    }
+
+    public function maintenanceRequests()
+    {
+        return $this->hasMany(MaintenanceRequest::class, 'lease_id', 'lease_id');
     }
 }

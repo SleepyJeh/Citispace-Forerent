@@ -20,14 +20,16 @@ return new class extends Migration
             $table->foreignId('manager_id')->nullable()
                 ->constrained('users', 'user_id')->nullOnDelete();
             $table->integer('floor_number');
+            $table->string('unit_number');
             $table->enum('occupants', ['Male', 'Female', 'Co-ed'])->default('Co-ed');
             $table->enum('bed_type', ['Single', 'Bunk', 'Twin']);
             $table->enum('room_type', ['Standard', 'Deluxe', 'Suite']);
             $table->integer('room_cap');
             $table->integer('unit_cap');
             $table->decimal('price', 8, 2);
-            $table->string('amenities', 255)->nullable();
+            $table->string('amenities')->nullable();
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 
