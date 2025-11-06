@@ -1,5 +1,4 @@
 <?php
-// app/Livewire/Layouts/TenantDetail.php
 
 namespace App\Livewire\Layouts;
 
@@ -69,18 +68,30 @@ class TenantDetail extends Component
         $this->currentTenant = $this->dummyTenants[$tenantId];
     }
 
-    public function editTenant(): void
-    {
-        if ($this->currentTenantId) {
-            // Dispatch event to open edit modal
-            $this->dispatch('openEditTenantModal_tenant-management', tenantId: $this->currentTenantId);
-        }
-    }
-
     private function resetTenantData(): void
     {
         $this->currentTenantId = null;
         $this->currentTenant = null;
+    }
+
+    // Placeholder for "Transfer" button
+    public function transferTenant(): void
+    {
+        if ($this->currentTenantId) {
+            // Add your logic for transferring the tenant here
+            // e.g., $this->dispatch('openTransferModal', tenantId: $this->currentTenantId);
+            logger('Transfer tenant ' . $this->currentTenantId);
+        }
+    }
+
+    // Placeholder for "Move Out" button
+    public function moveOutTenant(): void
+    {
+        if ($this->currentTenantId) {
+            // Add your logic for moving out the tenant here
+            // e.g., $this->dispatch('openMoveOutModal', tenantId: $this->currentTenantId);
+            logger('Move out tenant ' . $this->currentTenantId);
+        }
     }
 
     public function render()
