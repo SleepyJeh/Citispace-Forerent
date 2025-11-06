@@ -21,18 +21,7 @@
                         <span id="main-header" class="header-title text-2xl md:text-3xl text-blue-900 font-bold">PROPERTY MANAGER</span>
                         <span class="sub-header text-sm md:text-base text-gray-600">View and record property or unit</span>
                     </div>
-                    <div>
-                        <button
-                            type="button"
-                            onclick="Livewire.dispatch('openAddManagerModal_manager-dashboard')"
-                            class="inline-flex items-center gap-x-2 rounded-full bg-[#152C73] px-6 py-3 text-base font-semibold text-white shadow-sm hover:bg-[#152C73]/90 focus:outline-none focus:ring-2 focus:ring-[#152C73] focus:ring-offset-2 transition-colors"
-                        >
-                            <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
-                            </svg>
-                            Add Manager
-                        </button>
-                    </div>
+                   
                 </div>
 
                 @include('livewire.layouts.admingreeting')

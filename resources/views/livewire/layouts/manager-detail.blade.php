@@ -55,6 +55,7 @@
         <div class="mt-6">
             <div class="flex items-center justify-between mb-4">
                 <h4 class="font-bold text-gray-900 text-xl">Assigned Properties</h4>
+                {{-- Edit button retained --}}
                 <button
                     type="button"
                     wire:click="editManager"

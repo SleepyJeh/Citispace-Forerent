@@ -4,6 +4,7 @@ namespace App\Livewire\Layouts;
 
 use App\Models\Unit;
 use App\Models\User;
+use App\Models\Property;
 use Illuminate\Database\Eloquent\Collection;
 use Livewire\Component;
 use Livewire\Attributes\On;
@@ -52,7 +53,7 @@ class ManagerDetail extends Component
         $this->units = $this->getManagedUnits($managerId);
         $this->totalUnits = count($this->units);
 
-        $this->buildings = $this->getBuildingsManaged($this->units);
+        $this->buildings = $this->getBuildingsManaged($this->units); // ← FIX THIS LINE
         $this->totalBuildings = count($this->buildings);
 
         // Reset selected building when switching managers
@@ -139,7 +140,11 @@ class ManagerDetail extends Component
 
     private function getBuildingsManaged(Collection $units): Collection
     {
-        return new Collection($units->pluck('property')->unique('property_id')->values()->sortBy('property_id'));
+        // Get unique property IDs from the units
+        $propertyIds = $units->pluck('property_id')->unique()->values();
+
+        // Return an Eloquent Collection of Property models
+        return Property::whereIn('property_id', $propertyIds)->get();
     }
 
     public function render()

@@ -1,26 +1,27 @@
+{{-- resources/views/livewire/layouts/tenant-navigation.blade.php --}}
+
 <div class="w-full bg-white p-4 md:p-6 rounded-2xl shadow-md h-full flex flex-col">
     {{-- Header Section with Title and Add Button --}}
     <div class="flex items-center justify-between mb-4">
-        <h2 class="text-xl md:text-2xl font-bold text-gray-800">Property Manager</h2>
+        <h2 class="text-xl md:text-2xl font-bold text-gray-800">Tenants</h2>
         <button
             type="button"
-            wire:click="$dispatch('openAddManagerModal_manager-dashboard')"
             class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
         >
             <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                 <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
             </svg>
-            Add Manager
+            Add Tenant
         </button>
     </div>
 
-    {{-- Manager List Container --}}
+    {{-- Tenant List Container --}}
     <div class="flex-1 overflow-y-auto custom-scrollbar px-2 space-y-3">
-        {{-- Loop through the managers --}}
-        @forelse ($managers as $manager)
+        {{-- Loop through the tenants --}}
+        @forelse ($tenants as $tenant)
             @php
                 $baseClasses = 'w-full text-left font-semibold p-4 rounded-lg border-2 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-400';
-                $isActive = ($manager['user_id'] == $this->activeManagerId);
+                $isActive = ($tenant['id'] == $activeTenantId);
 
                 if ($isActive) {
                     $buttonClasses = 'bg-blue-600 text-white border-blue-600 shadow-lg';
@@ -31,26 +32,46 @@
 
             <button
                 type="button"
-                wire:click="selectManager({{ $manager['user_id'] }})"
+                wire:click="selectTenant({{ $tenant['id'] }})"
                 class="{{ $baseClasses }} {{ $buttonClasses }}"
             >
-                {{ $manager['first_name'] }} {{ $manager['last_name'] }}
+                <div class="flex justify-between items-start">
+                    <div class="flex-1 text-left">
+                        <h4 class="font-semibold text-base mb-1">{{ $tenant['name'] }}</h4>
+                        <p class="text-sm opacity-90">{{ $tenant['unit'] }} • {{ $tenant['bed_number'] }}</p>
+                    </div>
+
+                    {{-- Payment Status Badge --}}
+                    <div class="flex-shrink-0 ml-2">
+                        @if($tenant['payment_status'] === 'Paid')
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                </svg>
+                                Paid
+                            </span>
+                        @else
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                Pending
+                            </span>
+                        @endif
+                    </div>
+                </div>
             </button>
         @empty
             <div class="text-center py-8">
                 <svg class="w-16 h-16 mx-auto text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"/>
                 </svg>
-                <p class="text-gray-500 mb-4">No managers found.</p>
+                <p class="text-gray-500 mb-4">No tenants found.</p>
                 <button
                     type="button"
-                    wire:click="$dispatch('openAddManagerModal_manager-dashboard')"
                     class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200"
                 >
                     <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                         <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
                     </svg>
-                    Add Your First Manager
+                    Add Your First Tenant
                 </button>
             </div>
         @endforelse

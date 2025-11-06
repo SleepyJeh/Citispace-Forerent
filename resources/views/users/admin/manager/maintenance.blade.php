@@ -24,6 +24,9 @@
 
                 @include('livewire.layouts.admingreeting')
 
+                <!-- Make sure this matches your component namespace -->
+                <livewire:layouts.maintenance-dashboard />
+
             </div>
         </div>
     </section>

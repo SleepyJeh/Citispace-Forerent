@@ -1,38 +1,44 @@
 <div>
     <!-- Modal Overlay -->
     @if($isOpen)
-        <div wire:click.self="close" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm">
-            <div class="relative w-full max-w-3xl bg-gray-50 rounded-2xl shadow-xl overflow-hidden max-h-[90vh] flex flex-col" @click.stop>
-                <!-- Modal Header -->
-                <div class="flex items-start justify-between p-6 border-b border-gray-200 flex-shrink-0">
-                    <div>
-                        <h2 class="text-xl font-bold text-[#001B5E] uppercase">
-                            {{ $managerId ? 'Edit Manager' : 'Add New Manager' }}
-                        </h2>
-                        <p class="mt-1 text-sm text-gray-600">
-                            {{ $managerId ? 'Update manager information and property assignments.' : 'Create an account for the new property manager.' }}
-                        </p>
+        <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm">
+            <div class="relative w-full max-w-4xl bg-gray-50 rounded-2xl shadow-xl overflow-hidden max-h-[90vh] flex flex-col">
+
+                <!-- Modal Header - Blue Background -->
+                <div class="bg-[#070589] text-white p-6 flex-shrink-0">
+                    <div class="flex items-start justify-between">
+                        <div>
+                            <h2 class="text-xl font-bold uppercase">
+                                {{ $managerId ? 'EDIT MANAGER' : 'ADD NEW MANAGER' }}
+                            </h2>
+                            <p class="mt-1 text-sm text-blue-100">
+                                {{ $managerId ? 'Update manager information and property assignments.' : 'Create an account for the new property manager.' }}
+                            </p>
+                        </div>
+                        <button
+                            wire:click="close"
+                            type="button"
+                            class="text-white hover:text-blue-200 transition-colors focus:outline-none">
+                            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                            <span class="sr-only">Close modal</span>
+                        </button>
                     </div>
-                    <button
-                        wire:click="close"
-                        type="button"
-                        class="text-gray-400 hover:text-gray-600 transition-colors focus:outline-none">
-                        <x-icons.close />
-                        <span class="sr-only">Close modal</span>
-                    </button>
                 </div>
 
                 <!-- Modal Body - Scrollable -->
-                <div class="flex-1 overflow-y-auto p-6">
-                    <form wire:submit.prevent="save" class="space-y-6">
-
-                        <!-- White Container Card -->
-                        <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+                <div class="flex-1 overflow-y-auto">
+                    <!-- Main Content Area -->
+                    <div class="bg-white rounded-xl shadow-lg border border-gray-200 mx-6 my-6">
+                        <form wire:submit.prevent="save" class="space-y-6 p-6">
 
                             <!-- Profile Information Section -->
                             <div class="mb-6">
                                 <div class="flex items-center gap-2 mb-4">
-                                    <x-icons.profile />
+                                    <svg class="w-5 h-5 text-gray-700" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
+                                    </svg>
                                     <h3 class="text-base font-semibold text-gray-900">Profile Information</h3>
                                 </div>
 
@@ -244,7 +250,7 @@
                                         <label
                                             for="floor-{{ $modalId }}"
                                             class="absolute text-sm text-gray-500 duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-white px-2 peer-focus:px-2 peer-focus:text-[#0030C5] start-1"
-                                        >Q
+                                        >
                                             Floor
                                         </label>
                                         <svg class="absolute right-3 top-4 w-4 h-4 text-gray-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -290,23 +296,21 @@
                                 </div>
                             </div>
 
-                        </div>
+                        </form>
+                    </div>
 
-                        <!-- Divider -->
-                        <hr class="border-gray-200 border-dashed">
-
-                        <!-- Save Button -->
-                        <div class="flex justify-center pt-2">
-                            <button
-                                type="submit"
-                                class="px-20 py-2.5 bg-[#070589] text-white text-sm font-semibold rounded-lg hover:bg-[#001445] focus:ring-4 focus:ring-blue-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                wire:loading.attr="disabled"
-                            >
-                                <span wire:loading.remove wire:target="save">{{ $managerId ? 'Update' : 'Save' }}</span>
-                                <span wire:loading wire:target="save">{{ $managerId ? 'Updating...' : 'Saving...' }}</span>
-                            </button>
-                        </div>
-                    </form>
+                    <!-- Save Button -->
+                    <div class="flex justify-center pb-6">
+                        <button
+                            type="button"
+                            wire:click="save"
+                            class="px-20 py-2.5 bg-[#070589] text-white text-sm font-semibold rounded-lg hover:bg-[#001445] focus:ring-4 focus:ring-blue-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            wire:loading.attr="disabled"
+                        >
+                            <span wire:loading.remove wire:target="save">{{ $managerId ? 'Update Manager' : 'Save Manager' }}</span>
+                            <span wire:loading wire:target="save">{{ $managerId ? 'Updating...' : 'Saving...' }}</span>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
