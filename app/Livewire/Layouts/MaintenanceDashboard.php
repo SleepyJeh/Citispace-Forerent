@@ -10,6 +10,9 @@ class MaintenanceDashboard extends Component
     public $costPredictions = [];
     public $revenueProjections = [];
 
+    // NEW: Property to manage the active tab state
+    public $activeTab = 'all';
+
     public function mount()
     {
         // Dummy data for buildings
@@ -40,21 +43,28 @@ class MaintenanceDashboard extends Component
             ]
         ];
 
-        // Updated: Cost predictions from January to December
+        // Cost predictions
         $this->costPredictions = [
             'labels' => ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
             'data' => [32, 28, 35, 40, 38, 45, 42, 48, 50, 55, 52, 58]
         ];
 
-        // Updated: Revenue projections from January to December
+        // Revenue projections
         $this->revenueProjections = [
             'labels' => ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
             'data' => [45, 52, 48, 60, 65, 58, 70, 75, 80, 85, 82, 90]
         ];
     }
 
+    // NEW: Method to update the active tab
+    public function setActiveTab($tab)
+    {
+        $this->activeTab = $tab;
+    }
+
     public function render()
     {
-        return view('livewire.layouts.maintenance-dashboard'); // Updated to match your file path
+        // We pass the activeTab state to the view
+        return view('livewire.layouts.maintenance-dashboard');
     }
 }

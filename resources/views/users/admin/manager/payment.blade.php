@@ -24,6 +24,9 @@
 
                 @include('livewire.layouts.admingreeting')
 
+                <!-- ADD THIS LINE TO INCLUDE THE PAYMENT RECEIPTS COMPONENT -->
+                <livewire:layouts.payment-receipts />
+
             </div>
         </div>
     </section>

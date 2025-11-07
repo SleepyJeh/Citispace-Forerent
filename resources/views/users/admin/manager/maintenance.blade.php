@@ -2,7 +2,6 @@
 
 @section('content')
 <div class="flex flex-row h-screen overflow-hidden">
-    <!-- Navigations -->
     <livewire:navbars.side-bar />
 
     <section id="main-container" class="flex-1 h-full flex flex-col overflow-hidden">
@@ -24,7 +23,6 @@
 
                 @include('livewire.layouts.admingreeting')
 
-                <!-- Make sure this matches your component namespace -->
                 <livewire:layouts.maintenance-dashboard />
 
             </div>
