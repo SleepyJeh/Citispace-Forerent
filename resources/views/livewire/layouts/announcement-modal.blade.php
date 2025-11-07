@@ -103,14 +103,19 @@
                             <button
                                 wire:click="cancelConfirmation"
                                 type="button"
-                                class="flex-1 px-6 py-3 bg-blue-200 text-blue-900 text-base font-semibold rounded-lg hover:bg-blue-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
+                                wire:loading.attr="disabled"
+                                wire:target="confirmPost"
+                                class="flex-1 px-6 py-3 bg-blue-200 text-blue-900 text-base font-semibold rounded-lg hover:bg-blue-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                                 Cancel
                             </button>
                             <button
                                 wire:click="confirmPost"
                                 type="button"
-                                class="flex-1 px-6 py-3 bg-blue-900 text-white text-base font-semibold rounded-lg hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-900 transition-colors">
-                                Save
+                                wire:loading.attr="disabled"
+                                wire:target="confirmPost"
+                                class="flex-1 px-6 py-3 bg-blue-900 text-white text-base font-semibold rounded-lg hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center">
+                                <span wire:loading.remove wire:target="confirmPost">Save</span>
+                                <span wire:loading wire:target="confirmPost">Saving...</span>
                             </button>
                         </div>
                     </div>

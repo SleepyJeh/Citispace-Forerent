@@ -445,7 +445,7 @@
                                             step="0.01"
                                             id="monthlyRate-{{ $modalId }}"
                                             class="block pb-2.5 pt-4 w-full text-sm text-gray-900 bg-transparent rounded-lg border border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-[#0030C5] pr-2.5 pl-10"
-                                            placeholder=" "
+                                            placeholder="{{$this->unitPrice}}"
                                         />
 
                                         <!-- Peso Symbol -->

@@ -23,6 +23,7 @@ class TransferTenantModal extends Component
     public $selectedFloor = '';
     public $selectedUnit = '';
     public $selectedBed = '';
+    public $unitPrice = null; // Add this property
 
     public AddTenantForm $tenantForm;
 
@@ -36,7 +37,7 @@ class TransferTenantModal extends Component
 
     public function open($tenantId)
     {
-        $this->reset(['isOpen', 'tenantId', 'availableFloors', 'availableUnits', 'availableBeds', 'selectedBuilding', 'selectedFloor', 'selectedUnit', 'selectedBed']);
+        $this->reset(['isOpen', 'tenantId', 'availableFloors', 'availableUnits', 'availableBeds', 'selectedBuilding', 'selectedFloor', 'selectedUnit', 'selectedBed', 'unitPrice']);
         $this->tenantId = $tenantId;
         $this->isOpen = true;
 
@@ -63,6 +64,8 @@ class TransferTenantModal extends Component
             $this->selectedUnit = '';
             $this->selectedBed = '';
             $this->availableBeds = [];
+            $this->unitPrice = null;
+            $this->tenantForm->monthlyRate = null;
         }
     }
 
@@ -74,6 +77,8 @@ class TransferTenantModal extends Component
         $this->availableFloors = [];
         $this->availableUnits = [];
         $this->availableBeds = [];
+        $this->unitPrice = null;
+        $this->tenantForm->monthlyRate = null;
 
         if ($propertyId) {
             $this->availableFloors = $this->getFloorsForBuilding($propertyId);
@@ -91,6 +96,8 @@ class TransferTenantModal extends Component
         $this->selectedBed = '';
         $this->availableUnits = [];
         $this->availableBeds = [];
+        $this->unitPrice = null;
+        $this->tenantForm->monthlyRate = null;
 
         if ($floorNumber && $this->selectedBuilding) {
             $this->availableUnits = $this->getUnitsForFloor($this->selectedBuilding, $floorNumber);
@@ -109,12 +116,27 @@ class TransferTenantModal extends Component
         $this->availableBeds = [];
 
         if ($unitId) {
+            // Get the unit and its price
+            $unit = Unit::find($unitId);
+            if ($unit) {
+                $this->unitPrice = $unit->price;
+
+                // Set monthly rate to unit price if empty
+                if (empty($this->tenantForm->monthlyRate)) {
+                    $this->tenantForm->monthlyRate = $unit->price;
+                }
+            }
+
             $this->availableBeds = $this->getBedsForUnit($unitId);
+        } else {
+            $this->unitPrice = null;
+            $this->tenantForm->monthlyRate = null;
         }
 
         Log::info("🏠 Unit selected", [
             'unit_id' => $unitId,
             'available_beds' => count($this->availableBeds),
+            'unit_price' => $this->unitPrice,
         ]);
     }
 

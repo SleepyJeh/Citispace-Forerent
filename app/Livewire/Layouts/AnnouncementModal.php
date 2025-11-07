@@ -122,9 +122,14 @@ class AnnouncementModal extends Component
             )->filter()->unique('user_id')->values();
         }
 
-        // Send notifications
+        // Send notifications asynchronously after response
         if ($recipients->isNotEmpty()) {
-            Notification::send($recipients, new NewAnnouncement($announcement));
+            dispatch(function () use ($recipients, $announcement) {
+                // Process in chunks of 50 users to avoid memory issues
+                $recipients->chunk(50)->each(function ($chunk) use ($announcement) {
+                    Notification::send($chunk, new NewAnnouncement($announcement));
+                });
+            })->afterResponse();
         }
 
         session()->flash('message', 'Announcement posted successfully!');
