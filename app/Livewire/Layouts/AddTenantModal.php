@@ -42,6 +42,7 @@ class AddTenantModal extends Component
     public $availableFloors = [];
     public $availableUnits = [];
     public $availableBeds = [];
+    public $unitPrice = null; // Add this property
 
     public ?int $tenantId = null;
     public bool $isEditing = false;
@@ -105,6 +106,7 @@ class AddTenantModal extends Component
                 $this->availableUnits = $this->getUnitsForFloor($unit->property_id, $unit->floor_number);
                 $this->selectedUnit = $unit->unit_id;
                 $this->availableBeds = $this->getBedsForUnit($unit->unit_id);
+                $this->unitPrice = $unit->price; // Set the unit price
             }
 
             $this->selectedBed = $lease->bed_id;
@@ -129,6 +131,12 @@ class AddTenantModal extends Component
             $this->selectedUnit = '';
             $this->selectedBed = '';
             $this->availableBeds = [];
+            $this->unitPrice = null;
+
+            // Reset monthly rate if not editing
+            if (!$this->isEditing) {
+                $this->tenantForm->monthlyRate = null;
+            }
         }
     }
 
@@ -140,6 +148,12 @@ class AddTenantModal extends Component
         $this->availableFloors = [];
         $this->availableUnits = [];
         $this->availableBeds = [];
+        $this->unitPrice = null;
+
+        // Reset monthly rate if not editing
+        if (!$this->isEditing) {
+            $this->tenantForm->monthlyRate = null;
+        }
 
         if ($propertyId) {
             $this->availableFloors = $this->getFloorsForBuilding($propertyId);
@@ -152,6 +166,12 @@ class AddTenantModal extends Component
         $this->selectedBed = '';
         $this->availableUnits = [];
         $this->availableBeds = [];
+        $this->unitPrice = null;
+
+        // Reset monthly rate if not editing
+        if (!$this->isEditing) {
+            $this->tenantForm->monthlyRate = null;
+        }
 
         if ($floorNumber && $this->selectedBuilding) {
             $this->availableUnits = $this->getUnitsForFloor($this->selectedBuilding, $floorNumber);
@@ -164,7 +184,25 @@ class AddTenantModal extends Component
         $this->availableBeds = [];
 
         if ($unitId) {
+            // Get the unit and its price
+            $unit = Unit::find($unitId);
+            if ($unit) {
+                $this->unitPrice = $unit->price;
+
+                // Set monthly rate to unit price if not editing or if monthly rate is empty
+                if (!$this->isEditing || empty($this->tenantForm->monthlyRate)) {
+                    $this->tenantForm->monthlyRate = $unit->price;
+                }
+            }
+
             $this->availableBeds = $this->getBedsForUnit($unitId);
+        } else {
+            $this->unitPrice = null;
+
+            // Reset monthly rate if not editing
+            if (!$this->isEditing) {
+                $this->tenantForm->monthlyRate = null;
+            }
         }
     }
 
@@ -198,7 +236,7 @@ class AddTenantModal extends Component
 
         if ($this->tenantId) {
             // ============================================
-            // UPDATE MANAGER
+            // UPDATE TENANT
             // ============================================
             $tenant = User::findOrFail($this->tenantId);
 
@@ -212,7 +250,7 @@ class AddTenantModal extends Component
 
         } else {
             // ============================================
-            // CREATE NEW MANAGER
+            // CREATE NEW TENANT
             // ============================================
             $password = PasswordGenerator::generate(12);
 
@@ -245,7 +283,7 @@ class AddTenantModal extends Component
 
             $bed = Bed::findOrFail($this->selectedBed);
             $bed->update([
-               'status' => 'Occupied',
+                'status' => 'Occupied',
             ]);
 
             session()->flash('message', 'Tenant created successfully.');
@@ -331,6 +369,7 @@ class AddTenantModal extends Component
             'availableFloors',
             'availableUnits',
             'availableBeds',
+            'unitPrice',
             'tenantId',
             'isEditing',
         ]);

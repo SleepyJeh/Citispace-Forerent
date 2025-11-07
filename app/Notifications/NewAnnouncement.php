@@ -9,7 +9,7 @@ use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use App\Models\Property;
 
-class NewAnnouncement extends Notification
+class NewAnnouncement extends Notification implements ShouldQueue
 {
     use Queueable;
 
