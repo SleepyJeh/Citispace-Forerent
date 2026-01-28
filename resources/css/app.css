@@ -1,4 +1,6 @@
-@import url('https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap');
+/* 1. IMPORT ALL THREE FONTS (Montserrat, Lato, Open Sans) */
+@import url('https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap');
+
 @import 'tailwindcss';
 @import '../../vendor/livewire/flux/dist/flux.css';
 @import 'flowbite/src/themes/default';
@@ -14,9 +16,14 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
-    --font-body: "Open Sans", sans-serif, ui-sans-serif, system-ui;
-    --font-highlight: "Lato", sans-serif, ui-sans-serif, system-ui;
+    /* DEFAULT FONT: Montserrat (Used whenever you don't specify a font) */
+    --font-sans: "Montserrat", sans-serif, ui-sans-serif, system-ui;
 
+    /* EXTRA FONTS: You can now use these specific classes */
+    --font-lato: "Lato", sans-serif;
+    --font-opensans: "Open Sans", sans-serif;
+
+    /* COLORS */
     --color-primary:  #0C0A84;
     --color-secondary: #1080FC;
     --color-confirm: #004086;
@@ -29,10 +36,6 @@
 
 .page-container {
     @apply w-full min-h-full rounded-tl-4xl bg-[#F4F7FC] flex flex-col px-4 md:px-8 lg:px-18 pt-9 pb-16;
-}
-
-body {
-    font: var(--font-body);
 }
 
 /* Custom scrollbar styling for horizontal cards */
@@ -90,6 +93,43 @@ body {
     @apply w-4 h-4 mr-2;
 }
 
-/* \[:where(&)\]:size-4 {
-    @apply size-4;
-} */
+/* --- Table & Pagination UI Styles --- */
+
+/* Unified Custom Scrollbar (Vertical & Horizontal) */
+.custom-scrollbar::-webkit-scrollbar {
+    height: 6px; /* For horizontal scrolling */
+    width: 6px;  /* For vertical scrolling */
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #0C0B50; /* Matches your theme primary */
+    border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #0a0940;
+}
+
+/* Cross-browser support */
+.custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: #0C0B50 #f1f1f1;
+}
+
+/* Pagination Buttons */
+.pagination-btn {
+    @apply w-9 h-9 flex items-center justify-center rounded-lg text-sm font-bold transition-colors duration-200;
+}
+
+.pagination-btn-active {
+    @apply bg-[#0F3BB0] text-white shadow-sm hover:bg-blue-800;
+}
+
+.pagination-btn-inactive {
+    @apply bg-white border border-gray-200 text-gray-700 hover:bg-gray-50;
+}

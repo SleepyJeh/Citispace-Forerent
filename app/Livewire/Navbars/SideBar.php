@@ -9,15 +9,26 @@ use Livewire\Component;
 class SideBar extends Component
 {
     public $navigations = [];
+    public $sidebarOpen = true;
 
     public function mount()
     {
         $user = Auth::user();
 
+        // FIX: Handle Guest/Not Logged In State
+        // If there is no user, we provide a default 'dashboard' key to prevent the view from crashing.
         if (!$user) {
+            $this->navigations = [
+                'dashboard' => [
+                    'label' => 'Login',
+                    'route' => 'login', // Ensure this route exists in your web.php
+                    'icon'  => 'icons.dashboard',
+                ]
+            ];
             return;
         }
 
+        // Logic for Logged In Users
         switch ($user->role) {
             case Role::Landlord->value:
                 $this->navigations = [
@@ -34,7 +45,7 @@ class SideBar extends Component
                     'manager' => [
                         'label' => 'Managers',
                         'route' => 'landlord.manager',
-                        'icon'  => 'icons.property', // TO DO
+                        'icon'  => 'icons.property',
                     ],
                     'revenue' => [
                         'label' => 'Revenue',
@@ -99,12 +110,12 @@ class SideBar extends Component
                     'tenants' => [
                         'label' => 'Managers',
                         'route' => 'manager.tenant',
-                        'icon'  => 'icons.property', // TO DO
+                        'icon'  => 'icons.property',
                     ],
                     'payments' => [
                         'label' => 'Payments',
                         'route' => 'manager.payment',
-                        'icon'  => 'icons.payments', // TO DO
+                        'icon'  => 'icons.payments',
                     ],
                     'maintenance' => [
                         'label' => 'Maintenance',
@@ -116,6 +127,17 @@ class SideBar extends Component
                         'route' => 'message',
                         'icon'  => 'icons.messages',
                     ],
+                ];
+                break;
+
+            // Optional: Add a default case if the role doesn't match any known roles
+            default:
+                $this->navigations = [
+                    'dashboard' => [
+                        'label' => 'Dashboard',
+                        'route' => 'dashboard', // Fallback route
+                        'icon'  => 'icons.dashboard',
+                    ]
                 ];
                 break;
         }

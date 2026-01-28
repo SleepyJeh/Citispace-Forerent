@@ -1,31 +1,20 @@
-@extends ('layouts.app')
+@extends('layouts.app')
+
+@section('header-title', 'PROPERTY')
+@section('header-subtitle', 'Centralized rental property management overview')
 
 @section('content')
-<div class="flex flex-row h-screen overflow-hidden">
-    <!-- Navigations -->
-    <livewire:navbars.side-bar />
 
-    <section id="main-container" class="flex-1 h-full flex flex-col overflow-hidden">
+    @include('livewire.layouts.dashboard.admingreeting')
 
-        <div class="flex-shrink-0 bg-white z-30">
-            <livewire:layouts.top-bar />
-        </div>
+   
+    <livewire:layouts.properties.building-cards-section
+        :show-add-button="true"
+        title="Buildings"
+    />
 
-        <div class="flex-1 overflow-y-auto">
+    <div class="mt-6">
+        <livewire:layouts.units.unit-accordion />
+    </div>
 
-            <div id="pm-container" class="w-full min-h-full rounded-tl-4xl bg-[#F4F7FC] flex flex-col px-4 md:px-8 lg:px-18 pt-9 pb-16 gap-6">
-
-                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                    <div class="flex flex-col">
-                        <span id="main-header" class="header-title text-2xl md:text-3xl text-blue-900 font-bold">PROPERTY</span>
-                        <span class="sub-header text-sm md:text-base text-gray-600"> Centralized rental property management overview</span>
-                    </div>
-                </div>
-
-                @include('livewire.layouts.admingreeting')
-
-            </div>
-        </div>
-    </section>
-</div>
 @endsection

@@ -1,44 +1,73 @@
-@extends ('layouts.app')
+<div class="w-full space-y-6">
 
-@section('content')
+    @include('livewire.layouts.dashboard.admingreeting')
 
-<div class="flex flex-row h-screen overflow-hidden">
-    <nav class="w-0 md:w-64 flex-shrink-0 h-full overflow-y-auto bg-white">
-        <livewire:navbars.side-bar />
-    </nav>
+    {{-- 1. Announcements --}}
+    <livewire:layouts.dashboard.announcement-list :is-landlord="true" />
 
-    <section id="main-container" class="flex-1 h-full flex flex-col overflow-hidden">
-        <div class="flex-shrink-0 bg-white z-30">
-            <livewire:layouts.top-bar />
+    {{-- 2. Calendar --}}
+    <livewire:layouts.dashboard.calendar-widget />
+
+    {{-- 3. Financial Overview --}}
+    <div class="space-y-6">
+        <h3 class="text-2xl font-bold text-[#070642]">Financial Overview</h3>
+
+        {{--  Blue Cards (Donut) --}}
+        {{-- ROW 1: Blue Cards (Donut) --}}
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+            <livewire:layouts.dashboard.donut-stat-card
+                title="Total Rent Collected"
+                :amount="$totalRentCollected"
+                label="Collected"
+                :percentage="$rentCollectedPercentage"
+            />
+
+            <livewire:layouts.dashboard.donut-stat-card
+                title="Total Uncollected Rent"
+                :amount="$totalUncollectedRent"
+                label="Uncollected"
+                :percentage="$uncollectedPercentage"
+            />
+
+            <livewire:layouts.dashboard.donut-stat-card
+                title="Total Income"
+                :amount="$totalIncome"
+                label="Collected"
+                :percentage="$incomePercentage"
+            />
         </div>
 
-        <div class="flex-1 overflow-y-auto ml-8">
-            <div id="manager-container" class="w-full min-h-full rounded-tl-4xl bg-[#F4F7FC] flex flex-col px-4 md:px-8 lg:px-18 pt-9 pb-16 gap-6">
+        {{-- White Cards (Gauge) --}}
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
 
-                {{-- Header Section --}}
-                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                    <div class="flex flex-col">
-                        <span id="main-header" class="header-title text-2xl md:text-3xl text-blue-900 font-bold">DASHBOARD</span>
-                        <span class="sub-header text-sm md:text-base text-gray-600">Centralized rental property management overview</span>
-                    </div>
-                </div>
+            {{-- Revenue --}}
+            <livewire:layouts.dashboard.gauge-stat
+                title="Revenue"
+                :current="$revenueCurrent"
+                :target="$revenueTarget"
+            />
 
-                {{-- Admin Greeting --}}
-                @include('livewire.layouts.admingreeting')
+            {{-- Expenses --}}
+            <livewire:layouts.dashboard.gauge-stat
+                title="Total Expenses"
+                :current="$expensesCurrent"
+                :target="$expensesTarget"
+            />
 
-                {{-- Success Message --}}
-                @if (session()->has('message'))
-                    <div class="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg relative" role="alert">
-                        <span class="block sm:inline">{{ session('message') }}</span>
-                    </div>
-                @endif
+            {{-- ROI --}}
+            <livewire:layouts.dashboard.gauge-stat
+                title="Return On Investment"
+                :current="$roiCurrent"
+                :target="$roiTarget"
+                prefix="+ "
+                suffix="%"
+            />
 
-                {{-- Dashboard Component --}}
-                <livewire:layouts.dashboard />
-
-            </div>
         </div>
-    </section>
+    </div>
+
+    {{-- Modal (Hidden by default) --}}
+    <livewire:layouts.dashboard.announcement-modal />
+
 </div>
-
-@endsection

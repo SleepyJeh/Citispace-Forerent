@@ -1,0 +1,86 @@
+<?php
+
+namespace App\Livewire\Layouts\Financials;
+
+use Livewire\Component;
+use Livewire\WithPagination;
+use App\Models\Transaction;
+use App\Models\MaintenanceLog;
+use App\Models\Property; 
+use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
+
+class RevenueRecords extends Component
+{
+    use WithPagination;
+
+    public $activeTab = 'payment';
+    public $selectedMonth = null;
+    public $selectedBuilding = null;
+
+    // Reset pagination when filters change
+    public function updatedSelectedMonth() { $this->resetPage(); }
+    public function updatedSelectedBuilding() { $this->resetPage(); }
+    public function updatedActiveTab() { $this->resetPage(); }
+
+    public function render()
+    {
+        $monthOptions = [
+            'january' => 'January', 'february' => 'February', 'march' => 'March',
+            'april' => 'April', 'may' => 'May', 'june' => 'June',
+            'july' => 'July', 'august' => 'August', 'september' => 'September',
+            'october' => 'October', 'november' => 'November', 'december' => 'December',
+        ];
+
+
+        $buildingOptions = [];
+        try {
+            $buildingOptions = Property::distinct()
+                ->pluck('building_name', 'building_name')
+                ->toArray();
+        } catch (\Exception $e) {
+            $buildingOptions = [];
+        }
+
+
+        $paymentHistory = Transaction::query()
+            ->when($this->selectedMonth, function ($query) {
+                // Convert "january" to 1
+                $monthNumber = Carbon::parse($this->selectedMonth)->month;
+                $query->whereMonth('transaction_date', $monthNumber);
+            })
+            ->orderBy('transaction_date', 'desc')
+            ->paginate(10);
+
+        $maintenanceHistory = MaintenanceLog::query()
+            ->join('maintenance_requests', 'maintenance_logs.request_id', '=', 'maintenance_requests.request_id')
+            ->join('leases', 'maintenance_requests.lease_id', '=', 'leases.lease_id')
+            ->join('beds', 'leases.bed_id', '=', 'beds.bed_id')
+            ->join('units', 'beds.unit_id', '=', 'units.unit_id')
+            ->join('properties', 'units.property_id', '=', 'properties.property_id')
+            ->join('users', 'leases.tenant_id', '=', 'users.user_id')
+            ->select(
+                'maintenance_logs.*',
+                'maintenance_requests.problem',
+                'beds.bed_number as unit_number',
+                'properties.building_name as property_name',
+                DB::raw("CONCAT(users.first_name, ' ', users.last_name) as tenant_name")
+            )
+            ->when($this->selectedMonth, function ($query) {
+                $monthNumber = Carbon::parse($this->selectedMonth)->month;
+                $query->whereMonth('maintenance_logs.completion_date', $monthNumber);
+            })
+            ->when($this->selectedBuilding, function ($query) {
+                $query->where('properties.building_name', $this->selectedBuilding);
+            })
+            ->orderBy('maintenance_logs.completion_date', 'desc')
+            ->paginate(10);
+
+        return view('livewire.layouts.financials.revenue-records', [
+            'paymentHistory' => $paymentHistory,
+            'maintenanceHistory' => $maintenanceHistory,
+            'monthOptions' => $monthOptions,
+            'buildingOptions' => $buildingOptions,
+        ]);
+    }
+}

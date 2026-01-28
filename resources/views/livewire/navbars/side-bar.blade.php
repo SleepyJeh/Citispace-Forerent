@@ -1,78 +1,172 @@
-<nav class="w-0 md:w-64 flex-shrink-0 h-full overflow-y-auto bg-white">
-    <aside id="sidebar-multi-level-sidebar"
-           class="h-full bg-white border-r border-gray-200"
-           aria-label="Sidebar">
-        <div class="h-full px-3 py-6 overflow-y-auto flex flex-col">
-            <!-- Logo -->
-            <a href="{{ route($navigations['dashboard']['route']) }}" class="flex items-center justify-center mb-8 h-8 p-8">
-                <x-icons.logo />
-            </a>
+<div x-data="{
+    sidebarOpen: window.innerWidth >= 1024,
+    sidebarExpanded: true,
+    mobileMenuOpen: false
+}"
+x-init="
+    window.addEventListener('resize', () => {
+        if (window.innerWidth >= 1024) {
+            mobileMenuOpen = false;
+        }
+    });
+"
+class="relative h-screen flex">
+<div x-show="mobileMenuOpen"
+     @click="mobileMenuOpen = false"
+     x-transition:enter="transition-opacity ease-linear duration-300"
+     x-transition:enter-start="opacity-0"
+     x-transition:enter-end="opacity-100"
+     x-transition:leave="transition-opacity ease-linear duration-300"
+     x-transition:leave-start="opacity-100"
+     x-transition:leave-end="opacity-0"
+class="fixed inset-0 bg-gradient-to-br from-gray-900/50 via-gray-900/20 to-gray-900/30 backdrop-blur-[3px] z-40 lg:hidden"     style="display: none;">
+</div>
 
-            <!-- Main Navigation -->
-            <ul class="space-y-2 font-medium flex-1">
-                @foreach($navigations as $key => $navigation)
-                    @if(isset($navigation['children']))
-                        <!-- Nav with Dropdown -->
-                        <li>
-                            <button type="button"
-                                    class="flex items-center w-full p-3 rounded-lg {{ $this->getActiveClass(null) }}"
-                                    data-collapse-toggle="{{ Str::slug($navigation['label']) }}-dropdown"
-                                    aria-controls="{{ Str::slug($navigation['label']) }}-dropdown">
-                                <x-dynamic-component :component="$navigation['icon']" class="w-5 h-5 text-gray-500" />
-                                <span class="flex-1 ms-3 text-left">{{ $navigation['label'] }}</span>
-                                <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
-                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                          d="m1 1 4 4 4-4" />
-                                </svg>
-                            </button>
+    <button @click="mobileMenuOpen = !mobileMenuOpen; sidebarExpanded = true"
+            class="fixed top-4 left-4 z-50 p-2 rounded-lg bg-white shadow-lg lg:hidden hover:bg-gray-100 transition-colors">
+        <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+        </svg>
+    </button>
 
-                            <!-- Sub Navigation -->
-                            <ul id="{{ Str::slug($navigation['label']) }}-dropdown" class="hidden py-2 space-y-2">
-                                @foreach ($navigation['children'] as $child)
-                                    <li>
-                                        <a href="{{ route($navigation['route'], $child['query'] ?? []) }}"
-                                           class="flex items-center w-full p-2 pl-11 rounded-lg">
-                                            {{ $child['label'] }}
-                                        </a>
-                                    </li>
-                                @endforeach
-                            </ul>
-                        </li>
-                    @else
-                        <!-- Regular Nav -->
-                        <li>
-                            <a href="{{ route($navigation['route']) }}"
-                               class="flex items-center p-3 text-gray-700 rounded-lg {{ $this->getActiveClass($navigation['route']) }}">
-                                <x-dynamic-component :component="$navigation['icon']" />
-                                <span class="ms-3">{{ $navigation['label'] }}</span>
-                            </a>
-                        </li>
-                    @endif
-                @endforeach
-            </ul>
+    <nav :class="{
+            'w-64': sidebarExpanded,
+            'w-20': !sidebarExpanded,
+            '-translate-x-full': !mobileMenuOpen,
+            'translate-x-0': mobileMenuOpen
+         }"
+         class="fixed lg:relative left-0 top-0 h-full z-50 flex-shrink-0 bg-white border-r border-gray-200 transition-all duration-300 ease-in-out lg:translate-x-0 group">
 
-            <!-- Divider -->
-            <div class="border-t border-gray-200 my-4"></div>
+        <button @click="sidebarExpanded = !sidebarExpanded"
+                class="absolute -right-3 top-10 z-50 hidden lg:flex items-center justify-center w-6 h-6 bg-white border border-gray-200 rounded-full shadow-sm hover:bg-gray-50 focus:outline-none transform transition-transform duration-300"
+                :class="!sidebarExpanded ? 'rotate-180' : ''">
+            <svg class="w-3 h-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+            </svg>
+        </button>
 
-            <!-- Others Section -->
-            <p class="px-3 mb-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                Others
-            </p>
+        <aside class="h-full flex flex-col w-full">
+           <div class="flex items-center justify-center py-6 px-4 border-b border-gray-100 flex-shrink-0">
+                <a :href="sidebarExpanded ? '{{ route($navigations['dashboard']['route']) }}' : '#'"
+                   class="transition-all duration-300 flex items-center gap-2">
 
-            <ul class="space-y-2 font-medium">
-                <li>
-                    <a href="{{ route('settings') }}" class="flex items-center p-3 text-gray-700 rounded-lg hover:bg-[#DFE8FC] hover:text-[#070642] group">
-                        <x-icons.settings />
-                        <span class="ms-3">Settings</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="{{ route('logout') }}" class="flex items-center p-3 text-gray-700 rounded-lg hover:bg-[#DFE8FC] hover:text-[#070642] group">
-                        <x-icons.logout />
-                        <span class="ms-3">Log Out</span>
-                    </a>
-                </li>
-            </ul>
-        </div>
-    </aside>
-</nav>
+                    <div x-show="sidebarExpanded" x-cloak>
+                        <x-icons.logoprimary class="h-10 w-auto" />
+                    </div>
+
+                    <div x-show="!sidebarExpanded" x-cloak>
+                        <x-icons.logosecondary class="w-10 h-10" />
+                    </div>
+
+                </a>
+            </div>
+
+            <div class="flex-1 px-3 py-4 overflow-y-auto overflow-x-hidden custom-scrollbar">
+                <ul class="space-y-2 font-medium">
+                    @foreach($navigations as $key => $navigation)
+                        @if(isset($navigation['children']))
+                            <li x-data="{ open: false }">
+                                <button type="button"
+                                        @click="
+                                            if (!sidebarExpanded) {
+                                                sidebarExpanded = true;
+                                                setTimeout(() => open = true, 50);
+                                            } else {
+                                                open = !open;
+                                            }
+                                        "
+                                        class="flex items-center w-full p-3 rounded-lg {{ $this->getActiveClass(null) }} transition-colors relative"
+                                        :class="!sidebarExpanded && 'justify-center'"
+                                        :title="!sidebarExpanded ? '{{ $navigation['label'] }}' : ''">
+
+                                    <x-dynamic-component :component="$navigation['icon']" class="w-5 h-5 flex-shrink-0" />
+
+                                    <span x-show="sidebarExpanded"
+                                          x-transition
+                                          class="flex-1 ms-3 text-left whitespace-nowrap">
+                                        {{ $navigation['label'] }}
+                                    </span>
+
+                                    <svg x-show="sidebarExpanded"
+                                         :class="open && 'rotate-180'"
+                                         class="w-3 h-3 transition-transform"
+                                         xmlns="http://www.w3.org/2000/svg"
+                                         fill="none"
+                                         viewBox="0 0 10 6">
+                                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                              d="m1 1 4 4 4-4" />
+                                    </svg>
+                                </button>
+
+                                <ul x-show="open && sidebarExpanded"
+                                    x-transition
+                                    class="py-2 space-y-2">
+                                    @foreach ($navigation['children'] as $child)
+                                        <li>
+                                            <a href="{{ route($navigation['route'], $child['query'] ?? []) }}"
+                                               class="flex items-center w-full p-2 pl-11 rounded-lg text-gray-700 hover:bg-[#DFE8FC] hover:text-[#070642] transition-colors">
+                                                {{ $child['label'] }}
+                                            </a>
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            </li>
+                        @else
+                            <li>
+                                <a href="{{ route($navigation['route']) }}"
+                                   class="flex items-center p-3 rounded-lg {{ $this->getActiveClass($navigation['route']) }} transition-colors group"
+                                   :class="!sidebarExpanded && 'justify-center'"
+                                   :title="!sidebarExpanded ? '{{ $navigation['label'] }}' : ''">
+                                    <x-dynamic-component :component="$navigation['icon']" class="flex-shrink-0" />
+                                    <span x-show="sidebarExpanded"
+                                          x-transition
+                                          class="ms-3 whitespace-nowrap">
+                                        {{ $navigation['label'] }}
+                                    </span>
+                                </a>
+                            </li>
+                        @endif
+                    @endforeach
+                </ul>
+
+                <div class="border-t border-gray-200 my-4"></div>
+
+                <p x-show="sidebarExpanded"
+                   x-transition
+                   class="px-3 mb-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                    Others
+                </p>
+                <div x-show="!sidebarExpanded" class="h-px bg-gray-200 mx-3 mb-3"></div>
+
+                <ul class="space-y-2 font-medium">
+                    <li>
+                        <a href="{{ route('settings') }}"
+                           class="flex items-center p-3 text-gray-700 rounded-lg hover:bg-[#DFE8FC] hover:text-[#070642] transition-colors group"
+                           :class="!sidebarExpanded && 'justify-center'"
+                           :title="!sidebarExpanded ? 'Settings' : ''">
+                            <x-icons.settings class="flex-shrink-0" />
+                            <span x-show="sidebarExpanded"
+                                  x-transition
+                                  class="ms-3 whitespace-nowrap">
+                                Settings
+                            </span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('logout') }}"
+                           class="flex items-center p-3 text-gray-700 rounded-lg hover:bg-[#DFE8FC] hover:text-[#070642] transition-colors group"
+                           :class="!sidebarExpanded && 'justify-center'"
+                           :title="!sidebarExpanded ? 'Log Out' : ''">
+                            <x-icons.logout class="flex-shrink-0" />
+                            <span x-show="sidebarExpanded"
+                                  x-transition
+                                  class="ms-3 whitespace-nowrap">
+                                Log Out
+                            </span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </aside>
+    </nav>
+</div>
