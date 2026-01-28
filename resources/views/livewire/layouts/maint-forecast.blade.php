@@ -111,8 +111,6 @@
                                 <div class="col-md-3">
                                     <strong>Data Points:</strong> {{ $forecast['data_points_used'] ?? 0 }}
                                 </div>
-                                <div class="col-md-3">
-                                    <strong>R² Score:</strong> {{ number_format($forecast['model_performance']['r2_score'] ?? 0, 3) }}
                                 </div>
                             </div>
                         </div>
@@ -133,8 +131,6 @@
                                                 <th>Month</th>
                                                 <th>Forecasted Cost</th>
                                                 <th>Est. Jobs</th>
-                                                <th>Urgency Score</th>
-                                                <th>Seasonal Factor</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -143,8 +139,6 @@
                                                 <td><strong>{{ $monthly['month_name'] ?? '' }}</strong></td>
                                                 <td>₱{{ number_format($monthly['forecasted_cost'] ?? 0, 2) }}</td>
                                                 <td>{{ $monthly['maintenance_count_estimate'] ?? 0 }}</td>
-                                                <td>{{ number_format($monthly['urgency_estimate'] ?? 0, 1) }}</td>
-                                                <td>{{ number_format($monthly['seasonal_factor'] ?? 0, 2) }}x</td>
                                             </tr>
                                             @endforeach
                                         </tbody>

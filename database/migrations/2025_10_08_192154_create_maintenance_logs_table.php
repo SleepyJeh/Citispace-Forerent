@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('maintenance_logs', function (Blueprint $table) {
             $table->id('log_id')->primary();
             $table->foreignId('request_id')
-                ->constrained('maintenance_requests', 'request_id');
+                ->constrained('maintenance_request', 'request_id');
             $table->date('completion_date');
             $table->decimal('cost', 8, 2);
             $table->timestamps();

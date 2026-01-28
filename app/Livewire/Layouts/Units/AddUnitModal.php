@@ -1,7 +1,6 @@
 <?php
 
-namespace App\Livewire\Layouts;
-
+namespace App\Livewire\Layouts\Units;
 use Livewire\Component;
 use App\Models\Property;
 use App\Models\Unit;
@@ -23,7 +22,6 @@ class AddUnitModal extends Component
     // --- Step 1 Properties ---
     public $properties = [];
     public $property_id;
-    public $unit_number = "Unit 0";
     public $floor_number;
     public $m_f = 'Co-ed';
     public $bed_type;
@@ -252,7 +250,6 @@ class AddUnitModal extends Component
                 'unit_cap' => $this->unit_cap,
                 'price' => $this->actual_price,
                 'amenities' => json_encode($checkedAmenityNames),
-                'unit_number' => $this->unit_number,
             ]);
 
             session()->flash('success', 'New unit has been created successfully!');
@@ -344,7 +341,7 @@ class AddUnitModal extends Component
             ],
         ];
 
-        return view('livewire.layouts.add-unit-modal', [
+        return view('livewire.layouts.units.add-unit-modal', [
             'labels' => $labels
         ]);
     }

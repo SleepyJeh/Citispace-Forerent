@@ -14,59 +14,59 @@ class MaintenanceSeeder extends Seeder
     {
         $maintenanceCategories = [
             'Plumbing',
-            'Electrical', 
+            'Electrical',
             'Structural',
             'Appliance',
             'Pest Control'
         ];
 
         $urgencyLevels = ['Level 1', 'Level 2', 'Level 3', 'Level 4'];
-        
+
         // Get existing lease IDs or create minimal dummy data
         $leaseIds = $this->getOrCreateLeaseIds();
-        
+
         $maintenanceRequests = [];
         $maintenanceLogs = [];
-        
+
         // Create exactly 3 years of data: 2021, 2022, 2023
         $startDate = Carbon::create(2021, 1, 1);
         $endDate = Carbon::now();
-        
+
         $requestId = 1;
         $logId = 1;
-        
+
         $this->command->info("Generating 3 years of maintenance data from {$startDate->format('Y')} to {$endDate->format('Y')}...");
-        
+
         $currentDate = $startDate->copy();
         while ($currentDate->lte($endDate)) {
             // Generate 2-8 maintenance requests per month (creates realistic volume)
             $requestsThisMonth = rand(2, 8);
-            
+
             for ($i = 0; $i < $requestsThisMonth; $i++) {
                 $category = $maintenanceCategories[array_rand($maintenanceCategories)];
                 $urgency = $this->getWeightedUrgency($category);
                 $leaseId = $leaseIds[array_rand($leaseIds)];
-                
+
                 // Determine status - mix of completed and ongoing/pending
                 // For historical data, most should be completed
                 $statusWeights = ['Completed' => 0.85, 'Ongoing' => 0.1, 'Pending' => 0.05];
                 $status = $this->getWeightedRandom($statusWeights);
-                
+
                 $costRange = $this->getCostRange($category);
                 $baseCost = rand($costRange[0], $costRange[1]);
-                
+
                 // Add seasonal variation
                 $seasonalFactor = $this->getSeasonalFactor($category, $currentDate->month);
                 $finalCost = $baseCost * $seasonalFactor * (0.8 + (rand(0, 40) / 100));
-                
+
                 $completionDays = $this->getCompletionDays($category, $urgency);
                 $completionDate = $currentDate->copy()->addDays($completionDays);
-                
+
                 // Ensure completion date doesn't exceed current date for realistic data
                 if ($completionDate->gt(Carbon::now())) {
                     $completionDate = $currentDate->copy()->addDays(rand(1, 5));
                 }
-                
+
                 // Create maintenance request
                 $maintenanceRequests[] = [
                     'request_id' => $requestId,
@@ -80,7 +80,7 @@ class MaintenanceSeeder extends Seeder
                     'created_at' => $currentDate->format('Y-m-d H:i:s'),
                     'updated_at' => $currentDate->format('Y-m-d H:i:s'),
                 ];
-                
+
                 // Only create log entry for completed requests
                 if ($status === 'Completed') {
                     $maintenanceLogs[] = [
@@ -93,9 +93,9 @@ class MaintenanceSeeder extends Seeder
                     ];
                     $logId++;
                 }
-                
+
                 $requestId++;
-                
+
                 // Add some random days between requests in the same month for more realistic distribution
                 if ($i < $requestsThisMonth - 1) {
                     $currentDate = $currentDate->copy()->addDays(rand(1, 5));
@@ -105,32 +105,32 @@ class MaintenanceSeeder extends Seeder
                     }
                 }
             }
-            
+
             // Move to next month
             $currentDate = $currentDate->copy()->addMonth()->day(1);
-            
+
             // Show progress for each year
             if ($currentDate->month == 1) {
                 $this->command->info("Generated data for year: " . ($currentDate->year - 1));
             }
         }
-        
+
         // Insert requests in chunks
         $this->command->info("Inserting " . count($maintenanceRequests) . " maintenance requests...");
         foreach (array_chunk($maintenanceRequests, 100) as $chunk) {
             DB::table('maintenance_request')->insert($chunk);
         }
-        
+
         // Insert logs in chunks
         $this->command->info("Inserting " . count($maintenanceLogs) . " maintenance logs...");
         foreach (array_chunk($maintenanceLogs, 100) as $chunk) {
             DB::table('maintenance_logs')->insert($chunk);
         }
-        
+
         // Calculate statistics
         $totalCost = array_sum(array_column($maintenanceLogs, 'cost'));
         $avgMonthlyRequests = count($maintenanceRequests) / 36; // 36 months in 3 years
-        
+
         $this->command->info("✅ Successfully seeded 3 years of maintenance data!");
         $this->command->info("📊 Statistics:");
         $this->command->info("   • Total Maintenance Requests: " . number_format(count($maintenanceRequests)));
@@ -139,31 +139,31 @@ class MaintenanceSeeder extends Seeder
         $this->command->info("   • Total Maintenance Cost: ₱" . number_format($totalCost, 2));
         $this->command->info("   • Average Monthly Requests: " . number_format($avgMonthlyRequests, 1));
     }
-    
+
     private function getOrCreateLeaseIds()
     {
         // First, try to get existing lease IDs
         $leaseIds = DB::table('leases')->pluck('lease_id')->toArray();
-        
+
         if (!empty($leaseIds)) {
             $this->command->info("Found " . count($leaseIds) . " existing leases.");
             return $leaseIds;
         }
-        
+
         // If no leases exist, create realistic dummy leases spanning 3+ years
         $this->command->info("No existing leases found. Creating dummy leases spanning 3+ years...");
-        
+
         // First, ensure we have users and beds
         $userIds = $this->getOrCreateUserIds();
         $bedIds = $this->getOrCreateBedIds();
-        
+
         $leaseIds = [];
         $leaseStatuses = ['Active', 'Active', 'Active', 'Active', 'Expired', 'Active', 'Active', 'Expired', 'Active', 'Active'];
-        
+
         for ($i = 0; $i < 10; $i++) {
             $startDate = Carbon::now()->subMonths(rand(6, 48)); // Leases starting from 6 to 48 months ago
             $endDate = $startDate->copy()->addMonths(rand(6, 24));
-            
+
             $leaseId = DB::table('leases')->insertGetId([
                 'tenant_id' => $userIds[array_rand($userIds)],
                 'bed_id' => $bedIds[array_rand($bedIds)],
@@ -181,28 +181,28 @@ class MaintenanceSeeder extends Seeder
             ]);
             $leaseIds[] = $leaseId;
         }
-        
+
         $this->command->info("Created " . count($leaseIds) . " dummy leases.");
         return $leaseIds;
     }
-    
+
     private function getOrCreateUserIds()
     {
         $userIds = DB::table('users')->pluck('user_id')->toArray();
-        
+
         if (!empty($userIds)) {
             return $userIds;
         }
-        
+
         // Create realistic dummy users
         $userIds = [];
         $firstNames = ['John', 'Jane', 'Michael', 'Sarah', 'David', 'Lisa', 'Robert', 'Maria', 'William', 'Anna'];
         $lastNames = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Miller', 'Davis', 'Rodriguez', 'Martinez'];
-        
+
         for ($i = 1; $i <= 10; $i++) {
             $firstName = $firstNames[array_rand($firstNames)];
             $lastName = $lastNames[array_rand($lastNames)];
-            
+
             $userId = DB::table('users')->insertGetId([
                 'name' => $firstName . ' ' . $lastName,
                 'email' => strtolower($firstName) . '.' . strtolower($lastName) . $i . '@example.com',
@@ -212,22 +212,22 @@ class MaintenanceSeeder extends Seeder
             ]);
             $userIds[] = $userId;
         }
-        
+
         return $userIds;
     }
-    
+
     private function getOrCreateBedIds()
     {
         $bedIds = DB::table('beds')->pluck('bed_id')->toArray();
-        
+
         if (!empty($bedIds)) {
             return $bedIds;
         }
-        
+
         // Create realistic dummy beds
         $bedIds = [];
         $bedStatuses = ['Available', 'Occupied', 'Available', 'Occupied', 'Available', 'Maintenance', 'Occupied', 'Available', 'Occupied', 'Available'];
-        
+
         for ($i = 1; $i <= 15; $i++) {
             $bedId = DB::table('beds')->insertGetId([
                 'bed_code' => 'BED-' . str_pad($i, 3, '0', STR_PAD_LEFT),
@@ -237,10 +237,10 @@ class MaintenanceSeeder extends Seeder
             ]);
             $bedIds[] = $bedId;
         }
-        
+
         return $bedIds;
     }
-    
+
     private function getWeightedUrgency($category)
     {
         $weights = [
@@ -250,25 +250,25 @@ class MaintenanceSeeder extends Seeder
             'Appliance' => ['Level 1' => 0.2, 'Level 2' => 0.4, 'Level 3' => 0.3, 'Level 4' => 0.1],
             'Pest Control' => ['Level 1' => 0.1, 'Level 2' => 0.3, 'Level 3' => 0.4, 'Level 4' => 0.2],
         ];
-        
+
         return $this->getWeightedRandom($weights[$category]);
     }
-    
+
     private function getWeightedRandom($weights)
     {
         $random = rand(1, 100) / 100;
         $cumulative = 0;
-        
+
         foreach ($weights as $item => $weight) {
             $cumulative += $weight;
             if ($random <= $cumulative) {
                 return $item;
             }
         }
-        
+
         return array_key_first($weights);
     }
-    
+
     private function getCostRange($category)
     {
         $ranges = [
@@ -278,10 +278,10 @@ class MaintenanceSeeder extends Seeder
             'Appliance' => [1000, 6000],
             'Pest Control' => [600, 2500],
         ];
-        
+
         return $ranges[$category];
     }
-    
+
     private function getSeasonalFactor($category, $month)
     {
         $factors = [
@@ -291,10 +291,10 @@ class MaintenanceSeeder extends Seeder
             'Appliance' => [],
             'Pest Control' => [3 => 1.2, 6 => 1.2, 9 => 1.2, 12 => 1.2],
         ];
-        
+
         return $factors[$category][$month] ?? 1.0;
     }
-    
+
     private function getCompletionDays($category, $urgency)
     {
         $baseRanges = [
@@ -304,29 +304,29 @@ class MaintenanceSeeder extends Seeder
             'Appliance' => [1, 7],
             'Pest Control' => [1, 4],
         ];
-        
+
         $urgencyMultipliers = [
             'Level 1' => 0.3,
             'Level 2' => 0.6,
             'Level 3' => 0.8,
             'Level 4' => 1.0
         ];
-        
+
         $range = $baseRanges[$category];
         $maxDays = (int)($range[1] * $urgencyMultipliers[$urgency]);
         $minDays = max(1, (int)($range[0] * $urgencyMultipliers[$urgency]));
-        
+
         return rand($minDays, $maxDays);
     }
-    
+
     private function getRandomStaffName()
     {
         $firstNames = ['John', 'Jane', 'Michael', 'Sarah', 'David', 'Lisa', 'Robert', 'Maria', 'William', 'Anna'];
         $lastNames = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Miller', 'Davis', 'Rodriguez', 'Martinez'];
-        
+
         return $firstNames[array_rand($firstNames)] . ' ' . $lastNames[array_rand($lastNames)];
     }
-    
+
     private function generateProblemDescription($category)
     {
         $problems = [
@@ -381,7 +381,7 @@ class MaintenanceSeeder extends Seeder
                 'Bed bug inspection requested'
             ]
         ];
-        
+
         return $problems[$category][array_rand($problems[$category])];
     }
 }
