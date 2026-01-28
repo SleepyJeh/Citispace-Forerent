@@ -1,22 +1,19 @@
-FROM python:3.9-slim
+# 1. Start from a clean, lightweight Python image
+FROM python:3.10-slim
 
+# 2. Set the working directory inside the container
 WORKDIR /app
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    gcc \
-    g++ \
-    && rm -rf /var/lib/apt/lists/*
-
-# Copy requirements and install dependencies
+# 3. Copy your requirements file
+# This copies 'price_api/requirements.txt' into '/app/requirements.txt'
 COPY requirements.txt .
+
+# 4. Install the Python libraries
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application code
+# 5. Copy the rest of your code (main.py, dorm_price_model.joblib)
 COPY . .
 
-# Expose port
-EXPOSE 8000
-
-# Start the application
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+# 6. Run the Uvicorn server
+# This listens on 0.0.0.0 to be reachable by your Laravel container
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

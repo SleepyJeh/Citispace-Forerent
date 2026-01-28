@@ -13,8 +13,17 @@ class Unit extends Model
     protected $primaryKey = 'unit_id';
 
     protected $fillable = [
-        'property_id', 'manager_id', 'floor_number', 'unit_number', 'occupants',
-        'bed_type', 'room_type', 'room_cap', 'unit_cap', 'price', 'amenities'
+        'property_id',
+        'manager_id',
+        'floor_number',
+        'unit_number',
+        'occupants',
+        'bed_type',
+        'room_type',
+        'room_cap',
+        'unit_cap',
+        'price',
+        'amenities'
     ];
 
 

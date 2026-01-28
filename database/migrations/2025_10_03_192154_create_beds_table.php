@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('unit_id')
                 ->constrained('units', 'unit_id')
                 ->onDelete('cascade');
-            $table->integer('bed_number');
+            $table->string('bed_number');
             $table->enum('status', ['Vacant', 'Occupied'])->default('Vacant');
             $table->timestamps();
             $table->softDeletes();

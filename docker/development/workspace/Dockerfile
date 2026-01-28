@@ -8,7 +8,6 @@ ARG GID=1000
 ARG NODE_VERSION=22.12.0
 
 # Install system dependencies and build libraries
-# Install system dependencies and build libraries
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     unzip \
@@ -29,10 +28,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     bcmath \
     soap \
     pcntl \
-    && pecl install redis \
-    && docker-php-ext-enable redis \
-    && pecl install xdebug \
-    && docker-php-ext-enable xdebug \
+    && pecl install redis xdebug \
+    && docker-php-ext-enable redis xdebug \
     && apt-get autoremove -y && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Install Composer from official image

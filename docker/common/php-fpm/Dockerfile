@@ -14,13 +14,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libcurl4-openssl-dev \
     libicu-dev \
     libzip-dev \
-    # Add Python for revenue forecasting
-    python3 \
-    python3-pip \
-    python3-venv \
-    # Add build tools for Python packages
-    gcc \
-    g++ \
     && docker-php-ext-install -j$(nproc) \
     pdo_mysql \
     pdo_pgsql \
@@ -31,7 +24,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     bcmath \
     soap \
     pcntl \
-    && rm -rf /var/lib/apt/lists/* \
     && pecl install redis \
     && docker-php-ext-enable redis \
     && apt-get autoremove -y && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
@@ -43,6 +35,20 @@ COPY --from=composer:latest /usr/bin/composer /usr/local/bin/composer
 WORKDIR /var/www
 
 # Copy the entire Laravel application code into the container
+# -----------------------------------------------------------
+# In Laravel, the `composer install` command often triggers
+# scripts that need access to the entire application code.
+# For example, the `post-autoload-dump` event might execute
+# Artisan commands like `php artisan package:discover`. If the
+# application code (including the `artisan` file) is not
+# present, these commands will fail, leading to build errors.
+#
+# By copying the entire application code before running
+# `composer install`, we ensure that all necessary files are
+# available, allowing these scripts to run successfully.
+# In other cases, it would be possible to copy composer files
+# first, to leverage Docker's layer caching mechanism.
+# -----------------------------------------------------------
 COPY . /var/www
 
 # Install Composer dependencies
@@ -60,13 +66,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libzip-dev \
     libfcgi-bin \
     procps \
-    # Add Python runtime for revenue forecasting
-    python3 \
-    python3-pip \
-    python3-venv \
-    # Add Python build tools for compiling packages
-    python3-dev \
-    build-essential \
     && apt-get autoremove -y && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Download and install php-fpm health check script
@@ -87,22 +86,21 @@ COPY --from=builder /usr/local/etc/php/conf.d/ /usr/local/etc/php/conf.d/
 COPY --from=builder /usr/local/bin/docker-php-ext-* /usr/local/bin/
 
 # Use the recommended production PHP configuration
+# -----------------------------------------------------------
+# PHP provides development and production configurations.
+# Here, we replace the default php.ini with the production
+# version to apply settings optimized for performance and
+# security in a live environment.
+# -----------------------------------------------------------
 RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
 
 # Enable PHP-FPM status page by modifying zz-docker.conf with sed
 RUN sed -i '/\[www\]/a pm.status_path = /status' /usr/local/etc/php-fpm.d/zz-docker.conf
+# Update the variables_order to include E (for ENV)
+#RUN sed -i 's/variables_order = "GPCS"/variables_order = "EGPCS"/' "$PHP_INI_DIR/php.ini"
 
 # Copy the application code and dependencies from the build stage
 COPY --from=builder /var/www /var/www
-
-# Install Python dependencies for revenue forecasting with updated versions
-RUN pip3 install --no-cache-dir --break-system-packages --only-binary :all: \
-    numpy \
-    pandas \
-    scikit-learn
-
-# Clean up build tools after installation (optional, reduces image size)
-RUN apt-get remove -y python3-dev build-essential && apt-get autoremove -y
 
 # Set working directory
 WORKDIR /var/www
@@ -132,10 +130,6 @@ ARG XDEBUG_IDE_KEY=DOCKER
 ARG XDEBUG_LOG=/dev/stdout
 ARG XDEBUG_LOG_LEVEL=0
 
-# Add ARGs for syncing permissions
-ARG UID=1000
-ARG GID=1000
-
 USER root
 
 # Configure Xdebug if enabled
@@ -150,6 +144,10 @@ RUN if [ "${XDEBUG_ENABLED}" = "true" ]; then \
     echo "xdebug.start_with_request=yes" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini ; \
 fi
 
+# Add ARGs for syncing permissions
+ARG UID=1000
+ARG GID=1000
+
 # Create a new user with the specified UID and GID, reusing an existing group if GID exists
 RUN if getent group ${GID}; then \
       group_name=$(getent group ${GID} | cut -d: -f1); \
@@ -163,6 +161,7 @@ RUN if getent group ${GID}; then \
 # Dynamically update php-fpm to use the new user and group
 RUN sed -i "s/user = www-data/user = www/g" /usr/local/etc/php-fpm.d/www.conf && \
     sed -i "s/group = www-data/group = $group_name/g" /usr/local/etc/php-fpm.d/www.conf
+
 
 # Set the working directory
 WORKDIR /var/www

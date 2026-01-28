@@ -19,7 +19,7 @@ class User extends Authenticatable
      *
      * @var string
      */
-    protected $primaryKey = 'user_id'; // <-- THIS IS THE KEY!
+    protected $primaryKey = 'user_id';
 
     /**
      * The attributes that are mass assignable.
@@ -55,7 +55,7 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
-            'password' => 'hashed', // This automatically hashes passwords
+            'password' => 'hashed',
         ];
     }
 
@@ -86,5 +86,10 @@ class User extends Authenticatable
     public function announcements()
     {
         return $this->hasMany(Announcement::class, 'author_id', 'user_id');
+    }
+
+    public function unitsManaged()
+    {
+        return $this->hasMany(Unit::class, 'manager_id');
     }
 }

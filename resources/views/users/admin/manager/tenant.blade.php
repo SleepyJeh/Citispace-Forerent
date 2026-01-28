@@ -1,76 +1,56 @@
 @extends('layouts.app')
 
+@section('header-title', 'TENANT MANAGEMENT')
+@section('header-subtitle', 'Track tenant information and leases')
+
 @section('content')
-    <div class="flex h-screen overflow-hidden">
-        <!-- Sidebar -->
-        <livewire:navbars.side-bar />
 
-        <!-- Main Section -->
-        <section id="main-container" class="flex flex-col flex-1 overflow-hidden">
+    @include('livewire.layouts.dashboard.admingreeting')
 
-            <!-- Top Bar -->
-            <div class="flex-shrink-0 bg-white z-30">
-                <livewire:layouts.top-bar />
-            </div>
+    {{-- Building Cards Section --}}
+    <div class="mt-6">
+        <livewire:layouts.properties.building-cards-section
+            :show-add-button="false"
+            title="Properties"
+            empty-state-title="No properties available"
+            empty-state-description="Properties will appear here once added to the system"
+        />
+    </div>
 
-            <!-- Scrollable Content -->
-            <div class="flex-1 overflow-y-auto bg-[#F4F7FC]">
-                <div id="pm-container" class="w-full min-h-full rounded-tl-4xl flex flex-col px-4 md:px-8 lg:px-18 pt-9 pb-16 gap-6">
+    {{-- Tenant Management Section --}}
+    <div class="mt-6">
+        <div class="w-full">
+            <div class="flex flex-col lg:flex-row gap-6 h-[calc(100vh-400px)] min-h-[600px]">
+                {{-- Left Panel: Tenant Navigation --}}
+                <div class="lg:w-1/3">
+                    <livewire:layouts.tenants.tenant-navigation />
+                </div>
 
-                    <!-- Header -->
-                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                        <div class="flex flex-col">
-                            <span id="main-header" class="header-title text-2xl md:text-3xl text-blue-900 font-bold">TENANT MANAGEMENT</span>
-                            <span class="sub-header text-sm md:text-base text-gray-600">Track tenant information and leases</span>
-                        </div>
-                        <div>
-                            <button
-                                type="button"
-                                onclick="Livewire.dispatch('openAddTenantModal_tenant-dashboard')"
-                                class="inline-flex items-center gap-x-2 rounded-full bg-[#152C73] px-6 py-3 text-base font-semibold text-white shadow-sm hover:bg-[#152C73]/90 focus:outline-none focus:ring-2 focus:ring-[#152C73] focus:ring-offset-2 transition-colors"
-                            >
-                                <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                    <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
-                                </svg>
-                                Add Tenant
-                            </button>
-                        </div>
-                    </div>
-
-                    @include('livewire.layouts.admingreeting')
-
-                    <livewire:layouts.building-list />
-
-                    <!-- Main Content -->
-                    <div class="flex flex-col gap-6 min-h-0">
-                        <!-- Top Row: Navigation + Details -->
-                        <div class="flex flex-col lg:flex-row gap-6 flex-1 min-h-0">
-                            <!-- Tenant Navigation -->
-                            <div class="w-full lg:w-[30%] h-full min-h-0">
-                                <div class="h-full bg-white rounded-2xl shadow-md overflow-hidden">
-                                    <livewire:layouts.tenant-navigation />
-                                </div>
-                            </div>
-
-                            <!-- Tenant Details -->
-                            <div class="w-full lg:w-[70%] h-full min-h-0">
-                                <div class="h-full bg-white rounded-2xl shadow-md overflow-hidden">
-                                    <livewire:layouts.tenant-detail />
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Bottom Row: Previous Tenants Table -->
-                        <div class="flex-shrink-0">
-                            <livewire:layouts.previous-tenants-table />
-                        </div>
-                    </div>
-
-                    <!-- Add Tenant Modal -->
-                    <livewire:layouts.add-tenant-modal modalId="tenant-dashboard" />
-
+                {{-- Right Panel: Tenant Detail --}}
+                <div class="lg:w-2/3">
+                    <livewire:layouts.tenants.tenant-detail />
                 </div>
             </div>
-        </section>
+        </div>
     </div>
+
 @endsection
+
+@push('scripts')
+<script>
+    document.addEventListener('livewire:init', () => {
+        Livewire.on('buildingSelected', (event) => {
+            console.log('Building selected in tenant page:', event.buildingId);
+        });
+
+        Livewire.on('propertyCreated', (propertyId) => {
+            console.log('Property created:', propertyId);
+            Livewire.dispatch('refresh-property-list');
+        });
+
+        Livewire.on('tenantSelected', (event) => {
+            console.log('Tenant selected:', event.tenantId);
+        });
+    });
+</script>
+@endpush

@@ -13,7 +13,10 @@ class Property extends Model
     protected $primaryKey = 'property_id';
 
     protected $fillable = [
-        'owner_id', 'building_name', 'address', 'prop_description',
+        'owner_id',
+        'building_name',
+        'address',
+        'prop_description',
     ];
 
     public function owner()

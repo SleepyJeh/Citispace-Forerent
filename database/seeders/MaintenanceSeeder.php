@@ -6,7 +6,6 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
-use Illuminate\Support\Str;
 
 class MaintenanceSeeder extends Seeder
 {
@@ -69,7 +68,6 @@ class MaintenanceSeeder extends Seeder
 
                 // Create maintenance request
                 $maintenanceRequests[] = [
-                    'request_id' => $requestId,
                     'lease_id' => $leaseId,
                     'status' => $status,
                     'logged_by' => $this->getRandomStaffName(),
@@ -84,7 +82,6 @@ class MaintenanceSeeder extends Seeder
                 // Only create log entry for completed requests
                 if ($status === 'Completed') {
                     $maintenanceLogs[] = [
-                        'log_id' => $logId,
                         'request_id' => $requestId,
                         'completion_date' => $completionDate->format('Y-m-d'),
                         'cost' => round($finalCost, 2),
@@ -99,7 +96,6 @@ class MaintenanceSeeder extends Seeder
                 // Add some random days between requests in the same month for more realistic distribution
                 if ($i < $requestsThisMonth - 1) {
                     $currentDate = $currentDate->copy()->addDays(rand(1, 5));
-                    // Ensure we don't go beyond the current month
                     if ($currentDate->month != $startDate->month) {
                         $currentDate = $currentDate->copy()->subDays(rand(1, 5));
                     }
@@ -117,13 +113,14 @@ class MaintenanceSeeder extends Seeder
 
         // Insert requests in chunks
         $this->command->info("Inserting " . count($maintenanceRequests) . " maintenance requests...");
-        foreach (array_chunk($maintenanceRequests, 100) as $chunk) {
-            DB::table('maintenance_request')->insert($chunk);
+        // Chunk size increased slightly for speed
+        foreach (array_chunk($maintenanceRequests, 500) as $chunk) {
+            DB::table('maintenance_requests')->insert($chunk);
         }
 
         // Insert logs in chunks
         $this->command->info("Inserting " . count($maintenanceLogs) . " maintenance logs...");
-        foreach (array_chunk($maintenanceLogs, 100) as $chunk) {
+        foreach (array_chunk($maintenanceLogs, 500) as $chunk) {
             DB::table('maintenance_logs')->insert($chunk);
         }
 

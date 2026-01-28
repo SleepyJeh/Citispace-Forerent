@@ -12,13 +12,18 @@ class UnitFactory extends Factory
 {
     protected $model = Unit::class;
 
+    // Keep track of unit counters per floor
+    protected static array $floorCounters = [];
+
     public function definition(): array
     {
+        $floor = $this->faker->numberBetween(1, 10);
+
         return [
             'property_id'   => $this->getPropertyId(),
             'manager_id'    => $this->faker->boolean(70) ? $this->getManagerId() : null,
-            'floor_number'  => $this->faker->numberBetween(1, 10),
-            'unit_number'   => strtoupper($this->faker->bothify('F#-##')), // e.g., "F3-02"
+            'floor_number'  => $floor,
+            'unit_number'   => $this->generateUnitNumber($floor),
             'occupants'     => $this->faker->randomElement(['Male', 'Female', 'Co-ed']),
             'bed_type'      => $this->faker->randomElement(['Single', 'Bunk', 'Twin']),
             'room_type'     => $this->faker->randomElement(['Standard', 'Deluxe', 'Suite']),
@@ -29,6 +34,22 @@ class UnitFactory extends Factory
             'created_at'    => now(),
             'updated_at'    => now(),
         ];
+    }
+
+    private function generateUnitNumber(int $floor): string
+    {
+        // Initialize counter for this floor if not set
+        if (!isset(static::$floorCounters[$floor])) {
+            static::$floorCounters[$floor] = 1;
+        }
+
+        // Format: R + floor number + 2-digit counter
+        $unitNumber = sprintf('U%d%02d', $floor, static::$floorCounters[$floor]);
+
+        // Increment the counter for next unit on this floor
+        static::$floorCounters[$floor]++;
+
+        return $unitNumber;
     }
 
     private function getManagerId(): int

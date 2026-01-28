@@ -12,22 +12,22 @@ class TransactionSeeder extends Seeder
     {
         $transactions = [];
 
-        // Generate 2 years of transaction data
+        // Generate data from 2021 to now
         $startDate = Carbon::create(2021, 1, 1);
         $endDate = Carbon::now();
 
         $categories = ['Rent Payment', 'Deposit', 'Advance', 'Maintenance', 'Vendor Payment'];
-        
+
         $currentDate = $startDate->copy();
         $transactionId = 1;
 
         while ($currentDate <= $endDate) {
-            // Generate 20-50 transactions per month
-            $transactionsPerMonth = rand(20, 50);
-            
+            // INCREASED: Generate 150-300 transactions per month to test pagination
+            $transactionsPerMonth = rand(3, 6);
+
             for ($i = 0; $i < $transactionsPerMonth; $i++) {
                 $category = $categories[array_rand($categories)];
-                
+
                 // Set amount ranges based on category
                 switch ($category) {
                     case 'Rent Payment':
@@ -54,7 +54,7 @@ class TransactionSeeder extends Seeder
 
                 $transactions[] = [
                     'transaction_id' => $transactionId,
-                    'billing_id' => null, // Can be linked later if needed
+                    'billing_id' => null,
                     'name' => "Transaction {$transactionId}",
                     'reference_number' => $this->generateReferenceNumber($category, $currentDate, $transactionId),
                     'transaction_type' => $type,

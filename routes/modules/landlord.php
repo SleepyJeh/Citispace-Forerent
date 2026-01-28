@@ -1,5 +1,6 @@
 <?php
 
+use App\Livewire\Layouts\Dashboard\Dashboard;
 use App\Http\Controllers\PropertyController;
 use Illuminate\Support\Facades\Route;
 /*
@@ -19,10 +20,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::prefix('landlord')->middleware(['auth', 'role:landlord'])->group(function () {
     // Dashboard
-    Route::get('/', function () {
-        return view('users.admin.owner.dashboard');
-
-    })->name('landlord.dashboard');
+    Route::get('/', Dashboard::class)->name('landlord.dashboard');
 
     // Properties
     Route::prefix('property')->group(function () {
