@@ -1,28 +1,27 @@
 <div class="min-h-screen bg-[#F4F7FE] p-4 md:p-6 font-sans">
-    
+
     {{-- 1. THE LAYOUT SHELL --}}
     <x-ui.card-with-tabs
         :tabs="[
-            'payment' => 'Payment History', 
+            'payment' => 'Payment History',
             'maintenance' => 'Total Maintenance History'
         ]"
         :activeTab="$activeTab"
     >
-        
+
         {{-- 2. THE FILTERS --}}
         <x-slot:filters>
-            
+
             {{-- Month Filter --}}
             <x-dropdown label="{{ $monthOptions[$selectedMonth] ?? 'Month' }}">
-                {{-- CLEAR FILTER OPTION --}}
                 <x-dropdown-item wire:click="$set('selectedMonth', null)" @click="open = false">
                     All Months
                 </x-dropdown-item>
 
                 @foreach ($monthOptions as $value => $label)
-                    <x-dropdown-item 
-                        wire:click="$set('selectedMonth', '{{ $value }}')" 
-                        @click="open = false" 
+                    <x-dropdown-item
+                        wire:click="$set('selectedMonth', '{{ $value }}')"
+                        @click="open = false"
                         :active="$selectedMonth === $value"
                     >
                         {{ $label }}
@@ -38,8 +37,8 @@
                 </x-dropdown-item>
 
                 @foreach ($buildingOptions as $value => $label)
-                    <x-dropdown-item 
-                        wire:click="$set('selectedBuilding', '{{ $value }}')" 
+                    <x-dropdown-item
+                        wire:click="$set('selectedBuilding', '{{ $value }}')"
                         @click="open = false"
                         :active="$selectedBuilding === $value"
                     >
@@ -52,7 +51,7 @@
 
 
         {{-- 3. THE CONTENT TABLES --}}
-        
+
         {{-- Table A: Payment History --}}
         @if ($activeTab === 'payment')
             <x-ui.table>

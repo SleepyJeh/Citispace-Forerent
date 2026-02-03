@@ -2,8 +2,8 @@
     <div class="bg-blue-800 px-6 py-4 flex justify-between items-center">
         <h3 class="text-white text-lg font-semibold">Announcement</h3>
 
-        {{-- Only show Add button if passed as true --}}
-        @if($isLandlord)
+       {{-- Show Add button for Landlord and Manager only --}}
+        @if(request()->is('landlord') || request()->is('manager'))
             <button
                 wire:click="$dispatch('open-announcement-modal')"
                 type="button"

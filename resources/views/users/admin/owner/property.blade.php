@@ -6,7 +6,6 @@
 
 @section('content')
 
-    {{-- Admin Greeting (Optional: You can also move this to app.blade.php if you want it everywhere) --}}
     @include('livewire.layouts.dashboard.admingreeting')
 
     {{-- Success Message --}}

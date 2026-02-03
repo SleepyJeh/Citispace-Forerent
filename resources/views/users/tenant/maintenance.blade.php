@@ -1,34 +1,65 @@
 @extends('layouts.app')
-
-@section('header-title', 'MAINTENANCE')
-@section('header-subtitle', 'Track and manage property maintenance')
-
+@section('header-title', 'MAINTENANCE MANAGEMENT')
+@section('header-subtitle', 'Monitor costs, track trends, and manage repair tickets')
 @section('content')
-<div class="space-y-6">
+<div class="p-6 w-full h-[calc(100vh-80px)] flex flex-col font-['Poppins'] overflow-hidden"
+     x-data="{ activeTab: 'all' }">
 
-    {{-- 1. Top Section: Projected Maintenance Cost & Prediction Chart --}}
-    {{-- This loads the blade you provided: projected-maintenance-cost.blade.php --}}
-    <livewire:layouts.maintenance.projected-maintenance-cost />
+    {{-- 1. HEADER & BANNER SECTION --}}
+    <div class="flex-shrink-0 mb-6">
+        {{-- Hello Banner --}}
+        <div class="w-full bg-gradient-to-r from-[#070642] to-[#1a4fd1] rounded-3xl p-8 text-white shadow-lg relative overflow-hidden">
+            <h2 class="text-3xl font-medium relative z-10">Hello, {{ Auth::user()->first_name ?? 'Tenant' }}!</h2>
 
-    {{-- 2. Bottom Section: Maintenance History --}}
-    <div class="flex flex-col h-[800px]"> {{-- Fixed height ensures the scrollbars in children work --}}
-
-        <h2 class="text-xl font-bold text-slate-800 mb-4">Maintenance History</h2>
-
-        {{-- The Master-Detail Layout Wrapper --}}
-        <div class="flex flex-col lg:flex-row gap-6 h-full">
-
-            {{-- Left Column: History List (30% width) --}}
-            <div class="w-full lg:w-1/3 h-full overflow-hidden">
-                <livewire:layouts.maintenance.maintenance-history-list />
-            </div>
-
-            {{-- Right Column: Details Panel (70% width) --}}
-            <div class="w-full lg:w-2/3 h-full overflow-hidden">
-                <livewire:layouts.maintenance.maintenance-history-detail />
-            </div>
-
+            {{-- Decorative circles matching the design --}}
+            <div class="absolute top-0 right-0 w-64 h-64 bg-white opacity-5 rounded-full -mr-16 -mt-16 pointer-events-none"></div>
+            <div class="absolute bottom-0 right-20 w-32 h-32 bg-white opacity-5 rounded-full mb-[-40px] pointer-events-none"></div>
         </div>
+    </div>
+
+    {{-- 2. TABS & ACTIONS ROW --}}
+    <div class="flex flex-col md:flex-row justify-between items-center mb-4 flex-shrink-0 gap-4">
+
+        {{-- Tabs --}}
+        <div class="flex items-center gap-8 border-b border-gray-200 w-full md:w-auto overflow-x-auto">
+            @foreach(['all' => 'All', 'pending' => 'Pending', 'ongoing' => 'On Hold', 'completed' => 'Completed'] as $key => $label)
+                <button
+                    @click="activeTab = '{{ $key }}'; $dispatch('filter-maintenance', { status: '{{ $key }}' })"
+                    :class="activeTab === '{{ $key }}' ? 'text-[#070642] border-b-4 border-[#070642]' : 'text-gray-400 border-transparent hover:text-gray-600'"
+                    class="pb-2 text-lg font-bold transition-all whitespace-nowrap px-2">
+                    {{ $label }}
+                    {{-- You can pass counts here if available, e.g., <span class="text-sm ml-1">10</span> --}}
+                </button>
+            @endforeach
+        </div>
+
+        {{-- Add Button --}}
+        <button class="bg-[#070642] hover:bg-[#1a1955] text-white px-6 py-2.5 rounded-full font-medium flex items-center gap-2 transition-shadow shadow-md whitespace-nowrap">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            Add Maintenance Request
+        </button>
+    </div>
+
+    {{-- 3. MAIN CONTENT GRID --}}
+    <div class="flex flex-col lg:flex-row gap-6 flex-1 min-h-0">
+
+        {{-- LEFT PANEL: LIST --}}
+        <div class="w-full lg:w-1/3 h-full bg-white rounded-3xl shadow-sm border border-gray-100 flex flex-col overflow-hidden p-2">
+            <div class="p-4 pb-2">
+                <h3 class="text-xl font-bold text-[#070642]">Maintenance Request</h3>
+            </div>
+            <livewire:layouts.maintenance.tenant-maintenance-list />
+        </div>
+
+        {{-- RIGHT PANEL: DETAIL --}}
+        <div class="w-full lg:w-2/3 h-full bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden flex flex-col p-2">
+            <livewire:layouts.maintenance.tenant-maintenance-detail />
+        </div>
+
+        <livewire:layouts.maintenance.tenant-maintenance-create />
+
     </div>
 </div>
 @endsection

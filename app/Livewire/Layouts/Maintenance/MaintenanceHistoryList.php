@@ -1,80 +1,63 @@
 <?php
 
 namespace App\Livewire\Layouts\Maintenance;
+
 use Livewire\Component;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class MaintenanceHistoryList extends Component
 {
     public $filter = 'all';
-    public $allHistoryItems = [];
     public $activeHistoryId = null;
 
-
-    protected $dummyHistory = [
-        [
-            'request_id' => 1,
-            'lease_id' => 101,
-            'status' => 'Completed',
-            'tenant_name' => 'Ninole Candelaria',
-            'unit_number' => 'Unit 101',
-        ],
-        [
-            'request_id' => 2,
-            'lease_id' => 102,
-            'status' => 'Ongoing',
-            'tenant_name' => 'John Doe',
-            'unit_number' => 'Unit 202',
-        ],
-        [
-            'request_id' => 3,
-            'lease_id' => 103,
-            'status' => 'Completed',
-            'tenant_name' => 'Maria Santos',
-            'unit_number' => 'Unit 305',
-        ],
-        [
-            'request_id' => 4,
-            'lease_id' => 104,
-            'status' => 'Pending',
-            'tenant_name' => 'Kiko Ramos',
-            'unit_number' => 'Unit 102',
-        ],
-        [
-            'request_id' => 5,
-            'lease_id' => 105,
-            'status' => 'Pending',
-            'tenant_name' => 'Pedro Penduko',
-            'unit_number' => 'Unit 401',
-        ]
-    ];
-
-    public function mount($filter = 'all'): void
-    {
-        $this->filter = $filter;
-        $this->allHistoryItems = $this->dummyHistory;
-    }
-
-    public function selectHistory(int $historyId): void
-    {
-        $this->activeHistoryId = $historyId;
-        $this->dispatch('maintenanceHistorySelected', historyId: $historyId);
-    }
-
+    protected $listeners = ['refreshDashboard' => '$refresh'];
 
     public function render()
     {
-         $filteredItems = $this->allHistoryItems;
+        $user = Auth::user();
 
+        // Base Query
+        $query = DB::table('maintenance_requests')
+            ->join('leases', 'maintenance_requests.lease_id', '=', 'leases.lease_id')
+            ->join('beds', 'leases.bed_id', '=', 'beds.bed_id')
+            ->join('units', 'beds.unit_id', '=', 'units.unit_id')
+            ->join('users', 'leases.tenant_id', '=', 'users.user_id')
+            ->select(
+                'maintenance_requests.request_id',
+                'maintenance_requests.status',
+                'maintenance_requests.urgency',
+                'maintenance_requests.created_at',
+                'maintenance_requests.problem',
+                'units.unit_number',
+                DB::raw("CONCAT(users.first_name, ' ', users.last_name) as tenant_name")
+            );
+
+        // --- ROLE BASED FILTERING ---
+
+        if ($user->role === 'tenant') {
+            // Tenant sees ONLY their own requests
+            $query->where('leases.tenant_id', $user->user_id);
+        } elseif ($user->role === 'manager') {
+            // Manager sees requests for units they manage
+            $query->where('units.manager_id', $user->user_id);
+        }
+        // Landlord sees everything (no where clause needed)
+
+        // ----------------------------
 
         if ($this->filter !== 'all') {
-            $filteredItems = array_filter($this->allHistoryItems, function ($item) {
-                return $item['status'] === $this->filter;
-            });
+            $query->where('maintenance_requests.status', $this->filter);
         }
 
-
         return view('livewire.layouts.maintenance.maintenance-history-list', [
-            'historyItems' => $filteredItems
+            'historyItems' => $query->orderBy('created_at', 'desc')->get()
         ]);
+    }
+
+    public function selectHistory($id)
+    {
+        $this->activeHistoryId = $id;
+        $this->dispatch('maintenanceHistorySelected', historyId: $id);
     }
 }

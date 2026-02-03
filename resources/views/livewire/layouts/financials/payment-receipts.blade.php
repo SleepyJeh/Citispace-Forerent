@@ -1,98 +1,172 @@
-<div>
-    <div class="bg-[#070589] rounded-t-2xl p-6 relative shadow-lg">
-        <div class="flex items-center space-x-8">
-            <button wire:click="$set('activeTab', 'all')"
-                class="pb-2 font-semibold transition-all duration-200 {{ $activeTab === 'all' ? 'text-white border-b-4 border-white' : 'text-gray-300 hover:text-white' }}">
-                All {{ $allCount }}
-            </button>
+<div class="font-sans">
 
-            <button wire:click="$set('activeTab', 'Upcoming')"
-                class="pb-2 font-semibold transition-all duration-200 {{ $activeTab === 'Upcoming' ? 'text-white border-b-4 border-white' : 'text-gray-300 hover:text-white' }}">
-                Upcoming {{ $upcomingCount }}
-            </button>
+    <div class="font-sans">
+    <x-ui.card-with-tabs
+         :tabs="[
+            'all'      => 'All',
+            'upcoming' => 'Upcoming',
+            'paid'     => 'Paid',
+            'unpaid'   => 'Unpaid'
+        ]"
 
-            <button wire:click="$set('activeTab', 'Overdue')"
-                class="pb-2 font-semibold transition-all duration-200 {{ $activeTab === 'Overdue' ? 'text-white border-b-4 border-white' : 'text-gray-300 hover:text-white' }}">
-                Overdue {{ $overdueCount }}
-            </button>
+         :counts="$counts"
 
-            <button wire:click="$set('activeTab', 'Paid')"
-                class="pb-2 font-semibold transition-all duration-200 {{ $activeTab === 'Paid' ? 'text-white border-b-4 border-white' : 'text-gray-300 hover:text-white' }}">
-                Paid {{ $paidCount }}
-            </button>
-        </div>
-    </div>
+        :activeTab="$activeTab"
+        wire:model.live="activeTab"
+    >
 
+        {{-- FILTERS SLOT --}}
+        <x-slot:filters>
+            <div class="flex flex-col sm:flex-row items-center gap-3">
 
-    <div class="bg-white shadow-md p-6 rounded-b-2xl">
-        <div class="overflow-x-auto">
-            <table class="w-full">
-                <thead>
-                    <tr class="border-b-2 border-gray-200">
-                        <th class="text-left py-4 px-4 text-sm font-semibold text-gray-600">Unit Number</th>
-                        <th class="text-left py-4 px-4 text-sm font-semibold text-gray-600">Tenant Name</th>
-                        <th class="text-left py-4 px-4 text-sm font-semibold text-gray-600">Due Date</th>
-                        <th class="text-left py-4 px-4 text-sm font-semibold text-gray-600">Period Covered</th>
-                        <th class="text-left py-4 px-4 text-sm font-semibold text-gray-600">Total Amount</th>
-                        <th class="text-left py-4 px-4 text-sm font-semibold text-gray-600">Payment Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse ($billingHistory as $billing)
-                        <tr wire:key="billing-{{ $billing['billing_id'] }}" class="border-b border-gray-100 hover:bg-blue-50 transition-colors">
-                            <td class="py-4 px-4">
-                                <span class="text-blue-700 font-semibold">{{ $billing['unit_number'] }}</span>
-                            </td>
-                            <td class="py-4 px-4 text-gray-700">{{ $billing['tenant_name'] }}</td>
-                            <td class="py-4 px-4 text-gray-700">{{ \Carbon\Carbon::parse($billing['billing_date'])->format('F j, Y') }}</td>
-                            <td class="py-4 px-4 text-gray-700">{{ $billing['period_covered'] }}</td>
-                            <td class="py-4 px-4 text-gray-700 font-semibold">₱
-                                {{ number_format($billing['amount']) }}</td>
-                            <td class="py-4 px-4">
+                {{-- Month Dropdown --}}
+                @php
+                    $months = [
+                        1 => 'January', 2 => 'February', 3 => 'March', 4 => 'April',
+                        5 => 'May', 6 => 'June', 7 => 'July', 8 => 'August',
+                        9 => 'September', 10 => 'October', 11 => 'November', 12 => 'December'
+                    ];
+                    // Calculate Label: If filter is selected, show that month name, else 'Month'
+                    $currentLabel = $filterPeriod ? $months[$filterPeriod] : 'Month';
+                @endphp
 
-                                @if($billing['status'] === 'Annually')
-                                    <span class="text-gray-700">{{ $billing['status'] }}</span>
-                                @else
-                                    <div x-data="{ open: false }" class="relative">
-                                        <button @click="open = !open" class="bg-blue-800 text-white text-xs font-semibold py-1.5 px-3 rounded-lg w-28 flex items-center justify-between">
-                                            <span>
-                                                {{ $billing['status'] === 'Paid' ? 'Paid' : ($billing['status'] === 'Overdue' ? 'Overdue' : 'Upcoming') }}
-                                            </span>
-                                            <svg :class="{ 'rotate-180': open }" class="w-4 h-4 transition-transform duration-200" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
-                                        </button>
+                <x-dropdown
+                    label="{{ $currentLabel }}"
+                    align="right"
+                    width="w-48"
+                >
+                    {{-- Option 1: All Time --}}
+                    <x-dropdown-item
+                        wire:click="setFilterPeriod('')"
+                        @click="open = false"
+                        :active="$filterPeriod === ''"
+                    >
+                        All Months
+                    </x-dropdown-item>
 
-                                        <div x-show="open"
-                                             @click.away="open = false"
-                                             x-transition
-                                             class="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg"
-                                             style="display: none;">
+                    {{-- Option 2: Loop 12 Months --}}
+                    @foreach($months as $num => $name)
+                        <x-dropdown-item
+                            wire:click="setFilterPeriod({{ $num }})"
+                            @click="open = false"
+                            :active="$filterPeriod == $num"
+                        >
+                            {{ $name }}
+                        </x-dropdown-item>
+                    @endforeach
+                </x-dropdown>
 
-                                            <a href="#" wire:click.prevent="setStatus({{ $billing['billing_id'] }}, 'Paid')" @click="open = false"
-                                               class="block px-3 py-2 text-xs text-gray-700 hover:bg-gray-100">
-                                               Set as Paid
-                                            </a>
-                                            <a href="#" wire:click.prevent="setStatus({{ $billing['billing_id'] }}, 'Unpaid')" @click="open = false"
-                                               class="block px-3 py-2 text-xs text-gray-700 hover:bg-gray-100">
-                                               Set as Upcoming
-                                            </a>
-                                            <a href="#" wire:click.prevent="setStatus({{ $billing['billing_id'] }}, 'Overdue')" @click="open = false"
-                                               class="block px-3 py-2 text-xs text-gray-700 hover:bg-gray-100">
-                                               Set as Overdue
-                                            </a>
-                                        </div>
-                                    </div>
-                                @endif
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="6" class="text-center py-8 text-gray-500">
-                                No records found for this status.
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-    </div>
+                {{-- Building Dropdown (Unchanged) --}}
+                <x-dropdown
+                    label="{{ $filterBuilding ? 'Building ' . $filterBuilding : 'Building 1' }}"
+                    align="right"
+                    width="w-48"
+                >
+                    <x-dropdown-item wire:click="$set('filterBuilding', '')" @click="open = false" :active="$filterBuilding === ''">
+                        All Buildings
+                    </x-dropdown-item>
+                    <x-dropdown-item wire:click="$set('filterBuilding', '1')" @click="open = false" :active="$filterBuilding === '1'">
+                        Building 1
+                    </x-dropdown-item>
+                </x-dropdown>
+
+            </div>
+        </x-slot:filters>
+
+        {{-- 2. TABLE CONTENT --}}
+        <x-ui.table>
+            <x-slot:head>
+                <x-ui.th>Transaction ID</x-ui.th>
+                <x-ui.th>Tenant Name</x-ui.th>
+                <x-ui.th>Due Date</x-ui.th>
+                <x-ui.th>Period Covered</x-ui.th>
+                <x-ui.th>Total Amount</x-ui.th>
+                <x-ui.th class="text-center">Payment Status</x-ui.th>
+                <x-ui.th class="text-center">Conform Payment</x-ui.th>
+            </x-slot:head>
+
+            <x-slot:body>
+                @forelse ($payments as $payment)
+                    <x-ui.tr wire:key="payment-{{ $payment->billing_id }}">
+                        <x-ui.td class="font-bold text-[#1E0E4B]">
+                            FT-{{ 202300 + $payment->billing_id }}
+                        </x-ui.td>
+
+                        {{-- Tenant Name --}}
+                        <x-ui.td class="text-[#1E0E4B] font-medium">
+                            {{ $payment->first_name }} {{ $payment->last_name }}
+                        </x-ui.td>
+
+                        {{-- Due Date --}}
+                        <x-ui.td class="text-[#1E0E4B]">
+                            {{ Carbon\Carbon::parse($payment->billing_date)->format('F d, Y') }}
+                        </x-ui.td>
+
+                        {{-- Period Covered --}}
+                        <x-ui.td class="text-[#1E0E4B]">
+                            {{ Carbon\Carbon::parse($payment->billing_date)->format('M') }}-{{ Carbon\Carbon::parse($payment->next_billing)->format('M Y') }}
+                        </x-ui.td>
+
+                        {{-- Total Amount --}}
+                        <x-ui.td class="font-bold text-[#1E0E4B]">
+                            ₱ {{ number_format($payment->to_pay, 0) }}
+                        </x-ui.td>
+
+                        {{-- Status Badges --}}
+                        <x-ui.td class="text-center">
+                            @php
+                                $status = strtolower($payment->status);
+                            @endphp
+
+                            @if($status === 'paid')
+                                <span class="inline-flex items-center justify-center px-6 py-2 rounded-full text-xs font-bold bg-[#D4F4DD] text-[#537D3A] min-w-[100px]">
+                                    Paid
+                                </span>
+                            @elseif($status === 'overdue')
+                                <span class="inline-flex items-center justify-center px-6 py-2 rounded-full text-xs font-bold bg-[#FEE2E2] text-[#DC2626] min-w-[100px]">
+                                    Overdue
+                                </span>
+                            @else
+                                <span class="inline-flex items-center justify-center px-6 py-2 rounded-full text-xs font-bold bg-[#FFF3DD] text-[#CD8500] min-w-[100px]">
+                                    Upcoming
+                                </span>
+                            @endif
+                        </x-ui.td>
+
+                        {{-- Conform Payment Button --}}
+                        <x-ui.td class="text-center">
+                            @php
+                                $status = strtolower($payment->status);
+                            @endphp
+
+                            @if($status !== 'paid')
+                                <button
+                                    wire:click="markAsPaid({{ $payment->billing_id }})"
+                                    class="inline-flex items-center justify-center px-4 py-1 rounded border border-[#22C55E] text-[#22C55E] text-xs font-bold hover:bg-[#22C55E] hover:text-white transition-all min-w-[100px]"
+                                >
+                                    Mark As Paid
+                                </button>
+                            @else
+                                <button disabled class="inline-flex items-center justify-center px-4 py-1 rounded border border-gray-200 text-gray-400 text-xs font-bold min-w-[100px] cursor-not-allowed bg-white">
+                                    Paid
+                                </button>
+                            @endif
+                        </x-ui.td>
+                    </x-ui.tr>
+                @empty
+                    <x-ui.tr>
+                        <x-ui.td colspan="7" class="text-center py-12 text-slate-500">
+                            No payment records found.
+                        </x-ui.td>
+                    </x-ui.tr>
+                @endforelse
+            </x-slot:body>
+        </x-ui.table>
+
+        {{-- 3. PAGINATION FOOTER (Using your custom blue template) --}}
+        <x-slot:footer>
+            {{ $payments->links('livewire.layouts.components.paginate-blue') }}
+        </x-slot:footer>
+
+    </x-ui.card-with-tabs>
 </div>
