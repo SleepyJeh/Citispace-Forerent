@@ -17,6 +17,8 @@
 
     {{-- The Revenue Component --}}
     <livewire:layouts.financials.revenue-container />
+    <livewire:layouts.revenue-forecast />
+    <livewire:layouts.maint-forecast />
 
     {{-- Modals --}}
     <livewire:layouts.managers.add-manager-modal modal-id="manager-dashboard" />
