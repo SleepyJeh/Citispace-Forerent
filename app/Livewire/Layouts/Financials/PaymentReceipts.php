@@ -1,108 +1,89 @@
 <?php
 
 namespace App\Livewire\Layouts\Financials;
+
 use Livewire\Component;
+use Livewire\WithPagination;
+use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class PaymentReceipts extends Component
 {
-    public $activeTab = 'all'; // Default tab
-    public $allBillingHistory = []; // Public property to hold data
+    use WithPagination;
 
-    // Private method to get the initial data
-    private function getFullBillingHistory()
+    public $activeTab = 'all';
+
+    // Filters
+    public $filterPeriod = '';
+    public $filterBuilding = '';
+
+    // FIX 1: Reset to Page 1 when filters change
+    public function updatedActiveTab()
     {
-        return [
-            [
-                'billing_id' => 1,
-                'lease_id' => 101,
-                'billing_date' => '2025-01-28',
-                'next_billing' => '2025-02-28',
-                'amount' => 24000.00,
-                'status' => 'Paid',
-                'tenant_name' => 'Adam Candelaria',
-                'unit_number' => 'Unit 103',
-                'period_covered' => 'January 2025',
-            ],
-            [
-                'billing_id' => 2,
-                'lease_id' => 102,
-                'billing_date' => '2025-01-28',
-                'next_billing' => '2025-02-28',
-                'amount' => 24000.00,
-                'status' => 'Overdue',
-                'tenant_name' => 'Adam Candelaria',
-                'unit_number' => 'Unit 103',
-                'period_covered' => 'January 2025',
-            ],
-            [
-                'billing_id' => 3,
-                'lease_id' => 103,
-                'billing_date' => '2025-01-28',
-                'next_billing' => '2025-02-28',
-                'amount' => 24000.00,
-                'status' => 'Unpaid',
-                'tenant_name' => 'Adam Candelaria',
-                'unit_number' => 'Unit 103',
-                'period_covered' => 'January 2025',
-            ],
-            [
-                'billing_id' => 4,
-                'lease_id' => 104,
-                'billing_date' => '2025-01-28',
-                'next_billing' => '2026-01-28',
-                'amount' => 24000.00,
-                'status' => 'Unpaid', // UPDATED: Changed from 'Annually'
-                'tenant_name' => 'Adam Candelaria',
-                'unit_number' => 'Unit 103',
-                'period_covered' => 'January 2025',
-            ],
-        ];
+        $this->resetPage();
     }
-
-    // Load data into the public property when component mounts
-    public function mount()
+    public function updatedFilterPeriod()
     {
-        $this->allBillingHistory = $this->getFullBillingHistory();
-    }
-
-    // Action to update the status
-    public function setStatus($billingId, $newStatus)
+        $this->resetPage();
+    } // <--- Add this
+    public function updatedFilterBuilding()
     {
-        // Find and update the item in the public array
-        foreach ($this->allBillingHistory as $key => $billing) {
-            if ($billing['billing_id'] == $billingId) {
-                $this->allBillingHistory[$key]['status'] = $newStatus;
-                break; // Stop the loop once found and updated
-            }
-        }
+        $this->resetPage();
+    } // <--- Add this
+
+    public function markAsPaid($id)
+    {
+        DB::table('billings')->where('billing_id', $id)->update([
+            'status' => 'Paid',
+            'amount' => DB::raw('to_pay'),
+            'updated_at' => now()
+        ]);
+
+        $this->dispatch('show-toast', ['message' => 'Payment marked as Paid!']);
     }
 
     public function render()
     {
-        $allData = $this->allBillingHistory; // Use the public property
+        $baseQuery = DB::table('billings')
+            ->join('leases', 'billings.lease_id', '=', 'leases.lease_id')
+            ->join('users', 'leases.tenant_id', '=', 'users.user_id')
+            ->select(
+                'billings.*',
+                'users.first_name',
+                'users.last_name',
+                'leases.contract_rate'
+            );
 
-        // Calculate counts
-        $upcomingCount = count(array_filter($allData, fn($item) => $item['status'] === 'Unpaid'));
-        $overdueCount = count(array_filter($allData, fn($item) => $item['status'] === 'Overdue'));
-        $paidCount = count(array_filter($allData, fn($item) => $item['status'] === 'Paid'));
-        $allCount = count($allData);
+        $counts = [
+            'all'      => (clone $baseQuery)->count(),
+            'upcoming' => (clone $baseQuery)->where('billings.status', 'Unpaid')->count(),
+            'paid'     => (clone $baseQuery)->where('billings.status', 'Paid')->count(),
+            'unpaid'   => (clone $baseQuery)->where('billings.status', 'Overdue')->count(),
+        ];
 
-        // Filter data based on active tab
-        $filteredData = $allData;
-        if ($this->activeTab === 'Upcoming') {
-            $filteredData = array_filter($allData, fn($item) => $item['status'] === 'Unpaid');
-        } elseif ($this->activeTab === 'Overdue') {
-            $filteredData = array_filter($allData, fn($item) => $item['status'] === 'Overdue');
-        } elseif ($this->activeTab === 'Paid') {
-            $filteredData = array_filter($allData, fn($item) => $item['status'] === 'Paid');
+        $query = clone $baseQuery;
+
+        match ($this->activeTab) {
+            'upcoming' => $query->where('billings.status', 'Unpaid'),
+            'paid'     => $query->where('billings.status', 'Paid'),
+            'unpaid'   => $query->where('billings.status', 'Overdue'),
+            default    => null,
+        };
+
+        // Filter Logic
+        if ($this->filterPeriod) {
+            $query->whereMonth('billings.billing_date', $this->filterPeriod);
         }
 
+        if ($this->filterBuilding) {
+            // Add building filter logic here if needed
+        }
+
+        $payments = $query->orderBy('billings.billing_date', 'desc')->paginate(10);
+
         return view('livewire.layouts.financials.payment-receipts', [
-            'billingHistory' => $filteredData,
-            'allCount' => $allCount,
-            'upcomingCount' => $upcomingCount,
-            'overdueCount' => $overdueCount,
-            'paidCount' => $paidCount,
+            'payments' => $payments,
+            'counts' => $counts
         ]);
     }
 }

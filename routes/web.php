@@ -22,18 +22,8 @@ Route::get('/', function () {
     };
 });
 
-
-
-
-
-
 Route::middleware('auth')->group(function () {
-    // ... your other routes
-
-    // This route shows the list of properties (the page you uploaded)
     Route::get('/property', [PropertyController::class, 'index'])->name('properties.index');
-
-    // This route will show the "Add Property" form (we can build this next)
     Route::get('/properties/create', [PropertyController::class, 'create'])->name('properties.create');
 });
 
@@ -42,9 +32,11 @@ Route::get('/revenue', function () {
 })->name('revenue');
 
 // Messages
-Route::get('/messages', function () {
-    return view('users.messages');
-})->name('message');
+Route::middleware(['auth'])->prefix('owner')->group(function () {
+    Route::get('/messages', function () {
+        return view('users.admin.owner.message');
+    })->name('message'); 
+});
 
 // Settings
 Route::get('/settings', function () {

@@ -1,77 +1,58 @@
-{{-- resources/views/livewire/layouts/maintenance-history-list.blade.php --}}
+<div class="bg-white rounded-2xl shadow-md h-full flex flex-col">
+    {{-- Header / Filters --}}
+    <div class="p-4 border-b border-gray-100 flex justify-between items-center flex-shrink-0">
+        <h3 class="font-bold text-gray-800">Requests</h3>
 
-<div class="w-full bg-white p-4 md:p-6 rounded-2xl shadow-md h-full flex flex-col">
+        {{-- Status Filter (Only valid for Manager) --}}
+        @if(property_exists($this, 'filter'))
+            <select wire:model.live="filter" class="text-sm border-gray-200 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                <option value="all">All Status</option>
+                <option value="Pending">Pending</option>
+                <option value="Ongoing">Ongoing</option>
+                <option value="Completed">Completed</option>
+            </select>
+        @endif
+    </div>
 
-    {{-- History List Container --}}
-    <div class="flex-1 overflow-y-auto custom-scrollbar px-2 space-y-3">
-
-        {{-- Loop through the history items --}}
-        @forelse ($historyItems as $item)
-            @php
-                $baseClasses = 'w-full text-left font-semibold p-4 rounded-lg border-2 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-400';
-
-                $isActive = ($item['request_id'] == $activeHistoryId);
-
-                if ($isActive) {
-                    $buttonClasses = 'bg-blue-600 text-white border-blue-600 shadow-lg';
-                } else {
-                    $buttonClasses = 'bg-white text-gray-700 border-gray-200 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-500';
-                }
-            @endphp
-
-            <button
-                type="button"
-                wire:click="selectHistory({{ $item['request_id'] }})"
-                class="{{ $baseClasses }} {{ $buttonClasses }}"
+    {{-- Scrollable List --}}
+    <div class="overflow-y-auto flex-1 p-2 space-y-2 custom-scrollbar">
+        @forelse($historyItems as $item)
+            <div
+                wire:key="history-{{ $item->request_id }}"
+                wire:click="selectHistory({{ $item->request_id }})"
+                class="p-4 rounded-xl cursor-pointer transition-all duration-200 border border-transparent hover:shadow-md
+                {{ $activeHistoryId === $item->request_id ? 'bg-blue-50 border-blue-200 ring-1 ring-blue-300' : 'bg-gray-50 hover:bg-white hover:border-gray-200' }}"
             >
-                <div class="flex justify-between items-start">
-                    <div class="flex-1 text-left">
-                        <h4 class="font-semibold text-base mb-1">{{ $item['tenant_name'] }}</h4>
-                        <p class="text-sm opacity-90">{{ $item['unit_number'] }}</p>
-                    </div>
-
-                    {{-- Status Badge --}}
-                    <div class="flex-shrink-0 ml-2">
-                        @if($item['status'] === 'Completed')
-                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                Completed
-                            </span>
-                        @elseif($item['status'] === 'Ongoing')
-                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                In Progress
-                            </span>
-                        @else
-                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                                Pending
-                            </span>
-                        @endif
-                    </div>
+                <div class="flex justify-between items-start mb-2">
+                    <span class="font-bold text-[#070642] text-sm">
+                        {{ $item->ticket_number ?? 'TKT-'.$item->request_id }}
+                    </span>
+                    <span class="text-xs px-2 py-1 rounded-full font-medium
+                        {{ $item->status === 'Completed' ? 'bg-green-100 text-green-700' :
+                          ($item->status === 'Ongoing' ? 'bg-blue-100 text-blue-700' : 'bg-orange-100 text-orange-700') }}">
+                        {{ $item->status }}
+                    </span>
                 </div>
-            </button>
-        @empty
-            <div class="text-center py-8">
-                <p class="text-gray-500 mb-4">No maintenance history found for this status.</p>
+
+                <p class="text-sm text-gray-600 line-clamp-2 mb-2">{{ $item->problem }}</p>
+
+                <div class="flex justify-between items-center text-xs text-gray-500">
+                    <span>
+                        {{ \Carbon\Carbon::parse($item->created_at)->format('M d, Y') }}
+                    </span>
+                    {{-- Only show Tenant Name/Unit if the property exists (Manager View) --}}
+                    @if(isset($item->tenant_name))
+                        <span class="flex items-center gap-1">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                            {{ $item->tenant_name }}
+                        </span>
+                    @endif
+                </div>
             </div>
-        @endempty
+        @empty
+            <div class="text-center py-10 text-gray-400">
+                <p>No maintenance requests found.</p>
+            </div>
+        @endforelse
     </div>
 </div>
-
-{{-- This component shares the same custom scrollbar style as tenant-navigation --}}
-@push('styles')
-<style>
-    .custom-scrollbar::-webkit-scrollbar {
-        width: 8px;
-    }
-    .custom-scrollbar::-webkit-scrollbar-track {
-        background: #f1f1ff;
-        border-radius: 10px;
-    }
-    .custom-scrollbar::-webkit-scrollbar-thumb {
-        background: #0039C6;
-        border-radius: 10px;
-    }
-    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-        background: #002A8F;
-    }
-</style>
-@endpush

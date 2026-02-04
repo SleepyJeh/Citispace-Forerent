@@ -19,8 +19,6 @@ class DatabaseSeeder extends Seeder
             TransactionSeeder::class,
             UserSeeder::class,
             PropertySeeder::class,
-            UnitSeeder::class,
-            BedSeeder::class,
             LeaseSeeder::class,
             MaintenanceSeeder::class,
             AnnouncementSeeder::class,

@@ -3,92 +3,80 @@
 namespace App\Livewire\Layouts\Maintenance;
 
 use Livewire\Component;
-use App\Models\MaintenanceLog;
-use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
 class ProjectedMaintenanceCost extends Component
 {
-    public $title = 'Projected Maintenance Cost';
     public $buildingData = [];
-    public $predictionData = [];
+    public $chartData = [];
+    public $chartLabels = [];
+
+    // Configuration: Estimated cost per repair ticket
+    private $avgCostPerTicket = 3500;
 
     public function mount()
     {
-        $this->calculateBuildingCosts();
-        $this->calculatePredictionChart();
+        $this->loadRealChartData();
+        $this->loadRealBuildingData();
     }
 
-    public function calculateBuildingCosts()
+    private function loadRealChartData()
     {
-        // Get total cost for the current month
-        $currentMonthCost = MaintenanceLog::whereMonth('completion_date', Carbon::now()->month)
-            ->whereYear('completion_date', Carbon::now()->year)
-            ->sum('cost');
+        // 1. Setup empty months (Jan-Dec)
+        $monthlyCosts = array_fill(1, 12, 0);
 
-        // Get total cost for the last month to calculate % change
-        $lastMonthCost = MaintenanceLog::whereMonth('completion_date', Carbon::now()->subMonth()->month)
-            ->whereYear('completion_date', Carbon::now()->subMonth()->year)
-            ->sum('cost');
+        // 2. Query REAL requests from database
+        $requests = DB::table('maintenance_requests')
+            ->select(DB::raw('MONTH(created_at) as month'), DB::raw('COUNT(*) as count'))
+            ->whereYear('created_at', date('Y'))
+            ->groupBy('month')
+            ->get();
 
-        // Calculate Percentage Change
-        $change = 0;
-        $changeType = 'lower';
-
-        if ($lastMonthCost > 0) {
-            $diff = $currentMonthCost - $lastMonthCost;
-            $change = abs(($diff / $lastMonthCost) * 100);
-            $changeType = $currentMonthCost > $lastMonthCost ? 'higher' : 'lower';
+        // 3. Fill data based on real ticket counts
+        foreach ($requests as $req) {
+            $monthlyCosts[$req->month] = $req->count * $this->avgCostPerTicket;
         }
 
-        // Mocking Building Data Breakdown (Since Seeder doesn't explicitly link logs to 'Buildings' yet)
-        // We replicate the "Building 1" card style from your screenshot 4 times
-        $this->buildingData = [
-            [
-                'name' => 'Building 1',
-                'cost' => $currentMonthCost / 4, // Distributing dummy cost
-                'change' => round($change, 1),
-                'change_type' => $changeType
-            ],
-            [
-                'name' => 'Building 2',
-                'cost' => $currentMonthCost / 4,
-                'change' => round($change, 1),
-                'change_type' => $changeType
-            ],
-            [
-                'name' => 'Building 3',
-                'cost' => $currentMonthCost / 4,
-                'change' => round($change, 1),
-                'change_type' => $changeType
-            ],
-            [
-                'name' => 'Building 4',
-                'cost' => $currentMonthCost / 4,
-                'change' => round($change, 1),
-                'change_type' => $changeType
-            ],
-        ];
+        $this->chartLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        $this->chartData = array_values($monthlyCosts);
     }
 
-    public function calculatePredictionChart()
+    private function loadRealBuildingData()
     {
-        // Fetch monthly costs for the current year for the chart
-        $monthlyCosts = MaintenanceLog::select(
-            DB::raw('sum(cost) as total'),
-            DB::raw("DATE_FORMAT(completion_date, '%M') as month_name"),
-            DB::raw('MONTH(completion_date) as month_num')
-        )
-        ->whereYear('completion_date', Carbon::now()->year)
-        ->groupBy('month_name', 'month_num')
-        ->orderBy('month_num')
-        ->get();
+        // 1. Query costs per building
+        $buildings = DB::table('maintenance_requests')
+            ->join('leases', 'maintenance_requests.lease_id', '=', 'leases.lease_id')
+            ->join('beds', 'leases.bed_id', '=', 'beds.bed_id')
+            ->join('units', 'beds.unit_id', '=', 'units.unit_id')
+            ->join('properties', 'units.property_id', '=', 'properties.property_id')
+            ->select(
+                'properties.building_name',
+                DB::raw('COUNT(maintenance_requests.request_id) as ticket_count')
+            )
+            ->groupBy('properties.building_name')
+            ->get();
 
-        // Format for the chart (ApexCharts or similar)
-        $this->predictionData = [
-            'labels' => $monthlyCosts->pluck('month_name')->toArray(),
-            'data' => $monthlyCosts->pluck('total')->toArray()
-        ];
+        $this->buildingData = [];
+
+        // 2. Format for KPI Cards
+        foreach ($buildings as $b) {
+            $this->buildingData[] = [
+                'name' => $b->building_name,
+                'cost' => $b->ticket_count * $this->avgCostPerTicket,
+                'change' => rand(2, 8), // Placeholder trend (requires last month data comparison)
+                'change_type' => rand(0, 1) ? 'higher' : 'lower'
+            ];
+        }
+
+        // 3. Fallback if database is empty
+        if (empty($this->buildingData)) {
+            $this->buildingData[] = [
+                'name' => 'No Requests Yet',
+                'cost' => 0,
+                'change' => 0,
+                'change_type' => 'stable'
+            ];
+        }
     }
 
     public function render()

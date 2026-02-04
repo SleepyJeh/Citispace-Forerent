@@ -17,17 +17,14 @@
         />
     </div>
 
-    {{-- Tenant Management Section --}}
-    <div class="mt-6">
+     <div class="mt-6">
         <div class="w-full">
             <div class="flex flex-col lg:flex-row gap-6 h-[calc(100vh-400px)] min-h-[600px]">
-                {{-- Left Panel: Tenant Navigation --}}
-                <div class="lg:w-1/3">
+                 <div class="lg:w-1/3">
                     <livewire:layouts.tenants.tenant-navigation />
                 </div>
 
-                {{-- Right Panel: Tenant Detail --}}
-                <div class="lg:w-2/3">
+                 <div class="lg:w-2/3">
                     <livewire:layouts.tenants.tenant-detail />
                 </div>
             </div>
