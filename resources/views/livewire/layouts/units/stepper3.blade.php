@@ -15,7 +15,7 @@
         </div>
     @endif
 
-    {{-- Redesigned Unit Details Section --}}
+    {{-- Unit Details Section --}}
     <div class="bg-white rounded-lg border border-gray-200 shadow-sm mb-6">
         <div class="bg-[#003CC1] px-4 py-3 rounded-t-lg border-b border-gray-200">
             <h4 class="text-md font-semibold text-white">Unit Details</h4>
@@ -74,7 +74,7 @@
         </div>
     </div>
 
-    {{-- PREDICTION SECTION - REVISED DESIGN --}}
+    {{-- PREDICTION SECTION --}}
     <div class="rounded-xl overflow-hidden shadow-md mb-6" style="background: linear-gradient(90deg, #1D56D9 0%, #276AFF 47.95%, #2048BD 100%);">
         <div class="p-6 md:p-8 text-white">
 
@@ -90,7 +90,7 @@
                             <label class="text-sm font-medium opacity-80">Predicted Monthly Rate</label>
                         </div>
                         <div id="predict-price" class="relative">
-                            {{-- True glass morphism container --}}
+                            {{-- Glass container --}}
                             <div class="w-32 h-12 bg-white/20 backdrop-blur-md rounded-lg border border-white/20 flex items-center justify-center shadow-lg">
                                 <span class="text-2xl font-bold text-white">
                                     @if ($predicted_price)
@@ -113,7 +113,7 @@
                 <div class="relative md:text-right md:flex md:flex-col md:items-end">
                     <label for="actual_price" class="block text-l font-medium text-white opacity-80 mb-2 md:text-right">Set Actual Price</label>
 
-                    {{-- Glassmorphic container matching predict-price style --}}
+                    {{-- Glass container --}}
                     <div id="actual-price" class="w-80 h-18 bg-white/20 backdrop-blur-md rounded-lg border border-white/20 flex items-center justify-center shadow-lg px-4 md:justify-end">
                         <div class="flex items-center w-full md:justify-end">
                             <span class="text-3xl font-medium text-white opacity-70 mr-2">₱</span>
@@ -156,20 +156,50 @@
     </div>
 
 
-    {{-- Navigation Buttons --}}
+    {{-- ================================================= --}}
+    {{-- NAVIGATION BUTTONS (CANCEL BUTTON REMOVED) --}}
+    {{-- ================================================= --}}
     <div class="flex justify-between items-center mt-6">
+
+        {{-- Previous Button --}}
         <button
             wire:click="previousStep"
-            class="py-2.5 px-6 font-medium text-sm rounded-lg border-2 border-[#1080FC] text-white bg-[#1080FC] hover:bg-[#64AEFF] transition-colors duration-200">
+            class="py-2.5 px-6 font-medium text-sm rounded-lg shadow-sm border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+        >
             Previous
         </button>
 
-        {{-- Show Save button only if prediction exists --}}
+        {{-- Save Button --}}
         @if ($predicted_price)
-            <button wire:click="saveUnit"
-                class="py-2.5 px-6 font-medium text-sm text-white bg-[#070589] rounded-lg hover:bg-[#1511D6] transition-colors duration-200 shadow-md">
+            <button
+                wire:click="$dispatch('open-modal', 'publish-confirmation')"
+                class="py-2.5 px-6 font-medium text-sm text-white bg-[#070589] rounded-lg hover:bg-[#1511D6] transition-colors duration-200 shadow-md"
+            >
                 Save Unit
             </button>
         @endif
     </div>
+
+
+    {{-- ================================================= --}}
+    {{-- REUSABLE MODALS --}}
+    {{-- ================================================= --}}
+
+    {{-- 1. Publish Confirmation (Uses standard Confirm Modal) --}}
+    <x-ui.modal-confirm
+        name="publish-confirmation"
+        title="Publish Unit?"
+        description="Please review your listing one last time before it is published."
+        confirmText="Save"
+        cancelText="Cancel"
+        confirmAction="saveUnit"
+    />
+
+    {{-- 2. Discard Confirmation (Uses new Cancel Modal) --}}
+    <x-ui.modal-cancel
+        name="discard-confirmation"
+        route="{{ route('properties.index') }}"
+    />
+
 </div>
+

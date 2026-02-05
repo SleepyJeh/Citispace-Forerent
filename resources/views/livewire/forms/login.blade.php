@@ -72,7 +72,7 @@
             @error('email') <p class="text-red-500 text-xs mt-1.5">{{ $message }}</p> @enderror
         </div>
 
-        {{-- NEW: Wrapper div for Password field (for spacing) --}}
+        {{-- Password Field Wrapper --}}
         <div>
             <div class="relative">
                 <input
@@ -88,33 +88,40 @@
 
                 <label
                     for="password"
-                    {{-- This is identical to the email label --}}
                     class="absolute text-sm text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-white dark:bg-gray-900 px-2 peer-focus:px-2 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 start-4">
                     Password
                 </label>
 
-                {{--
-                  Icon Div:
-                  - This is now a sibling to the input and label.
-                  - 'absolute inset-y-0 right-0' positions it correctly.
-                --}}
-                <div class="absolute inset-y-0 right-0 flex items-center pr-3 cursor-pointer">
-                    <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                {{-- Toggle Button (Plain JS) --}}
+                <button type="button" onclick="togglePasswordVisibility()" class="absolute inset-y-0 right-0 flex items-center pr-3 cursor-pointer focus:outline-none">
+
+                    {{-- Eye Icon (Show) --}}
+                    <svg id="icon-show" class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+
+                    {{-- Eye Slash Icon (Hide) - Hidden by default --}}
+                    <svg id="icon-hide" class="h-5 w-5 text-gray-400 hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.243 4.243l-4.243-4.243" />
                     </svg>
-                </div>
+                </button>
             </div>
-            {{-- Validation error remains outside the relative div --}}
             @error('password') <p class="text-red-500 text-xs mt-1.5">{{ $message }}</p> @enderror
         </div>
 
-        {{-- Remember Me & Forgot Password (Unchanged) --}}
+        {{-- Remember Me & Forgot Password --}}
         <div class="flex items-center justify-between text-sm">
             <div class="flex items-center space-x-2">
-                <input type="checkbox" wire:model="remember" id="remember" class="h-4 w-4 rounded border-gray-300 text-blue-600 shadow-sm focus:ring-blue-500">
-                <label for="remember" class="text-gray-700">Remember me</label>
+                <input
+                    type="checkbox"
+                    id="remember"
+                    {{-- Binds to 'public $remember' in LoginForm.php --}}
+                    wire:model="remember"
+                    class="h-4 w-4 rounded border-gray-300 text-blue-600 shadow-sm focus:ring-blue-500 cursor-pointer">
+                <label for="remember" class="text-gray-700 cursor-pointer">Remember me</label>
             </div>
-            <a href="#" class="font-medium text-[var(--color-primary)] hover:text-blue-700">
+            <a href="{{ route('password.request') }}" class="font-medium text-[var(--color-primary)] hover:text-blue-700">
                 Forgot your password?
             </a>
         </div>
@@ -124,4 +131,22 @@
             Sign In
         </button>
     </form>
+
+    <script>
+    function togglePasswordVisibility() {
+        var passwordInput = document.getElementById('password');
+        var iconShow = document.getElementById('icon-show');
+        var iconHide = document.getElementById('icon-hide');
+
+        if (passwordInput.type === "password") {
+            passwordInput.type = "text";
+            iconShow.classList.add('hidden');
+            iconHide.classList.remove('hidden');
+        } else {
+            passwordInput.type = "password";
+            iconShow.classList.remove('hidden');
+            iconHide.classList.add('hidden');
+        }
+    }
+</script>
 </div>

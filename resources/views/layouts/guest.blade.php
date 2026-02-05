@@ -10,10 +10,13 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles
 </head>
-<body class="font-sans text-gray-900 antialiased">
-    
-    
+<body class="font-sans text-gray-900 antialiased min-h-screen flex flex-col sm:justify-center items-center pt-6 sm:pt-0 bg-gray-100">
+
+    {{-- 1. Keep this for standard Laravel controllers --}}
     @yield('content')
+
+    {{-- 2. ADD THIS: This is required for Livewire components to show up --}}
+    {{ $slot ?? '' }}
 
     @livewireScripts
 </body>

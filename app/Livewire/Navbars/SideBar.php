@@ -17,6 +17,7 @@ class SideBar extends Component
 
         // FIX: Handle Guest/Not Logged In State
         // If there is no user, we provide a default 'dashboard' key to prevent the view from crashing.
+
         if (!$user) {
             $this->navigations = [
                 'dashboard' => [

@@ -1,48 +1,58 @@
 @extends('layouts.app')
 
-{{-- 1. Pass the Title and Subtitle to the Main Layout --}}
 @section('header-title', 'SETTINGS')
-{{-- Note: I kept your subtitle, but you might want to change it since "View and record property" sounds like the Property page --}}
-@section('header-subtitle', 'View and update your profile settings')
+@section('header-subtitle', 'View and record property or unit')
 
 @section('content')
 
-    {{-- 2. Tabs Navigation --}}
-    <div class="mb-4 border-b border-gray-200 dark:border-gray-700">
-        <ul class="flex flex-wrap -mb-px text-sm font-medium text-center" id="settings-tab"
-            data-tabs-toggle="#settings-tab-content"
-            role="tablist"
-            data-tabs-active-classes="text-primary border-primary"
-            data-tabs-inactive-classes="text-gray-600 hover:text-primary border-transparent hover:border-gray-300">
+    <div class="w-full h-full max-w-[850px]">
 
-            <li class="me-2" role="presentation">
-                <button class="inline-block p-4 border-b-2 rounded-t-lg" id="personal-info-tab" data-tabs-target="#personal-info" type="button" role="tab" aria-controls="personal-info" aria-selected="true">
-                    Personal Information
-                </button>
-            </li>
-            <li class="me-2" role="presentation">
-                <button class="inline-block p-4 border-b-2 rounded-t-lg" id="security-tab" data-tabs-target="#security" type="button" role="tab" aria-controls="security" aria-selected="false">
-                    Security
-                </button>
-            </li>
-        </ul>
-    </div>
+        {{-- TABS NAVIGATION --}}
+        {{-- FIX: Used gap-8 for cleaner spacing instead of me-8 --}}
+        <div class="mb-8 border-b border-gray-200">
+            <ul class="flex flex-wrap gap-10 -mb-px text-lg font-bold" id="settings-tab"
+                data-tabs-toggle="#settings-tab-content"
+                role="tablist">
 
-    {{-- 3. Tab Content Areas --}}
-    <div id="settings-tab-content">
+                {{-- Tab 1: Personal Information --}}
+                <li role="presentation">
+                    <button
+                        class="inline-block pb-2 text-gray-400 border-b-4 border-transparent hover:text-gray-600 hover:border-gray-300 transition-all"
+                        id="personal-info-tab"
+                        data-tabs-target="#personal-info"
+                        type="button"
+                        role="tab"
+                        aria-controls="personal-info"
+                        aria-selected="false">
+                        Personal Information
+                    </button>
+                </li>
 
-        {{-- Personal Info Tab --}}
-        <div class="p-4 rounded-lg dark:bg-gray-800" id="personal-info" role="tabpanel" aria-labelledby="personal-info-tab">
-            {{-- CRITICAL: Your backend logic is preserved here --}}
-            <livewire:actions.settings-form />
+                {{-- Tab 2: Security --}}
+                <li role="presentation">
+                    <button
+                        class="inline-block pb-2 text-[#0C0B50] border-b-4 border-[#0C0B50]"
+                        id="security-tab"
+                        data-tabs-target="#security"
+                        type="button"
+                        role="tab"
+                        aria-controls="security"
+                        aria-selected="true">
+                        Security
+                    </button>
+                </li>
+            </ul>
         </div>
 
-        {{-- Security Tab --}}
-        <div class="hidden p-4 rounded-lg bg-gray-50 dark:bg-gray-800" id="security" role="tabpanel" aria-labelledby="security-tab">
-            <p class="text-sm text-gray-500 dark:text-gray-400">
-                This is the <strong class="font-medium text-gray-800 dark:text-white">Security</strong> tab.
-                You can add your password change form or two-factor authentication settings here.
-            </p>
+        {{-- TAB CONTENT --}}
+        <div id="settings-tab-content">
+            <div class="hidden" id="personal-info" role="tabpanel">
+                <livewire:actions.settings-form />
+            </div>
+
+            <div class="" id="security" role="tabpanel">
+                <livewire:layouts.settings.security-form />
+            </div>
         </div>
     </div>
 
