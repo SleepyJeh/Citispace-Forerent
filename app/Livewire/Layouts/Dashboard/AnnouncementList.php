@@ -7,13 +7,12 @@ use Livewire\Component;
 class AnnouncementList extends Component
 {
     public $announcements = [];
-    public $isLandlord = false; // Default to false
+    public $isLandlord = false; 
 
     public function mount($isLandlord = false)
     {
         $this->isLandlord = $isLandlord;
 
-        // Mock Data - Replace with Database Query later
         $this->announcements = [
             [
                 'date' => 'October 1, 2025',

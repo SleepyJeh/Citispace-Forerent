@@ -35,8 +35,7 @@ class Dashboard extends Component
     {
         $totalPotentialRent = $this->totalRentCollected + $this->totalUncollectedRent;
 
-        // Prevent "Division by Zero" error if there is no rent data yet
-        if ($totalPotentialRent > 0) {
+         if ($totalPotentialRent > 0) {
             $this->rentCollectedPercentage = ($this->totalRentCollected / $totalPotentialRent) * 100;
             $this->uncollectedPercentage = ($this->totalUncollectedRent / $totalPotentialRent) * 100;
         } else {
@@ -44,7 +43,6 @@ class Dashboard extends Component
             $this->uncollectedPercentage = 0;
         }
 
-        // For Income, let's compare it against your Revenue Target
         if ($this->revenueTarget > 0) {
             $this->incomePercentage = ($this->totalIncome / $this->revenueTarget) * 100;
         } else {

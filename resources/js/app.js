@@ -4,7 +4,7 @@ import 'flowbite';
 window.Alpine = Alpine;
 Alpine.start();
 
-// Initialize Flowbite dropdowns
+// Initialize  dropdowns
 document.addEventListener('DOMContentLoaded', function() {
     const dropdownToggles = document.querySelectorAll('[data-collapse-toggle]');
     dropdownToggles.forEach(toggle => {

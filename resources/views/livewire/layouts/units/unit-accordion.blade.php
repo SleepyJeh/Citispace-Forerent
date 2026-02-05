@@ -2,8 +2,10 @@
     {{-- Header --}}
     <div class="flex justify-between items-center mb-6 flex-shrink-0">
         <h3 class="text-xl font-bold text-gray-900">Units</h3>
-        <button wire:click="$dispatch('openAddUnitModal_property-dashboard')"
-        class="py-2 px-4 text-sm font-medium text-white bg-[#2360E8] rounded-lg hover:bg-[#1d4eb8] transition-colors">
+        <button
+            wire:click="$dispatch('open-add-unit-modal')"
+            class="py-2 px-4 text-sm font-medium text-white bg-[#2360E8] rounded-lg hover:bg-[#1d4eb8] transition-colors"
+        >
             + Add Unit
         </button>
     </div>

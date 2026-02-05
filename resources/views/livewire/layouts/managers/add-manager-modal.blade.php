@@ -1,10 +1,8 @@
 <div>
-    <!-- Modal Overlay -->
     @if($isOpen)
         <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm">
             <div class="relative w-full max-w-4xl bg-gray-50 rounded-2xl shadow-xl overflow-hidden max-h-[90vh] flex flex-col">
 
-                <!-- Modal Header - Blue Background -->
                 <div class="bg-[#070589] text-white p-6 flex-shrink-0">
                     <div class="flex items-start justify-between">
                         <div>
@@ -16,8 +14,8 @@
                             </p>
                         </div>
                         <button
-                            wire:click="close"
                             type="button"
+                            x-on:click="$dispatch('open-modal', 'discard-manager-confirmation')"
                             class="text-white hover:text-blue-200 transition-colors focus:outline-none">
                             <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -27,13 +25,10 @@
                     </div>
                 </div>
 
-                <!-- Modal Body - Scrollable -->
                 <div class="flex-1 overflow-y-auto">
-                    <!-- Main Content Area -->
                     <div class="bg-white rounded-xl shadow-lg border border-gray-200 mx-6 my-6">
-                        <form wire:submit.prevent="save" class="space-y-6 p-6">
+                        <div class="space-y-6 p-6">
 
-                            <!-- Profile Information Section -->
                             <div class="mb-6">
                                 <div class="flex items-center gap-2 mb-4">
                                     <svg class="w-5 h-5 text-gray-700" fill="currentColor" viewBox="0 0 20 20">
@@ -43,15 +38,12 @@
                                 </div>
 
                                 <div class="flex items-start gap-6">
-                                    <!-- Profile Picture Upload -->
                                     <div class="flex flex-col items-center text-center flex-shrink-0">
                                         <label for="profilePicture-{{ $modalId }}" class="cursor-pointer relative group">
                                             @if ($profilePicture)
                                                 @if(is_string($profilePicture))
-                                                    <!-- Existing image from database -->
                                                     <img src="{{ Storage::url($profilePicture) }}" alt="Profile Preview" class="w-24 h-24 rounded-full object-cover shadow-md border-4 border-[#001B5E]">
                                                 @else
-                                                    <!-- New uploaded image -->
                                                     <img src="{{ $profilePicture->temporaryUrl() }}" alt="Profile Preview" class="w-24 h-24 rounded-full object-cover shadow-md border-4 border-[#001B5E]">
                                                 @endif
                                             @else
@@ -86,7 +78,6 @@
                                         </div>
                                     </div>
 
-                                    <!-- Name Fields -->
                                     <div class="flex-1 flex flex-col gap-4">
                                         <div class="relative">
                                             <input
@@ -129,10 +120,8 @@
                                 </div>
                             </div>
 
-                            <!-- Divider -->
                             <hr class="my-6 border-gray-200 border-dashed">
 
-                            <!-- Contact Information Section -->
                             <div class="mb-6">
                                 <div class="flex items-center gap-2 mb-4">
                                     <svg class="w-5 h-5 text-gray-700" fill="currentColor" viewBox="0 0 20 20">
@@ -143,7 +132,6 @@
 
                                 <div class="grid grid-cols-2 gap-4">
                                     <div class="relative">
-                                        <!-- Input -->
                                         <input
                                             wire:model.defer="userForm.phoneNumber"
                                             type="text"
@@ -152,13 +140,11 @@
                                             placeholder=" "
                                         />
 
-                                        <!-- Fixed +63 prefix -->
                                         <div class="absolute top-4 left-0 px-3 flex items-center space-x-2 pointer-events-none">
                                             <span class="text-sm text-gray-500">+63</span>
                                             <span class="border-l border-gray-300 h-5"></span>
                                         </div>
 
-                                        <!-- Label -->
                                         <label
                                             for="phone-{{ $modalId }}"
                                             class="absolute text-sm text-gray-500 duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-white px-2 peer-focus:px-2 peer-focus:text-[#0030C5] peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 start-1">
@@ -195,10 +181,8 @@
                                 </div>
                             </div>
 
-                            <!-- Divider -->
                             <hr class="my-6 border-gray-200 border-dashed">
 
-                            <!-- Assign Properties Section -->
                             <div>
                                 <div class="flex items-center gap-2 mb-4">
                                     <svg class="w-5 h-5 text-gray-700" fill="currentColor" viewBox="0 0 20 20">
@@ -208,7 +192,6 @@
                                 </div>
 
                                 <div class="grid grid-cols-2 gap-4 mb-4">
-                                    <!-- Building Name -->
                                     <div class="relative">
                                         <select
                                             wire:model.live="selectedBuilding"
@@ -234,7 +217,6 @@
                                         @enderror
                                     </div>
 
-                                    <!-- Floor -->
                                     <div class="relative">
                                         <select
                                             wire:model.live="selectedFloor"
@@ -262,7 +244,6 @@
                                     </div>
                                 </div>
 
-                                <!-- Unit Number Selection -->
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Unit Number</label>
                                     <div class="border border-gray-300 rounded-lg p-4 max-h-48 overflow-y-auto bg-white">
@@ -296,14 +277,13 @@
                                 </div>
                             </div>
 
-                        </form>
+                        </div>
                     </div>
 
-                    <!-- Save Button -->
                     <div class="flex justify-center pb-6">
                         <button
                             type="button"
-                            wire:click="save"
+                            wire:click="$dispatch('open-modal', 'save-manager-confirmation')"
                             class="px-20 py-2.5 bg-[#070589] text-white text-sm font-semibold rounded-lg hover:bg-[#001445] focus:ring-4 focus:ring-blue-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             wire:loading.attr="disabled"
                         >
@@ -314,5 +294,54 @@
                 </div>
             </div>
         </div>
+
+        <x-ui.modal-confirm
+            name="save-manager-confirmation"
+            title="Save Manager?"
+            description="Are you sure you want to save this manager's information?"
+            confirmText="Yes, Save"
+            cancelText="Cancel"
+            confirmAction="save"
+        />
+
+        <div
+            x-data="{ show: false }"
+            x-show="show"
+            x-on:open-modal.window="if ($event.detail === 'discard-manager-confirmation') show = true"
+            x-on:close-modal.window="if ($event.detail === 'discard-manager-confirmation') show = false"
+            x-on:keydown.escape.window="show = false"
+            class="fixed inset-0 z-[60] flex items-center justify-center px-4 py-6 sm:px-0"
+            style="display: none;"
+        >
+            <div x-show="show" class="fixed inset-0 transform transition-all" x-on:click="show = false">
+                <div class="absolute inset-0 bg-gray-600 opacity-50"></div>
+            </div>
+
+            <div x-show="show" class="bg-white rounded-[20px] overflow-hidden shadow-xl transform transition-all sm:w-full sm:max-w-[480px] p-8 relative z-[100]">
+                <button @click="show = false" class="absolute top-5 right-5 text-[#0C0B50] hover:text-blue-700">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+
+                <div class="text-center mt-4 mb-8">
+                    <h3 class="text-2xl font-bold text-[#0C0B50] mb-3">Discard Unsaved Changes?</h3>
+                    <p class="text-gray-500 text-sm leading-relaxed px-4">Are you sure you want to close? All details will be lost.</p>
+                </div>
+
+                <div class="flex justify-center gap-4 px-2">
+                    <button
+                        wire:click="close"
+                        class="flex-1 bg-[#D6E6FF] hover:bg-[#c3daff] text-[#0C0B50] font-bold py-3 rounded-xl transition-colors text-sm">
+                        Discard
+                    </button>
+
+                    <button
+                        @click="show = false"
+                        class="flex-1 bg-[#104EA2] hover:bg-[#0d3f82] text-white font-bold py-3 rounded-xl transition-colors shadow-md text-sm">
+                        Keep Editing
+                    </button>
+                </div>
+            </div>
+        </div>
+
     @endif
 </div>

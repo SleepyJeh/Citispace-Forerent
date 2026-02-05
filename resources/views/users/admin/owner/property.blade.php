@@ -18,10 +18,8 @@
     {{-- Main Content Grid --}}
     <div class="flex flex-col lg:flex-row gap-6">
 
-        {{-- Left Column: 70% --}}
         <div class="w-full lg:w-[70%] flex flex-col gap-6">
 
-            {{-- Buildings Section --}}
             <div>
                 <livewire:layouts.properties.building-cards-section
                     :properties="$properties ?? []"
@@ -31,13 +29,11 @@
                 />
             </div>
 
-            {{-- Units Section --}}
             <div class="mt-6">
                 <livewire:layouts.units.unit-accordion />
             </div>
         </div>
 
-        {{-- Right Sidebar: 30% --}}
         <div class="w-full lg:w-[30%] flex flex-col gap-6">
             <livewire:layouts.property-widgets />
             <livewire:layouts.units.vacancy-metrics />

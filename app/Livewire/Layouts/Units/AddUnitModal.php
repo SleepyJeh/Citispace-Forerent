@@ -1,17 +1,19 @@
 <?php
 
 namespace App\Livewire\Layouts\Units;
+
 use Livewire\Component;
 use App\Models\Property;
 use App\Models\Unit;
 use Illuminate\Support\Facades\Http;
+use Livewire\Attributes\On; // Step 1: Ensure this is imported
 
 class AddUnitModal extends Component
 {
     public $isOpen = false;
     public $modalId;
 
-    // All existing AddUnit properties and methods remain the same
+    // --- Navigation Properties ---
     public $currentStep = 1;
     public $steps = [
         1 => 'Unit Details',
@@ -37,7 +39,7 @@ class AddUnitModal extends Component
     public $model_amenities = [];
     public $amenity_labels = [];
 
-    // All other properties from AddUnit...
+    // Grouped Amenities
     public $amenities_features = [
         'ac_unit' => false,
         'hot_cold_shower' => false,
@@ -94,6 +96,7 @@ class AddUnitModal extends Component
         try {
             $this->properties = Property::all(['property_id', 'building_name']);
         } catch (\Exception $e) {
+            // Fallback for demo/testing if database fails
             $this->properties = collect([
                 (object)['property_id' => 1, 'building_name' => 'Demo Property (Please Migrate)']
             ]);
@@ -101,19 +104,15 @@ class AddUnitModal extends Component
         $this->initializeAmenities();
     }
 
-    protected function getListeners(): array
-    {
-        return [
-            "openAddUnitModal_{$this->modalId}" => 'open',
-        ];
-    }
-
     /*----------------------------------
     | UI ACTIONS
     ----------------------------------*/
+
+    // Step 2: The Listener Attribute
+    // This tells Livewire: "When you hear 'open-add-unit-modal', run this function."
+    #[On('open-add-unit-modal')]
     public function open(): void
     {
-        $this->resetForm();
         $this->isOpen = true;
     }
 
@@ -125,7 +124,10 @@ class AddUnitModal extends Component
         $this->dispatch('unitModalClosed');
     }
 
-    // All existing methods remain exactly the same...
+    /*----------------------------------
+    | STEPPER LOGIC & PREDICTION
+    ----------------------------------*/
+
     private function initializeAmenities()
     {
         $amenity_keys = [
@@ -168,6 +170,7 @@ class AddUnitModal extends Component
             'Room capacity' => (int) $this->room_cap,
             'Unit capacity' => (int) $this->unit_cap,
         ];
+        // Merge amenities into the dataset
         $dataForModel = array_merge($dataForModel, $this->model_amenities);
 
         try {
