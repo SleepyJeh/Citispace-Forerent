@@ -78,10 +78,9 @@ class CalendarWidget extends Component
                 ->where('recipient_role', 'manager')->get();
         }
         else if ($this->role == "tenant") {
-            $propertyIds = Lease::where('tenant_id', auth()->id())
-                ->get()
-                ->pluck('bed.unit.property_id')
-                ->unique();
+            $leases = Lease::with('bed.unit')->where('tenant_id', auth()->id())->get();
+
+            $propertyIds = $leases->pluck('bed.unit.property_id')->unique();
 
             $this->dailyAnnouncements = Announcement::where('property_id', $propertyIds)
                 ->where('recipient_role', 'tenant')
@@ -125,9 +124,9 @@ class CalendarWidget extends Component
                 ->toArray();
 
         } elseif ($this->role == "tenant") {
-            $propertyIds = Lease::where('tenant_id', $userId)
-                ->pluck('bed.unit.property_id')
-                ->unique();
+            $leases = Lease::with('bed.unit')->where('tenant_id', auth()->id())->get();
+
+            $propertyIds = $leases->pluck('bed.unit.property_id')->unique();
 
             $this->announcementDates = Announcement::whereIn('property_id', $propertyIds)
                 ->where('recipient_role', 'tenant')

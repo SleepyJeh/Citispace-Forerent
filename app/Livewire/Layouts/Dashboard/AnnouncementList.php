@@ -33,9 +33,11 @@ class AnnouncementList extends Component
         }
         else if ($this->role == "tenant") {
             $propertyIds = Lease::where('tenant_id', auth()->id())
-                ->get()
-                ->pluck('bed.unit.property_id')
+                ->join('beds', 'leases.bed_id', '=', 'beds.bed_id')
+                ->join('units', 'beds.unit_id', '=', 'units.unit_id')
+                ->pluck('units.property_id')
                 ->unique();
+
 
             $this->announcements = Announcement::where('property_id', $propertyIds)
                 ->where('recipient_role', 'tenant')
