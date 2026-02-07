@@ -77,4 +77,26 @@ class User extends Authenticatable
     {
         return $this->hasMany(Unit::class, 'manager_id');
     }
+
+    /*----------------------------------
+    | MESSAGING RELATIONSHIPS
+    ----------------------------------*/
+
+    /**
+     * Messages sent by this user.
+     */
+    public function sentMessages()
+    {
+        // 'sender_id' is the foreign key in the messages table
+        return $this->hasMany(Message::class, 'sender_id', 'user_id');
+    }
+
+    /**
+     * Messages received by this user.
+     */
+    public function receivedMessages()
+    {
+        // 'receiver_id' is the foreign key in the messages table
+        return $this->hasMany(Message::class, 'receiver_id', 'user_id');
+    }
 }

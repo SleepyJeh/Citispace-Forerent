@@ -116,19 +116,12 @@ class AddUnitModal extends Component
     /*----------------------------------
     | UI ACTIONS
     ----------------------------------*/
+
+    // This tells Livewire: "When you hear 'open-add-unit-modal', run this function."
+    #[On('open-add-unit-modal')]
     public function open(): void
     {
         $this->resetForm();
-    /*----------------------------------
-    | UI ACTIONS
-    ----------------------------------*/
-
-    // Step 2: The Listener Attribute
-    // This tells Livewire: "When you hear 'open-add-unit-modal', run this function."
-    #[On('open-add-unit-modal')]
-
-    public function open(): void
-    {
         $this->isOpen = true;
     }
 

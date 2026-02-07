@@ -1,19 +1,17 @@
 #!/bin/sh
 set -e
 
-# Check if $UID and $GID are set, else fallback to default (1000:1000)
-USER_ID=${UID:-1000}
-GROUP_ID=${GID:-1000}
+# 1. Comment out the chown line. 
+# Windows handles these permissions differently, so this is unnecessary and slow.
+# echo "Fixing file permissions..."
+# chown -R ${UID:-1000}:${GID:-1000} /var/www || echo "Some files could not be changed"
 
-# Fix file ownership and permissions using the passed UID and GID
-echo "Fixing file permissions with UID=${USER_ID} and GID=${GROUP_ID}..."
-chown -R ${USER_ID}:${GROUP_ID} /var/www || echo "Some files could not be changed"
-
-# Clear configurations to avoid caching issues in development
+# 2. Keep the cache clearing (useful for Laravel)
 echo "Clearing configurations..."
-php artisan config:clear
-php artisan route:clear
-php artisan view:clear
+php artisan config:clear || echo "Artisan not found yet, skipping..."
+php artisan route:clear || echo "Artisan not found yet, skipping..."
+php artisan view:clear || echo "Artisan not found yet, skipping..."
 
-# Run the default command (e.g., php-fpm or bash)
+# 3. This is the most important part! 
+# It runs whatever command comes from docker-compose (usually php-fpm)
 exec "$@"
