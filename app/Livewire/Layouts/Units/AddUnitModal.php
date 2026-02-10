@@ -2,20 +2,22 @@
 
 namespace App\Livewire\Layouts\Units;
 
-use Livewire\Component;
 use App\Models\Property;
 use App\Models\Unit;
 use Illuminate\Support\Facades\Http;
-use Livewire\Attributes\On; // Step 1: Ensure this is imported
+use Livewire\Attributes\On;
+use Livewire\Component; // Step 1: Ensure this is imported
 
 class AddUnitModal extends Component
 {
     public $isOpen = false;
+
     public $modalId;
 
     // All existing AddUnit properties and methods remain the same
     // --- Navigation Properties ---
     public $currentStep = 1;
+
     public $steps = [
         1 => 'Unit Details',
         2 => 'Model Amenities',
@@ -24,20 +26,32 @@ class AddUnitModal extends Component
 
     // --- Step 1 Properties ---
     public $properties = [];
+
     public $property_id;
+
     public $floor_number;
+
     public $m_f = 'Co-ed';
+
     public $bed_type;
+
     public $bed_number;
+
     public $utility_subsidy = false;
+
     public $unit_capacity;
+
     public $room_capacity;
+
     public $room_type;
+
     public $room_cap;
+
     public $unit_cap;
 
     // --- Step 2 Properties ---
     public $model_amenities = [];
+
     public $amenity_labels = [];
 
     // All other properties from AddUnit...
@@ -48,10 +62,12 @@ class AddUnitModal extends Component
         'free_wifi' => false,
         'fully_furnished' => false,
     ];
+
     public $bedroom_bedding = [
         'bunk_bed_mattress' => false,
         'closet_cabinet' => false,
     ];
+
     public $kitchen_dining = [
         'refrigerator' => false,
         'microwave' => false,
@@ -60,12 +76,16 @@ class AddUnitModal extends Component
         'dining_table' => false,
         'induction_cooker' => false,
     ];
+
     public $entertainment = [];
+
     public $additional_items = [
         'electric_fan' => false,
         'washing_machine' => false,
     ];
+
     public $consumables_provided = [];
+
     public $property_amenities = [
         'access_pool' => false,
         'access_gym' => false,
@@ -74,7 +94,9 @@ class AddUnitModal extends Component
 
     // --- Step 3 Properties ---
     public $predicted_price = null;
+
     public $actual_price;
+
     public $is_predicting = false;
 
     // --- Validation Rules ---
@@ -100,7 +122,7 @@ class AddUnitModal extends Component
         } catch (\Exception $e) {
             // Fallback for demo/testing if database fails
             $this->properties = collect([
-                (object)['property_id' => 1, 'building_name' => 'Demo Property (Please Migrate)']
+                (object) ['property_id' => 1, 'building_name' => 'Demo Property (Please Migrate)'],
             ]);
         }
         $this->initializeAmenities();
@@ -117,7 +139,6 @@ class AddUnitModal extends Component
     | UI ACTIONS
     ----------------------------------*/
 
-    // This tells Livewire: "When you hear 'open-add-unit-modal', run this function."
     #[On('open-add-unit-modal')]
     public function open(): void
     {
@@ -158,7 +179,7 @@ class AddUnitModal extends Component
             'Washing_Machine',
             'Access_Pool',
             'Access_Gym',
-            'Bunk_Bed_Mattress'
+            'Bunk_Bed_Mattress',
         ];
         $labels = [];
         foreach ($amenity_keys as $key) {
@@ -204,7 +225,7 @@ class AddUnitModal extends Component
 
     public function masterSelectAll($checked)
     {
-        $checked = (bool)$checked;
+        $checked = (bool) $checked;
         $this->selectAll('amenities_features', $checked);
         $this->selectAll('bedroom_bedding', $checked);
         $this->selectAll('kitchen_dining', $checked);
@@ -242,11 +263,12 @@ class AddUnitModal extends Component
     public function saveUnit()
     {
         $this->validate(array_merge($this->step1Rules, [
-            'actual_price' => 'required|numeric|min:0|max:999999.99'
+            'actual_price' => 'required|numeric|min:0|max:999999.99',
         ]));
 
         if (is_null($this->predicted_price)) {
             session()->flash('error', 'Price prediction is missing.');
+
             return;
         }
 
@@ -255,6 +277,7 @@ class AddUnitModal extends Component
         try {
             Unit::create([
                 'property_id' => $this->property_id,
+                'unit_number' => $this->generateUniqueUnitNumber($this->property_id, $this->floor_number), // ← Auto-generate
                 'floor_number' => $this->floor_number,
                 'm/f' => $this->m_f,
                 'bed_type' => $this->bed_type,
@@ -265,13 +288,21 @@ class AddUnitModal extends Component
                 'amenities' => json_encode($checkedAmenityNames),
             ]);
 
-            session()->flash('success', 'New unit has been created successfully!');
-            $this->close();
-            $this->dispatch('unitCreated');
-            $this->dispatch('refresh-unit-list');
+            // ... rest of success handling
         } catch (\Exception $e) {
-            session()->flash('error', 'Error saving unit: ' . $e->getMessage());
+            session()->flash('error', 'Error saving unit: '.$e->getMessage());
         }
+    }
+
+    private function generateUniqueUnitNumber($propertyId, $floorNumber): string
+    {
+        $baseNumber = sprintf('F%dU%d', $floorNumber, rand(100, 999)); // e.g., F2U456
+
+        while (Unit::where('property_id', $propertyId)->where('unit_number', $baseNumber)->exists()) {
+            $baseNumber = sprintf('F%dU%d', $floorNumber, rand(1000, 9999));
+        }
+
+        return $baseNumber;
     }
 
     /*----------------------------------
@@ -355,7 +386,7 @@ class AddUnitModal extends Component
         ];
 
         return view('livewire.layouts.units.add-unit-modal', [
-            'labels' => $labels
+            'labels' => $labels,
         ]);
     }
 }
