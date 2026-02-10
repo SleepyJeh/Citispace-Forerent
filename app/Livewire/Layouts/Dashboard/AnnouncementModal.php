@@ -1,12 +1,14 @@
 <?php
 
 namespace App\Livewire\Layouts\Dashboard;
+
 use Livewire\Component;
 
 class AnnouncementModal extends Component
 {
     public $showModal = false;
-    public $showConfirmation = false;
+    // Removed: public $showConfirmation = false; (No longer needed)
+
     public $headline = '';
     public $details = '';
 
@@ -31,7 +33,7 @@ class AnnouncementModal extends Component
     public function closeModal()
     {
         $this->showModal = false;
-        $this->showConfirmation = false;
+        // Removed: $this->showConfirmation = false;
         $this->resetForm();
     }
 
@@ -42,27 +44,13 @@ class AnnouncementModal extends Component
         $this->resetValidation();
     }
 
-    public function save()
-    {
-        $this->validate();
-        $this->showConfirmation = true;
-    }
-
-    public function cancelConfirmation()
-    {
-        $this->showConfirmation = false;
-    }
-
+    // This is the final action called by the <x-ui.modal-confirm> component
     public function confirmPost()
     {
         $this->validate();
 
-        // Save to database
-        // Announcement::create([
-        //     'headline' => $this->headline,
-        //     'details' => $this->details,
-        //     'posted_at' => now(),
-        // ]);
+        // Save logic (Example)
+        // Announcement::create([...]);
 
         session()->flash('message', 'Announcement posted successfully!');
 
