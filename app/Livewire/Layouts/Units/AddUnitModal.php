@@ -266,6 +266,10 @@ class AddUnitModal extends Component
             ]);
 
             // ... rest of success handling
+            session()->flash('success', 'New unit has been created successfully!');  // ← SUCCESS MESSAGE RESTORED
+            $this->close();
+            $this->dispatch('unitCreated');
+            $this->dispatch('refresh-unit-list');
         } catch (\Exception $e) {
             session()->flash('error', 'Error saving unit: ' . $e->getMessage());
         }
