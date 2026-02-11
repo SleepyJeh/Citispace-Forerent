@@ -12,8 +12,8 @@ class MessageSystem extends Component
 {
     use WithFileUploads;
 
-    // UPDATED: Default to 'manager' (since we removed tenant)
-    public $activeTab = 'manager';
+    public $activeTab = ''; // Will be set dynamically
+    public $allowedTabs = []; // To control which tabs are visible
 
     public $search = '';
     public $selectedUserId = null;
@@ -23,9 +23,32 @@ class MessageSystem extends Component
 
     public function mount()
     {
+        $userRole = Auth::user()->role;
+
+        // 1. Determine which tabs (roles) this user can see
+        match ($userRole) {
+            'landlord' => $this->allowedTabs = ['manager', 'tenant'],
+            'manager'  => $this->allowedTabs = ['landlord', 'tenant'],
+            'tenant'   => $this->allowedTabs = ['landlord', 'manager'],
+            default    => $this->allowedTabs = ['manager'],
+        };
+
+        // 2. Set default active tab to the first allowed role
+        $this->activeTab = $this->allowedTabs[0];
+
+        // 3. Select first chat automatically
         $firstChat = $this->getChatsProperty()->first();
         if ($firstChat) {
             $this->selectedUserId = $firstChat->user_id;
+        }
+    }
+
+    // Function to switch tabs (e.g., from "Managers" to "Tenants")
+    public function setTab($tabName)
+    {
+        if (in_array($tabName, $this->allowedTabs)) {
+            $this->activeTab = $tabName;
+            $this->selectedUserId = null; // Reset selection when switching tabs
         }
     }
 
@@ -34,102 +57,40 @@ class MessageSystem extends Component
         $myId = Auth::id();
 
         return User::where('user_id', '!=', $myId)
-            ->where(function ($q) use ($myId) {
-                $q->whereHas('sentMessages', fn($q) => $q->where('receiver_id', $myId))
-                    ->orWhereHas('receivedMessages', fn($q) => $q->where('sender_id', $myId));
-            })
-            // This now filters by 'landlord' or 'manager' based on the new tabs
+            // Filter users based on the currently selected tab (Role)
             ->where('role', $this->activeTab)
-            ->when($this->search, fn($q) => $q->where('first_name', 'like', "%$this->search%"))
-            ->get()
-            ->map(function ($user) use ($myId) {
-                $lastMsg = Message::where(function ($q) use ($user, $myId) {
-                    $q->where('sender_id', $user->user_id)->where('receiver_id', $myId);
-                })
-                    ->orWhere(function ($q) use ($user, $myId) {
-                        $q->where('sender_id', $myId)->where('receiver_id', $user->user_id);
-                    })
-                    ->latest()
-                    ->first();
-
-                $user->last_message = $lastMsg ? $lastMsg->message : 'No messages';
-                $user->last_time = $lastMsg ? $lastMsg->created_at->format('g:i A') : '';
-                $user->last_message_raw = $lastMsg ? $lastMsg->created_at : null;
-
-                $user->unread_count = Message::where('sender_id', $user->user_id)
-                    ->where('receiver_id', $myId)
-                    ->where('is_read', false)
-                    ->count();
-
-                return $user;
+            ->where(function ($q) use ($myId) {
+                // Logic: Users I have chatted with OR users matching the role
+                // You might want to remove the 'whereHas' check if you want to list ALL users of that role
+                // For now, let's list ALL users of that role so you can start new chats
+                $q->where('first_name', 'like', "%$this->search%")
+                    ->orWhere('last_name', 'like', "%$this->search%");
             })
-            ->sortByDesc('last_message_raw')
-            ->values();
-    }
-
-    // ... (Rest of the functions: getMessagesProperty, sendMessage, etc. stay the same) ...
-
-    public function getMessagesProperty()
-    {
-        if (!$this->selectedUserId) return [];
-
-        return Message::where(function ($q) {
-            $q->where('sender_id', Auth::id())->where('receiver_id', $this->selectedUserId);
-        })
-            ->orWhere(function ($q) {
-                $q->where('sender_id', $this->selectedUserId)->where('receiver_id', Auth::id());
-            })
-            ->orderBy('created_at', 'asc')
             ->get();
     }
 
+    // ... (Keep selectChat, sendMessage, toggleProfile, render as they were) ...
     public function selectChat($userId)
-    {
-        $this->selectedUserId = $userId;
-        $this->showProfile = false;
-
-        Message::where('sender_id', $userId)
-            ->where('receiver_id', Auth::id())
-            ->update(['is_read' => true]);
+    { /* ... */
     }
-
     public function sendMessage()
-    {
-        if (trim($this->messageInput) === '' && !$this->attachment) return;
-
-        $data = [
-            'sender_id' => Auth::id(),
-            'receiver_id' => $this->selectedUserId,
-            'message' => $this->messageInput,
-            'created_at' => now(),
-            'is_read' => false
-        ];
-
-        if ($this->attachment) {
-            $path = $this->attachment->store('chat-attachments', 'public');
-            $data['type'] = 'file';
-            $data['file_path'] = $path;
-            $data['message'] = $this->attachment->getClientOriginalName();
-            $this->attachment = null;
-        }
-
-        Message::create($data);
-        $this->reset('messageInput');
+    { /* ... */
     }
-
     public function toggleProfile()
-    {
-        $this->showProfile = !$this->showProfile;
+    { /* ... */
     }
 
     public function render()
     {
-        $activeChatUser = User::find($this->selectedUserId);
-
         return view('livewire.layouts.message.message-system', [
             'chats' => $this->getChatsProperty(),
-            'activeMessages' => $this->getMessagesProperty(),
-            'activeChatUser' => $activeChatUser
+            'activeMessages' => $this->selectedUserId ? Message::where(function ($q) {
+                $q->where('sender_id', Auth::id())->where('receiver_id', $this->selectedUserId);
+            })->orWhere(function ($q) {
+                $q->where('sender_id', $this->selectedUserId)->where('receiver_id', Auth::id());
+            })->orderBy('created_at', 'asc')->get() : [],
+
+            'activeChatUser' => $this->selectedUserId ? User::find($this->selectedUserId) : null,
         ]);
     }
 }

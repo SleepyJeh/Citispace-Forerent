@@ -46,11 +46,41 @@ Route::get('/revenue', function () {
 })->name('revenue');
 
 // Messages
-Route::middleware(['auth'])->prefix('owner')->group(function () {
+// Route::middleware(['auth'])->prefix('owner')->group(function () {
+//     Route::get('/messages', function () {
+//         return view('users.admin.owner.message');
+//     })->name('message');
+// });
+// Landlord Messages
+
+// 1. Landlord
+Route::middleware(['auth', 'role:landlord'])->prefix('landlord')->group(function () {
     Route::get('/messages', function () {
-        return view('users.admin.owner.message');
-    })->name('message');
+        return view('users.message');
+    })->name('landlord.messages'); // <--- Name is 'landlord.messages'
 });
+
+// 2. Manager
+Route::middleware(['auth', 'role:manager'])->prefix('manager')->group(function () {
+    Route::get('/messages', function () {
+        return view('users.message');
+    })->name('manager.messages'); // <--- Name is 'manager.messages'
+});
+
+// 3. Tenant
+Route::middleware(['auth', 'role:tenant'])->prefix('tenant')->group(function () {
+    Route::get('/messages', function () {
+        return view('users.message');
+    })->name('tenant.messages'); // <--- Name is 'tenant.messages'
+});
+
+// 3. Tenant Route
+Route::middleware(['auth', 'role:tenant'])->prefix('tenant')->group(function () {
+    Route::get('/messages', function () {
+        return view('users.message'); // Points to the same file
+    })->name('tenant.messages');
+});
+
 
 // Settings
 Route::get('/settings', function () {
