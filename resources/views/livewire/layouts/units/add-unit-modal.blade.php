@@ -98,5 +98,14 @@
             </div>
         </div>
 
+        <x-ui.modal-cancel
+            name="discard-unit-confirmation"
+            title="Discard Unsaved Changes?"
+            description="Are you sure you want to close? All details entered will be lost."
+            discardText="Discard"
+            returnText="Keep Editing"
+            discardAction="close"
+        />
+        
     @endif
 </div>
