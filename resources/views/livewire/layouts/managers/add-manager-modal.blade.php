@@ -199,7 +199,7 @@
                                             id="building-{{ $modalId }}"
                                             class="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-transparent rounded-lg border border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-[#0030C5] peer cursor-pointer"
                                         >
-                                            <option value="">Select Building</option>
+                                            <option value="" hidden>Select Building</option>
                                             @foreach($buildings as $building)
                                                 <option value="{{ $building['property_id'] }}">{{ $building['building_name'] }}</option>
                                             @endforeach

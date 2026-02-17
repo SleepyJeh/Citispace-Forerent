@@ -38,13 +38,21 @@ class ManagerDetail extends Component
             return;
         }
 
-         $this->units = $this->getManagedUnits($managerId);
-        $this->totalUnits = count($this->units);
-
-         $this->buildings = $this->getBuildingsManaged($this->units);
+        $this->buildings = $this->getBuildingsManaged($managerId);
         $this->totalBuildings = count($this->buildings);
 
-         $this->selectedBuildingId = null;
+        // Count ALL units across all buildings before filtering
+        $this->totalUnits = $this->getManagedUnits($managerId)->count();
+
+        // Auto-select the first building
+        $firstBuilding = is_array($this->buildings)
+            ? reset($this->buildings)
+            : $this->buildings->first();
+
+        $this->selectedBuildingId = $firstBuilding?->property_id ?? null;
+
+        // Load units filtered to the selected building
+        $this->units = $this->getManagedUnits($managerId, $this->selectedBuildingId);
     }
 
     #[On('managerUpdated')]
@@ -61,7 +69,6 @@ class ManagerDetail extends Component
         }
     }
 
-
     public function selectBuilding(int $buildingId): void
     {
         if (!$this->currentManagerId) {
@@ -69,9 +76,8 @@ class ManagerDetail extends Component
         }
 
         $this->selectedBuildingId = $buildingId;
-         $this->units = $this->getManagedUnits($this->currentManagerId, $buildingId);
+        $this->units = $this->getManagedUnits($this->currentManagerId, $buildingId);
     }
-
 
     public function editManager(): void
     {
@@ -82,7 +88,6 @@ class ManagerDetail extends Component
             );
         }
     }
-
 
     private function resetManagerData(): void
     {
@@ -102,6 +107,7 @@ class ManagerDetail extends Component
             ->whereHas('property', function ($query) {
                 $query->where('owner_id', Auth::id());
             })
+            ->orderBy('unit_number')
             ->select('units.*');
 
         if ($propertyId) {
@@ -119,11 +125,16 @@ class ManagerDetail extends Component
         });
     }
 
-    private function getBuildingsManaged($units)
+    private function getBuildingsManaged(int $managerId)
     {
-         $collection = is_array($units) ? collect($units) : $units;
+        $propertyIds = Unit::where('manager_id', $managerId)
+            ->whereHas('property', function ($query) {
+                $query->where('owner_id', Auth::id());
+            })
+            ->pluck('property_id')
+            ->unique()
+            ->values();
 
-        $propertyIds = $collection->pluck('property_id')->unique()->values();
         return Property::whereIn('property_id', $propertyIds)->get();
     }
 

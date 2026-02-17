@@ -1,45 +1,41 @@
 <?php
 
-// database/factories/UserFactory.php
-
 namespace Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Hash;
 
 class UserFactory extends Factory
 {
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
     public function definition(): array
     {
+        $firstName = fake()->firstName();
+        $lastName  = fake()->lastName();
+
+        $email = strtolower($firstName . '.' . $lastName) . '@example.com';
+
         return [
-            // Use the new first_name and last_name columns
-            'first_name' => fake()->firstName(),
-            'last_name' => fake()->lastName(),
+            'first_name' => $firstName,
+            'last_name'  => $lastName,
 
-            'email' => fake()->unique()->safeEmail(),
+            'email' => $email,
 
-            // Randomly pick one of your allowed roles
             'role' => fake()->randomElement(['tenant', 'manager', 'landlord']),
 
             'contact' => fake()->phoneNumber(),
-            'profile_img' => null, // Or use fake()->imageUrl()
-            'password' => 'password', // Will be hashed by the User model
+
+            'profile_img' => 'https://i.pravatar.cc/150?u=' . $email,
+
+            'password' => Hash::make('password'),
 
             'email_verified_at' => now(),
-            'phone_verified_at' => null, // Or 'now()' if you want them pre-verified
+            'phone_verified_at' => null,
 
             'remember_token' => Str::random(10),
         ];
     }
 
-    /**
-     * Indicate that the model's email address should be unverified.
-     */
     public function unverified(): static
     {
         return $this->state(fn(array $attributes) => [

@@ -6,57 +6,56 @@ use Illuminate\Database\Seeder;
 use App\Models\User;
 use App\Models\Bed;
 use App\Models\Lease;
-use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
 
 class LeaseSeeder extends Seeder
 {
     public function run(): void
     {
-      
-        $beds = Bed::where('status', 'occupied')
-            ->whereDoesntHave('leases')
-            ->get();
+        // Get all tenants
+        $tenants = User::where('role', 'tenant')->get();
 
-        foreach ($beds as $bed) {
-             $tenant = User::factory()->create(['role' => 'tenant']);
+        // Get all vacant beds with their units loaded
+        $availableBeds = Bed::where('status', 'Vacant')->with('unit')->get();
 
-             $lease = Lease::factory()->create([
+        foreach ($tenants as $tenant) {
+
+            // Stop if no beds left
+            if ($availableBeds->isEmpty()) {
+                break;
+            }
+
+            // Filter beds that are in units with a manager
+            $managedBeds = $availableBeds->filter(function ($bed) {
+                return !is_null($bed->unit->manager_id);
+            });
+
+            // Filter beds that match tenant gender based on unit occupants
+            $matchingBeds = $managedBeds->filter(function ($bed) use ($tenant) {
+                $occupantsType = $bed->unit->occupants; // Male, Female, Co-ed
+                return $occupantsType === 'Co-ed' || $occupantsType === $tenant->gender;
+            });
+
+            // If no matching bed, skip tenant
+            if ($matchingBeds->isEmpty()) {
+                continue;
+            }
+
+            // Pick a random matching bed
+            $bed = $matchingBeds->random();
+
+            // Create the lease
+            Lease::factory()->create([
                 'tenant_id' => $tenant->user_id,
                 'bed_id'    => $bed->bed_id,
-                'contract_rate' => 24000,
             ]);
 
+            // Mark bed as occupied
+            $bed->update(['status' => 'Occupied']);
 
-            for ($i = 0; $i < 12; $i++) {
-
-
-                $anchorDate = Carbon::parse('2025-01-28');
-
-                $billingDate = $anchorDate->copy()->subMonths($i);
-                $nextBilling = $billingDate->copy()->addMonth();
-
-                // DETERMINE STATUS
-                if ($i === 0) {
-                     $status = 'Unpaid';
-                } elseif ($i === 1) {
-                     $status = 'Overdue';
-                } else {
-                     $status = 'Paid';
-                }
-
-                // Insert the bill
-                DB::table('billings')->insert([
-                    'lease_id' => $lease->lease_id,
-                    'billing_date' => $billingDate,
-                    'next_billing' => $nextBilling,
-                    'to_pay' => 24000,
-                    'amount' => ($status === 'Paid') ? 24000 : 0,
-                    'status' => $status,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
-            }
+            // Remove the bed from available list
+            $availableBeds = $availableBeds->reject(
+                fn($b) => $b->bed_id === $bed->bed_id
+            );
         }
     }
 }
