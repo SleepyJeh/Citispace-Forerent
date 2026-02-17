@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             PropertySeeder::class,
             UnitSeeder::class,
             LeaseSeeder::class,
+            BillingSeeder::class,
             MaintenanceSeeder::class,
             AnnouncementSeeder::class,
         ]);

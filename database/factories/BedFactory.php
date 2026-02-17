@@ -13,7 +13,7 @@ class BedFactory extends Factory
     {
         return [
             'bed_number' => 'B1', // will be overridden
-            'status'     => $this->faker->randomElement(['Vacant', 'Occupied']),
+            'status'     => 'Vacant',
             'created_at' => now(),
             'updated_at' => now(),
         ];

@@ -154,10 +154,10 @@
                                     </div>
                                     <div>
                                         <label class="text-xs font-semibold text-gray-700">Dorm Type</label>
-                                        <select wire:model="dormType" class="w-full mt-1 border-gray-300 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500">
+                                        <select wire:model="dormType" disabled class="w-full mt-1 border-gray-300 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500">
                                             <option value="">Select Type</option>
-                                            <option value="All Female">All Female</option>
-                                            <option value="All Male">All Male</option>
+                                            <option value="Female">All Female</option>
+                                            <option value="Male">All Male</option>
                                             <option value="Co-ed">Co-ed</option>
                                         </select>
                                     </div>
@@ -165,15 +165,15 @@
                                         <label class="text-xs font-semibold text-gray-700">Term</label>
                                         <select wire:model="term" class="w-full mt-1 border-gray-300 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500">
                                             <option value="">Select Term</option>
-                                            <option value="6 Months">6 Months</option>
-                                            <option value="12 Months">1 Year</option>
+                                            <option value="6">6 Months</option>
+                                            <option value="12">1 Year</option>
                                         </select>
                                     </div>
                                     <div>
                                         <label class="text-xs font-semibold text-gray-700">Shift</label>
                                         <select wire:model="shift" class="w-full mt-1 border-gray-300 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500">
                                             <option value="">Select Shift</option>
-                                            <option value="Day">Day</option>
+                                            <option value="Morning">Day</option>
                                             <option value="Night">Night</option>
                                         </select>
                                     </div>
@@ -234,10 +234,9 @@
 
                 {{-- Footer --}}
                 <div class="p-6 bg-white border-t border-gray-200 flex justify-end">
-                    {{-- Save Button (Triggers Confirm Modal) --}}
                     <button
                         type="button"
-                        x-on:click="$dispatch('open-modal', 'save-tenant-confirmation')"
+                        wire:click="validateAndConfirm"
                         class="bg-[#070589] hover:bg-[#000060] text-white font-bold py-3 px-10 rounded-xl text-sm transition-colors shadow-lg"
                     >
                         Save Tenant

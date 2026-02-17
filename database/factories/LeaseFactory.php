@@ -11,24 +11,21 @@ class LeaseFactory extends Factory
 
     public function definition(): array
     {
-        // Random start date between 3 years ago and today
-        $startDate = $this->faker->dateTimeBetween('-3 years', 'now');
-
         // Lease term (months)
         $term = $this->faker->numberBetween(3, 12);
 
+        // Start date: sometime in the past term months so end_date is always >= today
+        $startDate = $this->faker->dateTimeBetween("-{$term} months", 'now');
+
         // Compute end date
         $endDate = (clone $startDate)->modify("+{$term} months");
-
-        // Determine lease status
-        $status = $endDate < now() ? 'Expired' : 'Active';
 
         return [
             // These will be set in LeaseSeeder
             'tenant_id'        => null,
             'bed_id'           => null,
 
-            'status'           => $status,
+            'status'           => 'Active', // always active
             'term'             => $term,
             'shift'            => $this->faker->randomElement(['Night', 'Morning']),
             'auto_renew'       => $this->faker->boolean(),

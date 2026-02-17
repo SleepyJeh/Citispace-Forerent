@@ -43,10 +43,16 @@ class LeaseSeeder extends Seeder
             // Pick a random matching bed
             $bed = $matchingBeds->random();
 
+            // Get the unit price
+            $unitPrice = $bed->unit->price;
+
             // Create the lease
             Lease::factory()->create([
-                'tenant_id' => $tenant->user_id,
-                'bed_id'    => $bed->bed_id,
+                'tenant_id'        => $tenant->user_id,
+                'bed_id'           => $bed->bed_id,
+                'contract_rate'    => $unitPrice,
+                'advance_amount'   => $unitPrice,
+                'security_deposit' => $unitPrice,
             ]);
 
             // Mark bed as occupied
