@@ -6,7 +6,10 @@ use App\Livewire\Forms\AddUserForm;
 use App\Models\Property;
 use App\Models\Unit;
 use App\Models\User;
+use App\Notifications\NewAccount;
+use App\Services\PasswordGenerator;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Notification;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Livewire\Attributes\Validate;
@@ -178,11 +181,12 @@ class AddManagerModal extends Component
             $manager = $this->userForm->update(User::find($this->managerId));
         } else {
             $manager = $this->userForm->store('manager');
+            Notification::send($manager, new NewAccount($manager->email, PasswordGenerator::generate(), $manager->role));
         }
 
         if ($this->profilePicture && !is_string($this->profilePicture)) {
             $path = $this->profilePicture->store('profile-photos', 'public');
-            $manager->update(['profile_photo_path' => $path]);
+            $manager->update(['profile_img' => $path]);
         }
 
         // Flatten all selected unit IDs across every building+floor
