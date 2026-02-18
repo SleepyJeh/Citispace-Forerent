@@ -8,5 +8,7 @@
     @include('livewire.layouts.dashboard.admingreeting')
     <livewire:layouts.tenants.payment-history />
     <livewire:layouts.financials.payment-receipt-modal />
+    
+
 
 @endsection

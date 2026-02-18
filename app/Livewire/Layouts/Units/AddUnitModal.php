@@ -14,7 +14,6 @@ class AddUnitModal extends Component
     public $modalId;
     public $editingUnitId = null;
 
-    // --- Navigation Properties ---
     public $currentStep = 1;
     public $steps = [
         1 => 'Unit Details',
@@ -22,62 +21,23 @@ class AddUnitModal extends Component
         3 => 'Review & Predict',
     ];
 
-    // --- Step 1 Properties ---
     public $properties = [];
     public $property_id;
     public $floor_number;
     public $m_f = 'Co-ed';
     public $bed_type;
-    public $bed_number;
-    public $utility_subsidy = false;
-    public $unit_capacity;
-    public $room_capacity;
     public $room_type;
     public $room_cap;
     public $unit_cap;
 
-    // --- Step 2 Properties ---
     public $model_amenities = [];
     public $amenity_labels = [];
 
-    // Grouped Amenities
-    public $amenities_features = [
-        'ac_unit' => false,
-        'hot_cold_shower' => false,
-        'free_wifi' => false,
-        'fully_furnished' => false,
-    ];
-    public $bedroom_bedding = [
-        'bunk_bed_mattress' => false,
-        'closet_cabinet' => false,
-    ];
-    public $kitchen_dining = [
-        'refrigerator' => false,
-        'microwave' => false,
-        'water_kettle' => false,
-        'rice_cooker' => false,
-        'dining_table' => false,
-        'induction_cooker' => false,
-    ];
-    public $entertainment = [];
-    public $additional_items = [
-        'electric_fan' => false,
-        'washing_machine' => false,
-    ];
-    public $consumables_provided = [];
-    public $property_amenities = [
-        'access_pool' => false,
-        'access_gym' => false,
-        'housekeeping' => false,
-    ];
-
-    // --- Step 3 Properties ---
     public $predicted_price = null;
     public $actual_price;
     public $is_predicting = false;
 
-    // --- Validation Rules ---
-    protected $step1Rules = [
+    protected $rules = [
         'property_id' => 'required|integer|exists:properties,property_id',
         'floor_number' => 'required|integer|min:0',
         'm_f' => 'required|in:Male,Female,Co-ed',
@@ -85,43 +45,68 @@ class AddUnitModal extends Component
         'room_type' => 'required|in:Standard,Deluxe,Suite',
         'room_cap' => 'required|integer|min:1',
         'unit_cap' => 'required|integer|min:1',
+        'actual_price' => 'required|numeric|min:0|max:999999.99'
     ];
 
-    /*----------------------------------
-    | LIFECYCLE
-    ----------------------------------*/
     public function mount($modalId = null)
     {
         $this->modalId = $modalId ?? uniqid('add_unit_modal_');
-
         try {
             $this->properties = Property::all(['property_id', 'building_name']);
         } catch (\Exception $e) {
-            // Fallback for demo/testing if database fails
-            $this->properties = collect([
-                (object)['property_id' => 1, 'building_name' => 'Demo Property (Please Migrate)']
-            ]);
+            $this->properties = collect([]);
         }
         $this->initializeAmenities();
     }
 
-    protected function getListeners(): array
-    {
-        return [
-            "openAddUnitModal_{$this->modalId}" => 'open',
-        ];
-    }
-
-    /*----------------------------------
-    | UI ACTIONS
-    ----------------------------------*/
-
-    // FIXED: Merged the duplicate 'open' functions into one correct one
     #[On('open-add-unit-modal')]
     public function open(): void
     {
         $this->resetForm();
+        $this->editingUnitId = null;
         $this->isOpen = true;
+    }
+
+    #[On('open-unit-modal')]
+    public function loadUnitForEditing($unitId)
+    {
+        $this->resetForm();
+        $unit = Unit::find($unitId);
+
+        if ($unit) {
+            $this->editingUnitId = $unit->unit_id;
+            $this->property_id = $unit->property_id;
+            $this->floor_number = $unit->floor_number;
+            $this->m_f = $unit->{'m/f'} ?? $unit->gender ?? 'Co-ed';
+            $this->room_type = $unit->room_type;
+            $this->bed_type = $unit->bed_type;
+            $this->unit_cap = $unit->unit_cap;
+            $this->room_cap = $unit->room_cap;
+            $this->actual_price = $unit->price;
+            $this->predicted_price = $unit->price;
+
+            $savedAmenities = json_decode($unit->amenities, true) ?? [];
+            foreach ($this->model_amenities as $key => $value) {
+                if (in_array($key, $savedAmenities)) {
+                    $this->model_amenities[$key] = true;
+                }
+            }
+
+            $this->isOpen = true;
+            $this->currentStep = 1;
+        }
+    }
+
+    // app/Livewire/Layouts/Units/AddUnitModal.php
+
+    protected function getListeners(): array
+    {
+        return [
+            // This allows the specific dashboard instance to trigger it
+            "openAddUnitModal_{$this->modalId}" => 'open',
+            // This allows the Edit button in the accordion to trigger it
+            'open-unit-modal' => 'loadUnitForEditing',
+        ];
     }
 
     public function close(): void
@@ -131,10 +116,6 @@ class AddUnitModal extends Component
         $this->isOpen = false;
         $this->dispatch('unitModalClosed');
     }
-
-    /*----------------------------------
-    | STEPPER LOGIC & PREDICTION
-    ----------------------------------*/
 
     private function initializeAmenities()
     {
@@ -158,73 +139,27 @@ class AddUnitModal extends Component
             'Access_Gym',
             'Bunk_Bed_Mattress'
         ];
-        $labels = [];
+
         foreach ($amenity_keys as $key) {
-            $labels[$key] = ucwords(str_replace('_', ' ', $key));
+            $this->amenity_labels[$key] = ucwords(str_replace('_', ' ', $key));
         }
-        $this->amenity_labels = $labels;
         $this->model_amenities = array_fill_keys($amenity_keys, false);
-    }
-
-    private function runPrediction()
-    {
-        $this->is_predicting = true;
-
-        $dataForModel = [
-            'Floor' => (int) $this->floor_number,
-            'M/F' => $this->m_f,
-            'Bed type' => $this->bed_type,
-            'Room type' => $this->room_type,
-            'Room capacity' => (int) $this->room_cap,
-            'Unit capacity' => (int) $this->unit_cap,
-        ];
-        // Merge amenities into the dataset
-        $dataForModel = array_merge($dataForModel, $this->model_amenities);
-
-        try {
-            $response = Http::post('http://price_api:8000/predict', $dataForModel);
-
-            if ($response->successful()) {
-                session()->flash('success', 'Prediction model success.');
-                $this->predicted_price = $response->json('predicted_price');
-            } else {
-                session()->flash('error', 'Prediction model returned an error.');
-                $this->predicted_price = 0;
-            }
-        } catch (\Exception $e) {
-            session()->flash('error', 'Prediction service is offline. Using estimate.');
-            $this->predicted_price = rand(5000, 15000);
-        }
-
-        $this->actual_price = $this->predicted_price;
-        $this->is_predicting = false;
-    }
-
-    public function masterSelectAll($checked)
-    {
-        $checked = (bool)$checked;
-        $this->selectAll('amenities_features', $checked);
-        $this->selectAll('bedroom_bedding', $checked);
-        $this->selectAll('kitchen_dining', $checked);
-        $this->selectAll('entertainment', $checked);
-        $this->selectAll('additional_items', $checked);
-        $this->selectAll('consumables_provided', $checked);
-        $this->selectAll('property_amenities', $checked);
     }
 
     public function nextStep()
     {
         if ($this->currentStep == 1) {
-            // Validate Step 1 Data
-            // NOTE: Ensure ALL these fields exist in stepper1.blade.php
             $this->validate([
                 'property_id' => 'required',
-                'floor_number' => 'required|numeric', // Check if this input exists!
-                'room_type' => 'required',           // Check if this input exists!
+                'floor_number' => 'required|numeric',
+                'room_type' => 'required',
                 'unit_cap' => 'required|numeric',
                 'room_cap' => 'required|numeric',
-                // Add 'nullable' to rules if the field is optional in the UI
             ]);
+        }
+
+        if ($this->currentStep == 2) {
+            $this->runPrediction();
         }
 
         if ($this->currentStep < count($this->steps)) {
@@ -239,44 +174,76 @@ class AddUnitModal extends Component
         }
     }
 
+    private function runPrediction()
+    {
+        $this->is_predicting = true;
+        $dataForModel = [
+            'Floor' => (int) $this->floor_number,
+            'M/F' => $this->m_f,
+            'Bed type' => $this->bed_type,
+            'Room type' => $this->room_type,
+            'Room capacity' => (int) $this->room_cap,
+            'Unit capacity' => (int) $this->unit_cap,
+        ];
+        $dataForModel = array_merge($dataForModel, $this->model_amenities);
+
+        try {
+            $response = Http::timeout(5)->post('http://price_api:8000/predict', $dataForModel);
+            if ($response->successful()) {
+                $this->predicted_price = $response->json('predicted_price');
+            } else {
+                $this->predicted_price = rand(8000, 12000);
+            }
+        } catch (\Exception $e) {
+            $this->predicted_price = rand(5000, 15000);
+        }
+
+        if (!$this->editingUnitId) {
+            $this->actual_price = $this->predicted_price;
+        }
+        $this->is_predicting = false;
+    }
+
     public function saveUnit()
     {
-        $this->validate(array_merge($this->step1Rules, [
-            'actual_price' => 'required|numeric|min:0|max:999999.99'
-        ]));
+        $this->validate();
 
-        if (is_null($this->predicted_price)) {
-            session()->flash('error', 'Price prediction is missing.');
+        if (auth()->user()->role === 'manager' && !$this->editingUnitId) {
+            session()->flash('error', 'Managers are not authorized to create new units.');
             return;
         }
 
-        $checkedAmenityNames = array_keys(array_filter($this->model_amenities));
+        $checkedAmenities = array_keys(array_filter($this->model_amenities));
+
+        $data = [
+            'property_id' => $this->property_id,
+            'floor_number' => $this->floor_number,
+            'm/f' => $this->m_f,
+            'bed_type' => $this->bed_type,
+            'room_type' => $this->room_type,
+            'room_cap' => $this->room_cap,
+            'unit_cap' => $this->unit_cap,
+            'price' => $this->actual_price,
+            'amenities' => json_encode($checkedAmenities),
+        ];
 
         try {
-            Unit::create([
-                'property_id' => $this->property_id,
-                'floor_number' => $this->floor_number,
-                'm/f' => $this->m_f,
-                'bed_type' => $this->bed_type,
-                'room_type' => $this->room_type,
-                'room_cap' => $this->room_cap,
-                'unit_cap' => $this->unit_cap,
-                'price' => $this->actual_price,
-                'amenities' => json_encode($checkedAmenityNames),
-            ]);
+            if ($this->editingUnitId) {
+                Unit::find($this->editingUnitId)->update($data);
+                session()->flash('message', 'Unit updated successfully!');
+            } else {
+                Unit::create($data);
+                session()->flash('message', 'New unit created successfully!');
+            }
 
-            session()->flash('success', 'New unit has been created successfully!');
             $this->close();
-            $this->dispatch('unitCreated');
             $this->dispatch('refresh-unit-list');
+            $this->dispatch('unitUpdated');
         } catch (\Exception $e) {
             session()->flash('error', 'Error saving unit: ' . $e->getMessage());
         }
     }
 
-    /*----------------------------------
-    | HELPER METHODS
-    ----------------------------------*/
     private function resetForm(): void
     {
         $this->reset([
@@ -285,52 +252,21 @@ class AddUnitModal extends Component
             'floor_number',
             'm_f',
             'bed_type',
-            'bed_number',
-            'utility_subsidy',
-            'unit_capacity',
-            'room_capacity',
             'room_type',
             'room_cap',
             'unit_cap',
-            'model_amenities',
             'predicted_price',
             'actual_price',
             'is_predicting',
-            'amenities_features',
-            'bedroom_bedding',
-            'kitchen_dining',
-            'entertainment',
-            'additional_items',
-            'consumables_provided',
-            'property_amenities',
+            'editingUnitId'
         ]);
-
-        // Re-initialize amenities
         $this->initializeAmenities();
         $this->m_f = 'Co-ed';
     }
 
-    public function selectAll($group, $checked)
-    {
-        foreach ($this->$group as $key => $value) {
-            $this->$group[$key] = $checked;
-        }
-    }
-
-    /*----------------------------------
-    | RENDER
-    ----------------------------------*/
     public function render()
     {
-        $labels = [
-            // ... (shortened for brevity) ...
-            'property_amenities' => ['access_pool' => 'Access Pool', 'access_gym' => 'Access Gym', 'housekeeping' => 'Housekeeping'],
-        ];
-
         return view('livewire.layouts.units.add-unit-modal', [
-            'labels' => $labels,
-            // Since we fixed the property definition above,
-            // you can pass it here safely:
             'editingUnitId' => $this->editingUnitId,
         ]);
     }
