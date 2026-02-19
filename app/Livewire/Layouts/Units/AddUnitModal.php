@@ -227,34 +227,38 @@ class AddUnitModal extends Component
             'amenities' => json_encode($checkedAmenities),
         ];
 
-        try {
-            Unit::create([
-                'property_id' => $this->property_id,
-                'unit_number' => $this->generateUniqueUnitNumber($this->property_id, $this->floor_number), // ← Auto-generate
-                'floor_number' => $this->floor_number,
-                'm/f' => $this->m_f,
-                'bed_type' => $this->bed_type,
-                'room_type' => $this->room_type,
-                'room_cap' => $this->room_cap,
-                'unit_cap' => $this->unit_cap,
-                'price' => $this->actual_price,
-                'amenities' => json_encode($checkedAmenities),
-            ]);
-
-            if ($this->editingUnitId) {
-                Unit::find($this->editingUnitId)->update($data);
+        if ($this->editingUnitId) {
+            $unit = Unit::find($this->editingUnitId);
+            if ($unit) {
+                $unit->update($data);
                 session()->flash('message', 'Unit updated successfully!');
             } else {
-                Unit::create($data);
-                session()->flash('message', 'New unit created successfully!');
+                session()->flash('error', 'Unit not found for updating.');
             }
+        } else {
+            try {
+                Unit::create([
+                    'property_id' => $this->property_id,
+                    'unit_number' => $this->generateUniqueUnitNumber($this->property_id, $this->floor_number), // ← Auto-generate
+                    'floor_number' => $this->floor_number,
+                    'm/f' => $this->m_f,
+                    'bed_type' => $this->bed_type,
+                    'room_type' => $this->room_type,
+                    'room_cap' => $this->room_cap,
+                    'unit_cap' => $this->unit_cap,
+                    'price' => $this->actual_price,
+                    'amenities' => json_encode($checkedAmenities),
+                ]);
 
-            $this->close();
-            $this->dispatch('refresh-unit-list');
-            $this->dispatch('unitUpdated');
-        } catch (\Exception $e) {
-            session()->flash('error', 'Error saving unit: ' . $e->getMessage());
+                session()->flash('message', 'New unit created successfully!');
+            } catch (\Exception $e) {
+                session()->flash('error', 'Error creating unit: ' . $e->getMessage());
+            }
         }
+
+        $this->close();
+        $this->dispatch('refresh-unit-list');
+        $this->dispatch('unitUpdated');
     }
 
     private function generateUniqueUnitNumber($propertyId, $floorNumber): string
