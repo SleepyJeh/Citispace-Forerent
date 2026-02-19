@@ -6,7 +6,10 @@ use App\Livewire\Forms\AddUserForm;
 use App\Models\Property;
 use App\Models\Unit;
 use App\Models\User;
+use App\Notifications\NewAccount;
+use App\Services\PasswordGenerator;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Notification;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Livewire\Attributes\Validate;
@@ -31,6 +34,9 @@ class AddManagerModal extends Component
 
     #[Validate('nullable')]
     public $selectedUnits = [];
+
+    // Accumulated selections: ['propertyId_floor' => [unitId, unitId, ...]]
+    public $allSelectedUnits = [];
 
     public $buildings = [];
     public $floors = [];
@@ -62,22 +68,50 @@ class AddManagerModal extends Component
                 $this->isEditing = true;
                 $this->managerId = $manager->user_id;
                 $this->userForm->setUser($manager);
-                $this->loadExistingAssignments($manager->user_id);
+
+                // Pre-populate allSelectedUnits with ALL existing assignments
+                $existingUnits = Unit::where('manager_id', $manager->user_id)
+                    ->whereHas('property', fn($q) => $q->where('owner_id', Auth::id()))
+                    ->get(['unit_id', 'property_id', 'floor_number']);
+
+                foreach ($existingUnits as $unit) {
+                    $key = $unit->property_id . '_' . $unit->floor_number;
+                    $this->allSelectedUnits[$key][] = (string) $unit->unit_id;
+                }
+
+                $firstUnit = $existingUnits->first();
+
+                if ($firstUnit) {
+                    $this->selectedBuilding = $firstUnit->property_id;
+                    $this->updatedSelectedBuilding($firstUnit->property_id);
+
+                    $this->selectedFloor = $firstUnit->floor_number;
+                    $this->updatedSelectedFloor($firstUnit->floor_number);
+                }
             }
         }
 
         $this->isOpen = true;
     }
 
-    public function loadBuildings()
+    public function loadBuildings(): void
     {
         $this->buildings = Property::where('owner_id', Auth::id())
             ->get(['property_id', 'building_name']);
     }
 
-    public function updatedSelectedBuilding($propertyId)
+    public function updatedSelectedUnits(): void
+    {
+        if ($this->selectedBuilding && $this->selectedFloor) {
+            $key = $this->selectedBuilding . '_' . $this->selectedFloor;
+            $this->allSelectedUnits[$key] = $this->selectedUnits;
+        }
+    }
+
+    public function updatedSelectedBuilding($propertyId): void
     {
         $this->selectedFloor = '';
+        $this->selectedUnits = [];
         $this->floors = [];
         $this->availableUnits = [];
 
@@ -90,54 +124,37 @@ class AddManagerModal extends Component
         }
     }
 
-    public function updatedSelectedFloor($floor)
+    public function updatedSelectedFloor($floor): void
     {
         $this->availableUnits = [];
+        $this->selectedUnits = [];
 
         if ($this->selectedBuilding && $floor) {
             $this->availableUnits = $this->getUnitsForFloor($this->selectedBuilding, $floor, $this->managerId);
-        }
-    }
 
-    private function loadExistingAssignments($managerId)
-    {
-        $firstUnit = Unit::where('manager_id', $managerId)
-            ->with('property')
-            ->whereHas('property', function ($q) {
-                $q->where('owner_id', Auth::id());
-            })
-            ->first();
-
-        if ($firstUnit) {
-            $this->selectedBuilding = $firstUnit->property_id;
-            $this->updatedSelectedBuilding($firstUnit->property_id);
-
-            $this->selectedFloor = $firstUnit->floor_number;
-            $this->updatedSelectedFloor($firstUnit->floor_number);
-
-            $managedUnitIds = Unit::where('manager_id', $managerId)
-                ->where('property_id', $firstUnit->property_id)
-                ->where('floor_number', $firstUnit->floor_number)
-                ->pluck('unit_id')
-                ->toArray();
-
-            foreach ($managedUnitIds as $id) {
-                $this->selectedUnits[$id] = true;
-            }
+            // Restore previously saved selections for this building+floor
+            $key = $this->selectedBuilding . '_' . $floor;
+            $this->selectedUnits = $this->allSelectedUnits[$key] ?? [];
         }
     }
 
     private function getUnitsForFloor($propertyId, $floor, $managerId = null): array
     {
+        $key = $propertyId . '_' . $floor;
+        $pendingUnitIds = array_map('intval', $this->allSelectedUnits[$key] ?? []);
+
         $units = Unit::where('property_id', $propertyId)
             ->where('floor_number', $floor)
             ->whereHas('property', function ($q) {
                 $q->where('owner_id', Auth::id());
             })
-            ->where(function ($query) use ($managerId) {
+            ->where(function ($query) use ($managerId, $pendingUnitIds) {
                 $query->whereNull('manager_id');
                 if (!is_null($managerId)) {
                     $query->orWhere('manager_id', $managerId);
+                }
+                if (!empty($pendingUnitIds)) {
+                    $query->orWhereIn('unit_id', $pendingUnitIds);
                 }
             })
             ->orderBy('unit_id')
@@ -150,54 +167,58 @@ class AddManagerModal extends Component
         ])->toArray();
     }
 
-    /**
-     * NEW: Checks validation BEFORE opening the confirmation modal.
-     */
-    public function validateAndConfirm()
+    public function validateAndConfirm(): void
     {
-        $this->validate(); // Stops here if fields are missing
+        $this->validate();
         $this->dispatch('open-modal', 'save-manager-confirmation');
     }
 
-    public function save()
+    public function save(): void
     {
         $this->validate();
 
-        // 1. Save Manager (Pass 'manager' string explicitly to fix DB crash)
-        $manager = $this->userForm->store('manager');
-
-        // 2. Handle Profile Picture Upload manually
-        if ($this->profilePicture && !is_string($this->profilePicture)) {
-            $path = $this->profilePicture->store('profile-photos', 'public');
-            $manager->update(['profile_photo_path' => $path]);
+        if ($this->isEditing) {
+            $manager = $this->userForm->update(User::find($this->managerId));
+        } else {
+            $manager = $this->userForm->store('manager');
+            Notification::send($manager, new NewAccount($manager->email, PasswordGenerator::generate(), $manager->role));
         }
 
-        // 3. Save Assignments
-        if ($this->selectedBuilding && $this->selectedFloor) {
-            Unit::where('property_id', $this->selectedBuilding)
-                ->where('floor_number', $this->selectedFloor)
-                ->where('manager_id', $manager->user_id)
-                ->whereNotIn('unit_id', array_keys(array_filter($this->selectedUnits)))
+        if ($this->profilePicture && !is_string($this->profilePicture)) {
+            $path = $this->profilePicture->store('profile-photos', 'public');
+            $manager->update(['profile_img' => $path]);
+        }
+
+        // Flatten all selected unit IDs across every building+floor
+        $allSelectedUnitIds = array_map(
+            'intval',
+            array_merge(...array_values($this->allSelectedUnits) ?: [[]])
+        );
+
+        if (!empty($allSelectedUnitIds)) {
+            // Unassign this manager from any units NOT in the new selection
+            Unit::where('manager_id', $manager->user_id)
+                ->whereNotIn('unit_id', $allSelectedUnitIds)
                 ->update(['manager_id' => null]);
 
-            $selectedUnitIds = array_keys(array_filter($this->selectedUnits));
-
-            Unit::whereIn('unit_id', $selectedUnitIds)
+            // Assign manager to all selected units
+            Unit::whereIn('unit_id', $allSelectedUnitIds)
                 ->update(['manager_id' => $manager->user_id]);
+        } else {
+            // No units selected at all — clear all assignments
+            Unit::where('manager_id', $manager->user_id)
+                ->update(['manager_id' => null]);
         }
 
         $this->close();
-
         $this->dispatch('refresh-manager-list');
         $this->dispatch('managerUpdated', managerId: $manager->user_id);
-
-        // Close the confirmation modal
         $this->dispatch('close-modal', 'save-manager-confirmation');
 
         session()->flash('message', $this->isEditing ? 'Manager updated successfully.' : 'Manager added successfully.');
     }
 
-    public function close()
+    public function close(): void
     {
         $this->isOpen = false;
         $this->resetForm();
@@ -205,7 +226,7 @@ class AddManagerModal extends Component
 
     private function resetForm(): void
     {
-        $this->reset(['profilePicture', 'selectedBuilding', 'selectedFloor', 'selectedUnits', 'floors', 'availableUnits', 'managerId', 'isEditing']);
+        $this->reset(['profilePicture', 'selectedBuilding', 'selectedFloor', 'selectedUnits', 'allSelectedUnits', 'floors', 'availableUnits', 'managerId', 'isEditing']);
         $this->userForm->reset();
         $this->resetValidation();
     }

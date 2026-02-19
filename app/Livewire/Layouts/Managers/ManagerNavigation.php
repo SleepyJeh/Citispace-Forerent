@@ -16,22 +16,11 @@ class ManagerNavigation extends Component
     public function mount(): void
     {
         $this->loadManagers();
-
-        if (!$this->activeManagerId && count($this->managers) > 0) {
-            // Handle both Array or Collection
-            $firstManager = is_array($this->managers)
-                ? reset($this->managers)
-                : $this->managers->first();
-
-            $this->activeManagerId = is_array($firstManager)
-                ? $firstManager['user_id']
-                : $firstManager->user_id;
-        }
     }
 
     public function booted(): void
     {
-        if ($this->activeManagerId && count($this->managers) > 0) {
+        if ($this->activeManagerId) {
             $this->dispatch('managerSelected', managerId: $this->activeManagerId);
         }
     }

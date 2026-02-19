@@ -38,7 +38,7 @@
             >
                 <div class="flex justify-between items-start">
                     <div class="flex-1 text-left">
-                        <h4 class="font-semibold text-base mb-1">{{ $tenant['name'] }}</h4>
+                        <h4 class="font-semibold text-base mb-1">{{ $tenant['first_name'] }} {{ $tenant['last_name'] }}</h4>
                         <p class="text-sm opacity-90">{{ $tenant['unit'] }} • {{ $tenant['bed_number'] }}</p>
                     </div>
 
@@ -50,6 +50,10 @@
                                     <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
                                 </svg>
                                 Paid
+                            </span>
+                        @elseif($tenant['payment_status'] === 'Overdue')
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                Overdue
                             </span>
                         @else
                             <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">

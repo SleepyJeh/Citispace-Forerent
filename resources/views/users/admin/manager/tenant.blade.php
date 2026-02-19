@@ -14,6 +14,7 @@
             title="Properties"
             empty-state-title="No properties available"
             empty-state-description="Properties will appear here once added to the system"
+            event-name="tenant-property-selected"
         />
     </div>
 

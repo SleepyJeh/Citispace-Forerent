@@ -9,62 +9,59 @@ class TenantDetail extends Component
     public $currentTenantId = null;
     public $currentTenant = null;
 
-    // Default dummy data for testing
-    protected $dummyTenants = [
-        1 => [
-            'id' => 1,
-            'name' => 'Ninole Candelaria',
-            'address' => 'Taguig, 1634 Metro Manila, Philippines',
-            'building' => 'The Ridge Wood - 4th Floor',
-            'unit' => 'Unit 101',
-            'contact_number' => '09457835123',
-            'email' => 'ninole@gmail.com',
-            'bed_number' => 'B1',
-            'lease_start_date' => '2024-01-08',
-            'lease_term' => '6 Months',
-            'is_auto_renew' => false,
-            'dorm_type' => 'Dorm Type',
-            'gender' => 'All Female',
-            'lease_end_date' => '2024-07-08',
-            'shift' => 'Shift',
-            'move_in_date' => '2024-01-06',
-            'security_deposit' => 20000.00,
-            'monthly_rate' => 20000.00,
-            'payment_status' => 'Paid',
-        ],
-        2 => [
-            'id' => 2,
-            'name' => 'John Doe',
-            'address' => 'Makati, Metro Manila, Philippines',
-            'building' => 'The Residences - 2nd Floor',
-            'unit' => 'Unit 202',
-            'contact_number' => '09123456789',
-            'email' => 'john.doe@email.com',
-            'bed_number' => 'B2',
-            'lease_start_date' => '2024-02-01',
-            'lease_term' => '12 Months',
-            'is_auto_renew' => true,
-            'dorm_type' => 'Studio',
-            'gender' => 'All Male',
-            'lease_end_date' => '2025-02-01',
-            'shift' => 'Day',
-            'move_in_date' => '2024-01-28',
-            'security_deposit' => 15000.00,
-            'monthly_rate' => 15000.00,
-            'payment_status' => 'Pending',
-        ]
-    ];
-
     #[On('tenantSelected')]
-    public function loadTenant(?int $tenantId): void
+    public function loadTenant(int $tenantId): void
     {
-        if (!$tenantId || !isset($this->dummyTenants[$tenantId])) {
+        $tenant = \App\Models\User::where('user_id', $tenantId)
+            ->where('role', 'tenant')
+            ->with([
+                'leases' => fn($q) => $q->latest()->limit(1)->with([
+                    'bed.unit.property',
+                    'billings' => fn($q) => $q->latest()->limit(1)
+                ])
+            ])
+            ->first();
+
+        if (!$tenant) {
             $this->resetTenantData();
             return;
         }
 
+        $lease   = $tenant->leases->first();
+        $bed     = $lease?->bed;
+        $unit    = $bed?->unit;
+        $property = $unit?->property;
+        $billing = $lease?->billings->first();
+
         $this->currentTenantId = $tenantId;
-        $this->currentTenant = $this->dummyTenants[$tenantId];
+        $this->currentTenant = [
+            'personal_info' => [
+                'first_name' => $tenant->first_name,
+                'last_name'  => $tenant->last_name,
+                'address'    => $property?->address,
+                'property'   => $property?->building_name,
+                'unit'       => $unit?->unit_number,
+            ],
+            'contact_info' => [
+                'contact_number' => $tenant->contact,
+                'email'          => $tenant->email,
+            ],
+            'rent_details' => [
+                'bed_number'       => $bed?->bed_number,
+                'dorm_type'        => $unit?->occupants,
+                'lease_start_date' => $lease?->start_date?->format('Y-m-d'),
+                'lease_end_date'   => $lease?->end_date?->format('Y-m-d'),
+                'lease_term'       => $lease?->term,
+                'shift'            => $lease?->shift,
+                'auto_renew'       => $lease?->auto_renew,
+            ],
+            'move_in_details' => [
+                'move_in_date'     => $lease?->move_in?->format('Y-m-d'),
+                'monthly_rate'     => $lease?->contract_rate,
+                'security_deposit' => $lease?->security_deposit,
+                'payment_status'   => $billing?->status ?? 'No billing',
+            ],
+        ];
     }
 
     private function resetTenantData(): void

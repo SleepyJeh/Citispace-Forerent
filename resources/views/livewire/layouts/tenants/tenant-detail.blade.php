@@ -25,26 +25,26 @@
                 <div class="flex justify-between items-start">
                     {{-- Left: Name and Address --}}
                     <div>
-                        <h3 class="font-bold text-3xl mb-2">{{ $currentTenant['name'] }}</h3>
+                        <h3 class="font-bold text-3xl mb-2">{{ $currentTenant['personal_info']['first_name'] }} {{ $currentTenant['personal_info']['last_name'] }}</h3>
                         <div class="flex flex-col gap-1.5">
                             <span class="flex items-center gap-2 text-sm text-white/90">
                                 <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                                     <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" />
                                 </svg>
-                                {{ $currentTenant['address'] }}
+                                {{ $currentTenant['personal_info']['address'] }}
                             </span>
                             <span class="flex items-center gap-2 text-sm text-white/90">
                                 <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                                     <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
                                 </svg>
-                                {{ $currentTenant['building'] }}
+                                {{ $currentTenant['personal_info']['property'] }}
                             </span>
                         </div>
                     </div>
 
                     {{-- Right: Unit Tag --}}
                     <span class="flex-shrink-0 bg-white text-blue-700 text-sm font-semibold px-4 py-1.5 rounded-full">
-                        {{ $currentTenant['unit'] }}
+                        {{ $currentTenant['personal_info']['unit'] }}
                     </span>
                 </div>
             </div>
@@ -68,8 +68,8 @@
                 <div class="bg-white rounded-lg border border-gray-200 p-5 shadow-sm">
                     <h5 class="font-bold text-lg text-gray-900 mb-4">Contact Details</h5>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
-                        {!! $detailItem('Contact Number', $currentTenant['contact_number']) !!}
-                        {!! $detailItem('Email', $currentTenant['email']) !!}
+                        {!! $detailItem('Contact Number', $currentTenant['contact_info']['contact_number']) !!}
+                        {!! $detailItem('Email', $currentTenant['contact_info']['email']) !!}
                     </div>
                 </div>
 
@@ -77,13 +77,13 @@
                 <div class="bg-white rounded-lg border border-gray-200 p-5 shadow-sm">
                     <h5 class="font-bold text-lg text-gray-900 mb-4">Rent Details</h5>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
-                        {!! $detailItem('Bed Number', $currentTenant['bed_number']) !!}
-                        {!! $detailItem('Dorm Type', $currentTenant['dorm_type']) !!}
-                        {!! $detailItem('Start Date', \Carbon\Carbon::parse($currentTenant['lease_start_date'])->format('F j, Y')) !!}
-                        {!! $detailItem('End Date', \Carbon\Carbon::parse($currentTenant['lease_end_date'])->format('F j, Y')) !!}
-                        {!! $detailItem('Term', $currentTenant['lease_term']) !!}
-                        {!! $detailItem('Shift', $currentTenant['shift']) !!}
-                        {!! $detailItem('Auto Renew Contract', $currentTenant['is_auto_renew'] ? 'Yes' : 'No') !!}
+                        {!! $detailItem('Bed Number', $currentTenant['rent_details']['bed_number']) !!}
+                        {!! $detailItem('Dorm Type', $currentTenant['rent_details']['dorm_type']) !!}
+                        {!! $detailItem('Start Date', \Carbon\Carbon::parse($currentTenant['rent_details']['lease_start_date'])->format('F j, Y')) !!}
+                        {!! $detailItem('End Date', \Carbon\Carbon::parse($currentTenant['rent_details']['lease_end_date'])->format('F j, Y')) !!}
+                        {!! $detailItem('Term', $currentTenant['rent_details']['lease_term']) !!}
+                        {!! $detailItem('Shift', $currentTenant['rent_details']['shift']) !!}
+                        {!! $detailItem('Auto Renew Contract', $currentTenant['rent_details']['auto_renew'] ? 'Yes' : 'No') !!}
                     </div>
                 </div>
 
@@ -91,10 +91,10 @@
                 <div class="bg-white rounded-lg border border-gray-200 p-5 shadow-sm">
                     <h5 class="font-bold text-lg text-gray-900 mb-4">Move In Details</h5>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
-                        {!! $detailItem('Move-in Date', \Carbon\Carbon::parse($currentTenant['move_in_date'])->format('F j, Y')) !!}
-                        {!! $detailItem('Monthly Rate', 'P ' . number_format($currentTenant['monthly_rate'], 2)) !!}
-                        {!! $detailItem('Security Deposit', 'P ' . number_format($currentTenant['security_deposit'], 2)) !!}
-                        {!! $detailItem('Payment Status', $currentTenant['payment_status'], $currentTenant['payment_status'] === 'Paid') !!}
+                        {!! $detailItem('Move-in Date', \Carbon\Carbon::parse($currentTenant['move_in_details']['move_in_date'])->format('F j, Y')) !!}
+                        {!! $detailItem('Monthly Rate', 'P ' . number_format($currentTenant['move_in_details']['monthly_rate'], 2)) !!}
+                        {!! $detailItem('Security Deposit', 'P ' . number_format($currentTenant['move_in_details']['security_deposit'], 2)) !!}
+                        {!! $detailItem('Payment Status', $currentTenant['move_in_details']['payment_status'], $currentTenant['move_in_details']['payment_status'] === 'Paid') !!}
                     </div>
                 </div>
 

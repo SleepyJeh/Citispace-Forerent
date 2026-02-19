@@ -12,23 +12,28 @@ class UnitFactory extends Factory
 {
     protected $model = Unit::class;
 
-    // Keep track of unit counters per floor
-    protected static array $floorCounters = [];
-
     public function definition(): array
     {
-        $floor = $this->faker->numberBetween(1, 10);
+        $bedType = $this->faker->randomElement(['Single', 'Twin', 'Bunk']);
+
+        // Determine number of beds based on bed_type
+        $bedCount = match ($bedType) {
+            'Single' => 1,
+            'Twin'   => 2,
+            'Bunk'   => 4,
+            default  => 1,
+        };
 
         return [
-            'property_id'   => $this->getPropertyId(),
-            'manager_id'    => $this->faker->boolean(70) ? $this->getManagerId() : null,
-            'floor_number'  => $floor,
-            'unit_number'   => $this->generateUnitNumber($floor),
+            'property_id'   => Property::factory(),
+            'manager_id'    => User::where('role', 'manager')->inRandomOrder()->value('user_id'),
+            'floor_number'  => 1,
+            'unit_number'   => '0000', // will be overridden by seeder if needed
             'occupants'     => $this->faker->randomElement(['Male', 'Female', 'Co-ed']),
-            'bed_type'      => $this->faker->randomElement(['Single', 'Bunk', 'Twin']),
+            'bed_type'      => $bedType,
             'room_type'     => $this->faker->randomElement(['Standard', 'Deluxe', 'Suite']),
-            'room_cap'      => $this->faker->numberBetween(1, 4),
-            'unit_cap'      => $this->faker->numberBetween(2, 8),
+            'room_cap'      => $bedCount, // same as number of beds per unit
+            'unit_cap'      => $bedCount, // total beds in the unit same as bed type
             'price'         => $this->faker->randomFloat(2, 3000, 15000),
             'amenities'     => null,
             'created_at'    => now(),
@@ -36,50 +41,25 @@ class UnitFactory extends Factory
         ];
     }
 
-    private function generateUnitNumber(int $floor): string
-    {
-        // Initialize counter for this floor if not set
-        if (!isset(static::$floorCounters[$floor])) {
-            static::$floorCounters[$floor] = 1;
-        }
-
-        // Format: R + floor number + 2-digit counter
-        $unitNumber = sprintf('U%d%02d', $floor, static::$floorCounters[$floor]);
-
-        // Increment the counter for next unit on this floor
-        static::$floorCounters[$floor]++;
-
-        return $unitNumber;
-    }
-
-    private function getManagerId(): int
-    {
-        $manager = User::where('role', 'manager')->inRandomOrder()->first();
-
-        if (!$manager) {
-            $manager = User::factory()->create(['role' => 'manager']);
-        }
-
-        return $manager->user_id;
-    }
-
-    private function getPropertyId(): int
-    {
-        $property = Property::inRandomOrder()->first();
-
-        if (!$property) {
-            $property = Property::factory()->create();
-        }
-
-        return $property->property_id;
-    }
-
     public function configure()
     {
         return $this->afterCreating(function (Unit $unit) {
-            Bed::factory()->count($unit->unit_cap)->create([
-                'unit_id' => $unit->unit_id,
-            ]);
+
+            // Determine number of beds based on bed_type
+            $bedCount = match ($unit->bed_type) {
+                'Single' => 1,
+                'Twin'   => 2,
+                'Bunk'   => 4,
+                default  => 1,
+            };
+
+            // Create beds for this unit
+            for ($i = 1; $i <= $bedCount; $i++) {
+                Bed::factory()->create([
+                    'unit_id'    => $unit->unit_id,
+                    'bed_number' => 'B' . $i,
+                ]);
+            }
         });
     }
 }

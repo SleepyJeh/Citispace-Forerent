@@ -67,7 +67,7 @@
                 <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
             </svg>
         </button>
-        
+
             </div>
             <h5 class="font-bold text-gray-800 text-base mb-3">Buildings</h5>
         </div>
@@ -112,7 +112,7 @@
             <div class="flex-1 overflow-y-auto custom-vertical-scrollbar bg-white rounded-b-xl border-2 border-t-0 border-gray-200">
                 @forelse ($units as $unit)
                     <div class="flex justify-between items-center px-6 py-4 border-b border-dotted border-gray-300 last:border-b-0 hover:bg-gray-50 transition-colors">
-                        <span class="w-1/3 text-base font-bold text-gray-900">{{ $unit->unit_id }}</span>
+                        <span class="w-1/3 text-base font-bold text-gray-900">{{ $unit->unit_number }}</span>
                         <span class="w-1/3">
                         <div class="text-base font-semibold text-gray-900">{{ $unit->available_beds }} of {{ $unit->total_beds }}</div>
                         <div class="text-xs text-gray-500">{{ $unit->occupants }}</div>
