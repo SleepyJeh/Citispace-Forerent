@@ -37,7 +37,8 @@ class PaymentReceipts extends Component
 
     public function viewReceipt($billingId)
     {
-        // Dispatch event to the modal component with the ID
+        logger("Click registered for Billing ID: " . $billingId);
+
         $this->dispatch('open-payment-receipt', billingId: $billingId);
     }
 

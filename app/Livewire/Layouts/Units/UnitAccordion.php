@@ -192,16 +192,14 @@ class UnitAccordion extends Component
 
     public function render()
     {
-        // Always return a paginator instance, even when no building is selected
         if ($this->selectedBuildingId) {
             $units = Unit::where('property_id', $this->selectedBuildingId)
-                ->with(['property', 'beds'])
+                ->with(['property', 'beds']) // Eager load relationships to fix lag
                 ->withCount(['beds as occupied_beds_count' => function ($query) {
                     $query->where('status', 'Occupied');
                 }])
                 ->paginate(4);
         } else {
-            // Return empty paginator when no building is selected
             $units = new LengthAwarePaginator([], 0, 4, 1);
         }
 
