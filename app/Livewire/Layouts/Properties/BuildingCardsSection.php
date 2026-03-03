@@ -71,6 +71,38 @@ class BuildingCardsSection extends Component
         $this->dispatch($this->eventName, id: $propertyId);
     }
 
+    /**
+     * Refresh the property list when a new property is created elsewhere.
+     */
+    protected function getListeners(): array
+    {
+        return array_merge(parent::getListeners() ?? [], [
+            'refresh-property-list' => 'refreshProperties',
+            'propertyCreated' => 'handleNewProperty',
+        ]);
+    }
+
+    public function refreshProperties(): void
+    {
+        $this->properties = $this->loadPropertiesByRole();
+
+        // maintain existing selection if still present, otherwise pick first
+        if ($this->properties->isNotEmpty()) {
+            if (!$this->properties->pluck('property_id')->contains($this->selectedBuilding)) {
+                $this->selectedBuilding = $this->properties->first()->property_id;
+            }
+        } else {
+            $this->selectedBuilding = null;
+        }
+    }
+
+    public function handleNewProperty($propertyId): void
+    {
+        // reload list then select the newly created property
+        $this->refreshProperties();
+        $this->selectedBuilding = $propertyId;
+    }
+
     public function render()
     {
         return view('livewire.layouts.properties.building-cards-section');

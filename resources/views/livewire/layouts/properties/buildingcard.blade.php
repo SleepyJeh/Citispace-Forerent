@@ -5,7 +5,7 @@
     {{-- Image Container --}}
     <div class="relative h-48 overflow-hidden">
         <img
-            src="{{ $property->image ? asset('storage/' . $property->image) : asset('images/building_placeholder.png') }}"
+            src="{{ $property->image ? asset('storage/' . $property->image) : asset('office-building.png') }}"
             alt="{{ $property->building_name }}"
             class="w-full h-full object-cover">
     </div>

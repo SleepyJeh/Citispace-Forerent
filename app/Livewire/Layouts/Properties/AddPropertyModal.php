@@ -69,9 +69,9 @@ class AddPropertyModal extends Component
 
         $this->close();
 
-        // Redirect to property units page or trigger next modal
-        $this->dispatch('propertyCreated', $property->property_id);
-        $this->dispatch('refresh-property-list');
+        // Notify other components about the new property
+        $this->emit('propertyCreated', $property->property_id);
+        $this->emit('refresh-property-list');
     }
 
 

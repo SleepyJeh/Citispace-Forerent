@@ -12,13 +12,13 @@
 
         {{-- TABLE SLOT --}}
         <x-ui.table>
-            <x-slot:header>
+            <x-slot:head>
                 <x-ui.th>Tenant Name</x-ui.th>
                 <x-ui.th>Billing Date</x-ui.th>
                 <x-ui.th>Amount</x-ui.th>
                 <x-ui.th>Status</x-ui.th>
                 <x-ui.th class="text-center">Action</x-ui.th>
-            </x-slot:header>
+            </x-slot:head>
 
             <x-slot:body>
                 @forelse ($payments as $payment)

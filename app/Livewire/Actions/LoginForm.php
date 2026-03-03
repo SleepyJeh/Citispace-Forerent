@@ -5,6 +5,8 @@ namespace App\Livewire\Actions;
 use App\Enums\Role;
 use Livewire\Component;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cookie;
+
 
 
 class LoginForm extends Component
@@ -24,6 +26,14 @@ class LoginForm extends Component
         $this->validateOnly($propertyName);
     }
 
+    public function mount()
+    {
+        if (Cookie::has('email')) {
+            $this->email = Cookie::get('email');
+            $this->remember = true; // Auto-check the box
+        }
+    }
+
     public function login()
     {
         $this->validate();
@@ -34,11 +44,16 @@ class LoginForm extends Component
         ];
 
         if (Auth::attempt($credentials, $this->remember)) {
+            // Store email in cookie for 30 days if "remember me" is checked
+            if ($this->remember) {
+                Cookie::queue('email', $this->email, 43200); // 43200 minutes = 30 days
+            } else {
+                Cookie::queue(Cookie::forget('email'));
+            }
+
             session()->flash('success', 'Login successful!');
 
             $role = auth()->user()->role;
-
-            // Check the role of user and redirect them to respective
             return match ($role) {
                 Role::Landlord->value => redirect()->route('landlord.dashboard'),
                 Role::Manager->value => redirect()->route('manager.dashboard'),
