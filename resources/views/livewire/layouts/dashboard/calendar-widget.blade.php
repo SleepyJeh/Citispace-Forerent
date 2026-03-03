@@ -1,10 +1,10 @@
-<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-    {{-- Calendar Left Side --}}
-    <div class="bg-white rounded-xl shadow-md p-6">
-        <h3 class="text-xl font-bold text-gray-900 mb-4">{{ $currentMonth }}</h3>
-        <div class="grid grid-cols-7 gap-2 text-center">
-            @foreach(['Mon', 'Tues', 'Wed', 'Thurs', 'Fri', 'Sat', 'Sun'] as $day)
-            <div class="text-xs font-medium text-gray-600 pb-2">{{ $day }}</div>
+<div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+    {{-- Calendar Left Side (Compact) --}}
+    <div class="bg-white rounded-xl shadow-md p-4 lg:col-span-1">
+        <h3 class="text-lg font-bold text-gray-900 mb-3">{{ $currentMonth }}</h3>
+        <div class="grid grid-cols-7 gap-1 text-center">
+            @foreach(['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as $day)
+            <div class="text-xs font-medium text-gray-600 pb-1">{{ $day }}</div>
             @endforeach
 
                 @foreach($calendarDays as $day)
@@ -13,7 +13,7 @@
                     @else
                         <button
                             wire:click="selectDate('{{ $currentYear }}-{{ date('m', strtotime($currentMonth)) }}-{{ $day }}')"
-                            class="aspect-square flex flex-col items-center justify-center rounded-lg text-sm
+                            class="aspect-square flex flex-col items-center justify-center rounded text-xs
                 {{ \Carbon\Carbon::parse($selectedDate)->day == $day
                     ? 'bg-blue-700 text-white font-bold'
                     : 'hover:bg-gray-100 text-gray-700' }}">
@@ -21,7 +21,7 @@
 
                             {{-- Dot for days with announcements --}}
                             @if(in_array($day, $announcementDates))
-                                <span class="w-2 h-2 mt-1 rounded-full
+                                <span class="w-1.5 h-1.5 mt-0.5 rounded-full
                     {{ \Carbon\Carbon::parse($selectedDate)->day == $day
                         ? 'bg-white'
                         : 'bg-blue-700' }}">
@@ -34,7 +34,7 @@
     </div>
 
     {{-- Daily Events Right Side --}}
-    <div class="bg-white rounded-xl shadow-md overflow-hidden">
+    <div class="bg-white rounded-xl shadow-md overflow-hidden lg:col-span-3">
         <div class="bg-blue-700 px-6 py-4">
             <h3 class="text-white text-lg font-semibold">{{ \Carbon\Carbon::parse($selectedDate)->format('F d, Y') }}</h3>
         </div>
