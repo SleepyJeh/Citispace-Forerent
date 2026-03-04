@@ -81,15 +81,23 @@ class UnitAccordion extends Component
      */
     public function loadSpecifications($unitId)
     {
-        $unit = Unit::with(['property', 'beds'])->find($unitId);
+        $unit = Unit::with(['property', 'beds.leases' => function($query) {
+            $query->where('status', 'Active');
+        }])->find($unitId);
 
         if (!$unit) {
             $this->specifications = [];
             return;
         }
 
-        // Calculate occupancy
-        $occupiedCount = $unit->beds->where('status', 'Occupied')->count();
+        // Calculate occupancy based on active leases
+        $occupiedCount = 0;
+        foreach ($unit->beds as $bed) {
+            if ($bed->leases->isNotEmpty()) {
+                $occupiedCount++;
+            }
+        }
+        
         $totalCapacity = $unit->unit_cap;
 
         // Process amenities
@@ -141,16 +149,29 @@ class UnitAccordion extends Component
     }
 
     /**
-     * Calculate unit status based on bed occupancy
+     * Calculate unit status based on active leases in beds
      */
     public function calculateUnitStatus($unit)
     {
-        $occupiedCount = $unit->beds->where('status', 'Occupied')->count();
-        $totalCapacity = $unit->unit_cap;
+        $hasAnyActiveLease = false;
+        $allBedsOccupied = true;
+        $totalBeds = $unit->beds->count();
+        
+        if ($totalBeds === 0) {
+            return 'Vacant';
+        }
 
-        if ($occupiedCount >= $totalCapacity) {
+        foreach ($unit->beds as $bed) {
+            if ($bed->leases->isNotEmpty()) {
+                $hasAnyActiveLease = true;
+            } else {
+                $allBedsOccupied = false;
+            }
+        }
+
+        if ($allBedsOccupied && $hasAnyActiveLease) {
             return 'Occupied';
-        } elseif ($occupiedCount > 0) {
+        } elseif ($hasAnyActiveLease) {
             return 'Available';
         } else {
             return 'Vacant';
@@ -194,9 +215,8 @@ class UnitAccordion extends Component
     {
         if ($this->selectedBuildingId) {
             $units = Unit::where('property_id', $this->selectedBuildingId)
-                ->with(['property', 'beds']) // Eager load relationships to fix lag
-                ->withCount(['beds as occupied_beds_count' => function ($query) {
-                    $query->where('status', 'Occupied');
+                ->with(['property', 'beds.leases' => function($query) {
+                    $query->where('status', 'Active');
                 }])
                 ->paginate(4);
         } else {

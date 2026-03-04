@@ -4,6 +4,7 @@ namespace App\Livewire\Layouts;
 
 use Livewire\Component;
 use App\Models\Unit;
+use App\Models\Bed;
 
 class PropertyWidgets extends Component
 {
@@ -13,8 +14,6 @@ class PropertyWidgets extends Component
     public int $occupiedPercent = 0;
     public int $vacant = 0;
     public int $vacantPercent = 0;
-    public int $maintenance = 0;
-    public int $maintenancePercent = 0;
     public int $moveInReady = 0;
     public int $moveInReadyPercent = 0;
     public float $occupancyRate = 0.0;
@@ -30,60 +29,67 @@ class PropertyWidgets extends Component
 
     private function loadUnitStats()
     {
-        // Calculate unit status based on bed occupancy
+        // Calculate unit status based on active leases in beds
         $this->totalUnits = Unit::count();
 
-        // For demo purposes, we'll calculate based on bed status
-        // In real implementation, you might want to track unit status separately
-        $units = Unit::withCount(['beds', 'beds as occupied_beds_count' => function($query) {
-            $query->where('status', 'Occupied');
+        // Get units with their beds and active leases
+        $units = Unit::with(['beds.leases' => function($query) {
+            $query->where('status', 'Active');
         }])->get();
 
         $occupiedUnits = 0;
         $vacantUnits = 0;
-        $maintenanceUnits = 0;
         $moveInReadyUnits = 0;
 
         foreach ($units as $unit) {
-            $totalBeds = $unit->beds_count;
-            $occupiedBeds = $unit->occupied_beds_count;
+            $hasAnyActiveLease = false;
+            $allBedsOccupied = true;
+            $totalBeds = $unit->beds->count();
+            
+            if ($totalBeds === 0) {
+                $vacantUnits++;
+                continue;
+            }
 
-            if ($occupiedBeds == $totalBeds) {
-                $occupiedUnits++;
-            } elseif ($occupiedBeds == 0) {
-                // Simple logic for demo - you might have actual maintenance status
-                if ($totalBeds > 2) { // Example condition for maintenance
-                    $maintenanceUnits++;
+            foreach ($unit->beds as $bed) {
+                if ($bed->leases->isNotEmpty()) {
+                    $hasAnyActiveLease = true;
                 } else {
-                    $vacantUnits++;
+                    $allBedsOccupied = false;
                 }
+            }
+
+            if ($allBedsOccupied && $hasAnyActiveLease) {
+                // All beds have active leases
+                $occupiedUnits++;
+            } elseif ($hasAnyActiveLease) {
+                // Some beds have active leases - move-in ready
+                $moveInReadyUnits++;
             } else {
-                $moveInReadyUnits++; // Partially occupied or ready
+                // No active leases at all - fully vacant
+                $vacantUnits++;
             }
         }
 
         $this->occupied = $occupiedUnits;
         $this->vacant = $vacantUnits;
-        $this->maintenance = $maintenanceUnits;
         $this->moveInReady = $moveInReadyUnits;
 
         // Calculate percentages
         if ($this->totalUnits > 0) {
             $this->occupiedPercent = round(($this->occupied / $this->totalUnits) * 100);
             $this->vacantPercent = round(($this->vacant / $this->totalUnits) * 100);
-            $this->maintenancePercent = round(($this->maintenance / $this->totalUnits) * 100);
             $this->moveInReadyPercent = round(($this->moveInReady / $this->totalUnits) * 100);
 
             $this->occupancyRate = round(($this->occupied / $this->totalUnits) * 100, 1);
-            $this->availableUnits = $this->totalUnits - $this->occupied;
+            $this->availableUnits = $this->vacant + $this->moveInReady;
         }
 
         // Prepare data for donut chart
         $this->unitStatusData = [
             ['label' => 'Occupied', 'value' => $this->occupiedPercent, 'count' => $this->occupied],
+            ['label' => 'Available', 'value' => $this->moveInReadyPercent, 'count' => $this->moveInReady],
             ['label' => 'Vacant', 'value' => $this->vacantPercent, 'count' => $this->vacant],
-            ['label' => 'Maintenance', 'value' => $this->maintenancePercent, 'count' => $this->maintenance],
-            ['label' => 'Move-In Ready', 'value' => $this->moveInReadyPercent, 'count' => $this->moveInReady]
         ];
     }
 
@@ -91,9 +97,8 @@ class PropertyWidgets extends Component
     {
         return [
             ['label' => 'Occupied', 'value' => $this->occupiedPercent, 'count' => $this->occupied],
+            ['label' => 'Available', 'value' => $this->moveInReadyPercent, 'count' => $this->moveInReady],
             ['label' => 'Vacant', 'value' => $this->vacantPercent, 'count' => $this->vacant],
-            ['label' => 'Maintenance', 'value' => $this->maintenancePercent, 'count' => $this->maintenance],
-            ['label' => 'Move-In Ready', 'value' => $this->moveInReadyPercent, 'count' => $this->moveInReady]
         ];
     }
 

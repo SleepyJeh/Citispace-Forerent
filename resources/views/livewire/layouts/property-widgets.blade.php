@@ -9,7 +9,7 @@
                 <path class="text-blue-600" stroke-dasharray="75, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-width="3.8" />
             </svg>
             <div class="absolute inset-0 flex flex-col items-center justify-center">
-                <span class="text-2xl font-bold text-gray-900">200</span>
+                <span class="text-2xl font-bold text-gray-900">{{ $totalUnits }}</span>
                 <span class="text-xs text-gray-500">Units</span>
             </div>
         </div>
@@ -21,26 +21,22 @@
             </div>
             <div class="flex items-center gap-2">
                 <span class="w-2 h-2 rounded-full bg-blue-600"></span>
-                <span class="text-gray-600">Vacant</span>
+                <span class="text-gray-600">Available</span>
             </div>
             <div class="flex items-center gap-2">
                 <span class="w-2 h-2 rounded-full bg-blue-400"></span>
-                <span class="text-gray-600">Maintenance</span>
-            </div>
-            <div class="flex items-center gap-2">
-                <span class="w-2 h-2 rounded-full bg-blue-200"></span>
-                <span class="text-gray-600">Available</span>
+                <span class="text-gray-600">Vacant</span>
             </div>
         </div>
 
         <div class="mt-6 pt-4 border-t border-gray-100 flex justify-between text-center">
             <div>
                 <p class="text-xs text-gray-500">Occupancy Rate</p>
-                <p class="font-bold text-gray-900">64.0%</p>
+                <p class="font-bold text-gray-900">{{ $occupancyRate }}%</p>
             </div>
             <div>
                 <p class="text-xs text-gray-500">Available Units</p>
-                <p class="font-bold text-gray-900">15</p>
+                <p class="font-bold text-gray-900">{{ $availableUnits }}</p>
             </div>
         </div>
     </div>

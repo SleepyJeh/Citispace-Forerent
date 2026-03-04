@@ -40,7 +40,6 @@
         {{-- Right Sidebar: 30% --}}
         <div class="w-full lg:w-[30%] flex flex-col gap-6">
             <livewire:layouts.property-widgets />
-            <livewire:layouts.units.vacancy-metrics />
         </div>
     </div>
 
