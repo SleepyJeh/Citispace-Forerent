@@ -34,18 +34,24 @@
     </div>
 
     {{-- Daily Events Right Side --}}
-    <div class="bg-white rounded-xl shadow-md overflow-hidden lg:col-span-3">
+    <div class="bg-white rounded-xl shadow-md overflow-hidden lg:col-span-3 flex flex-col">
         <div class="bg-blue-700 px-6 py-4">
             <h3 class="text-white text-lg font-semibold">{{ \Carbon\Carbon::parse($selectedDate)->format('F d, Y') }}</h3>
         </div>
-        <div class="p-6 space-y-4 max-h-80 overflow-y-auto">
+        <div class="flex-1 flex flex-col">
             @forelse($dailyAnnouncements as $dailyAnnouncement)
-            <div class="border-b border-gray-200 pb-4 last:border-0 last:pb-0">
-                <h4 class="text-base font-bold text-gray-900 mb-1">{{ $dailyAnnouncement->headline }}</h4>
-                <p class="text-sm text-gray-600">{{ $dailyAnnouncement->description }}</p>
+            <div class="p-6 space-y-4 max-h-80 overflow-y-auto flex-1">
+                @foreach($dailyAnnouncements as $dailyAnnouncement)
+                <div class="border-b border-gray-200 pb-4 last:border-0 last:pb-0">
+                    <h4 class="text-base font-bold text-gray-900 mb-1">{{ $dailyAnnouncement->headline }}</h4>
+                    <p class="text-sm text-gray-600">{{ $dailyAnnouncement->details }}</p>
+                </div>
+                @endforeach
             </div>
             @empty
-            <p class="text-gray-500 text-center py-4">No events for this day</p>
+            <div class="flex-1 flex items-center justify-center p-6">
+                <p class="text-gray-500 text-center">No Events for Today</p>
+            </div>
             @endforelse
         </div>
     </div>

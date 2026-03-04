@@ -62,8 +62,8 @@ class CalendarWidget extends Component
 
         if ($this->role == "landlord") {
             $this->dailyAnnouncements = Announcement::where('author_id', auth()->id())
-                ->whereDate('created_at', $this->selectedDate)
-                ->orderBy('created_at', 'desc')
+                ->whereDate('notification_date', $this->selectedDate)
+                ->orderBy('notification_date', 'desc')
                 ->get();
         }
         else if ($this->role == "manager") {
@@ -73,8 +73,8 @@ class CalendarWidget extends Component
 
             $this->dailyAnnouncements = Announcement::where('author_id', auth()->id())
                 ->orWhereIn('property_id', $propertyIds)
-                ->whereDate('created_at', $this->selectedDate)
-                ->orderBy('created_at', 'desc')
+                ->whereDate('notification_date', $this->selectedDate)
+                ->orderBy('notification_date', 'desc')
                 ->where('recipient_role', 'manager')->get();
         }
         else if ($this->role == "tenant") {
@@ -84,8 +84,8 @@ class CalendarWidget extends Component
 
             $this->dailyAnnouncements = Announcement::whereIn('property_id', $propertyIds)
                 ->where('recipient_role', 'tenant')
-                ->whereDate('created_at', $this->selectedDate)
-                ->orderBy('created_at', 'desc')
+                ->whereDate('notification_date', $this->selectedDate)
+                ->orderBy('notification_date', 'desc')
                 ->get();
         }
     }
@@ -101,8 +101,8 @@ class CalendarWidget extends Component
 
         if ($this->role == "landlord") {
             $this->announcementDates = Announcement::where('author_id', $userId)
-                ->whereBetween('created_at', [$startOfMonth, $endOfMonth])
-                ->pluck('created_at')
+                ->whereBetween('notification_date', [$startOfMonth, $endOfMonth])
+                ->pluck('notification_date')
                 ->map(fn($d) => (int) Carbon::parse($d)->format('d'))
                 ->unique()
                 ->toArray();
@@ -117,8 +117,8 @@ class CalendarWidget extends Component
                     ->orWhereIn('property_id', $propertyIds);
             })
                 ->where('recipient_role', 'manager')
-                ->whereBetween('created_at', [$startOfMonth, $endOfMonth])
-                ->pluck('created_at')
+                ->whereBetween('notification_date', [$startOfMonth, $endOfMonth])
+                ->pluck('notification_date')
                 ->map(fn($d) => (int) Carbon::parse($d)->format('d'))
                 ->unique()
                 ->toArray();
@@ -130,8 +130,8 @@ class CalendarWidget extends Component
 
             $this->announcementDates = Announcement::whereIn('property_id', $propertyIds)
                 ->where('recipient_role', 'tenant')
-                ->whereBetween('created_at', [$startOfMonth, $endOfMonth])
-                ->pluck('created_at')
+                ->whereBetween('notification_date', [$startOfMonth, $endOfMonth])
+                ->pluck('notification_date')
                 ->map(fn($d) => (int) Carbon::parse($d)->format('d'))
                 ->unique()
                 ->toArray();

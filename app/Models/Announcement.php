@@ -13,7 +13,19 @@ class Announcement extends Model
     protected $primaryKey = 'announcement_id';
 
     protected $fillable = [
-        'author_id', 'property_id', 'headline', 'details', 'sender_role', 'recipient_role', 'created_at'
+        'author_id',
+        'property_id',
+        'headline',
+        'details',
+        'sender_role',
+        'recipient_role',
+        'notification_date',
+        'created_at'
+    ];
+
+    protected $casts = [
+        'notification_date' => 'datetime',
+        'created_at' => 'datetime',
     ];
 
     public function author()

@@ -19,6 +19,8 @@ class AnnouncementModal extends Component
     public $headline = '';
     public $details = '';
     public $propertyId = null;
+    public $notificationDate = null;
+    public $editingAnnouncementId = null;
 
     public $properties = [];
 
@@ -26,15 +28,18 @@ class AnnouncementModal extends Component
         'headline' => 'required|min:3|max:200',
         'details' => 'required|min:10|max:1000',
         'propertyId' => 'required|exists:properties,property_id',
+        'notificationDate' => 'required|date',
     ];
 
     protected $messages = [
         'headline.required' => 'Please enter a headline for your announcement.',
         'details.required' => 'Please enter details for your announcement.',
         'property_id.required' => 'Please select a property.',
+        'notificationDate.required' => 'Please select a notification date.',
+        'notificationDate.date' => 'The notification date must be a valid date.',
     ];
 
-    protected $listeners = ['open-announcement-modal' => 'openModal'];
+    protected $listeners = ['open-announcement-modal' => 'openModal', 'edit-announcement' => 'editAnnouncement'];
 
     public function mount()
     {
@@ -61,6 +66,18 @@ class AnnouncementModal extends Component
         $this->resetForm();
     }
 
+    public function editAnnouncement($announcementId)
+    {
+        $announcement = Announcement::findOrFail($announcementId);
+        
+        $this->editingAnnouncementId = $announcementId;
+        $this->headline = $announcement->headline;
+        $this->details = $announcement->details;
+        $this->propertyId = $announcement->property_id;
+        $this->notificationDate = $announcement->notification_date?->format('Y-m-d');
+        $this->showModal = true;
+    }
+
     public function closeModal()
     {
         $this->showModal = false;
@@ -73,6 +90,8 @@ class AnnouncementModal extends Component
         $this->headline = '';
         $this->details = '';
         $this->propertyId = null;
+        $this->notificationDate = null;
+        $this->editingAnnouncementId = null;
         $this->resetValidation();
     }
 
@@ -81,18 +100,30 @@ class AnnouncementModal extends Component
     {
         $this->validate();
 
-        $announcement = new Announcement();
+        if ($this->editingAnnouncementId) {
+            // Update existing announcement
+            $announcement = Announcement::findOrFail($this->editingAnnouncementId);
+            $announcement->update([
+                'headline' => $this->headline,
+                'details' => $this->details,
+                'property_id' => $this->propertyId,
+                'notification_date' => $this->notificationDate,
+            ]);
+            session()->flash('message', 'Announcement updated successfully!');
+        } else {
+            // Create new announcement
+            $announcement = new Announcement();
 
-        if (Auth::user()->role === "landlord") // ← CHANGE TO Auth::user()
-        {
-            $announcement = $this->saveToDatabase('manager');
-        } else if (Auth::user()->role === "manager") { // ← CHANGE TO Auth::user()
-            $announcement = $this->saveToDatabase('tenant');
+            if (Auth::user()->role === "landlord") // ← CHANGE TO Auth::user()
+            {
+                $announcement = $this->saveToDatabase('manager');
+            } else if (Auth::user()->role === "manager") { // ← CHANGE TO Auth::user()
+                $announcement = $this->saveToDatabase('tenant');
+            }
+
+            $this->sendEmailToRecipient($announcement);
+            session()->flash('message', 'Announcement posted successfully!');
         }
-
-        $this->sendEmailToRecipient($announcement);
-
-        session()->flash('message', 'Announcement posted successfully!');
 
         $this->closeModal();
         $this->dispatch('announcement-posted');
@@ -107,6 +138,7 @@ class AnnouncementModal extends Component
             'details' => $this->details,
             'sender_role' => Auth::user()->role, // ← CHANGE TO Auth::user()
             'recipient_role' => $recipientRole,
+            'notification_date' => $this->notificationDate,
             'created_at' => now()
         ]);
 

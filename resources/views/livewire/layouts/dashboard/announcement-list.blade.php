@@ -16,10 +16,26 @@
     </div>
     <div class="p-6 space-y-4 max-h-64 overflow-y-auto">
         @forelse($announcements as $announcement)
-        <div class="border-b border-gray-200 pb-4 last:border-0 last:pb-0">
-            <div class="text-sm text-blue-700 font-semibold mb-1">{{ $announcement['created_at'] }}</div>
-            <h4 class="text-base font-bold text-gray-900 mb-1">{{ $announcement['headline'] }}</h4>
-            <p class="text-sm text-gray-600">{{ $announcement['details'] }}</p>
+        <div class="border-b border-gray-200 pb-4 last:border-0 last:pb-0 flex justify-between items-start group">
+            <div class="flex-1">
+                <div class="text-sm text-blue-700 font-semibold mb-1">{{ $announcement->notification_date ? $announcement->notification_date->format('M d, Y') : $announcement->created_at->format('M d, Y') }}</div>
+                <h4 class="text-base font-bold text-gray-900 mb-1">{{ $announcement['headline'] }}</h4>
+                <p class="text-sm text-gray-600">{{ $announcement['details'] }}</p>
+            </div>
+            
+            {{-- Edit button (show only for owners/managers) --}}
+            @if(request()->is('landlord') || request()->is('manager'))
+            <button
+                wire:click="$dispatch('edit-announcement', { announcementId: {{ $announcement->announcement_id }} })"
+                type="button"
+                class="ml-3 text-gray-400 hover:text-blue-700 transition-colors opacity-0 group-hover:opacity-100 focus:outline-none"
+                title="Edit announcement"
+            >
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                </svg>
+            </button>
+            @endif
         </div>
         @empty
         <p class="text-gray-500 text-center py-4">No announcements yet</p>

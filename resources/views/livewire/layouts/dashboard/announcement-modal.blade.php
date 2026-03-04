@@ -10,8 +10,8 @@
             <div class="bg-[#070589] text-white p-6 flex-shrink-0">
                 <div class="flex items-start justify-between">
                     <div>
-                        <h2 class="text-xl font-bold uppercase">ANNOUNCEMENT</h2>
-                        <p class="mt-1 text-sm text-blue-100">Fill in the details to post a new update</p>
+                        <h2 class="text-xl font-bold uppercase">{{ $editingAnnouncementId ? 'EDIT' : '' }} ANNOUNCEMENT</h2>
+                        <p class="mt-1 text-sm text-blue-100">{{ $editingAnnouncementId ? 'Update the details of your announcement' : 'Fill in the details to post a new update' }}</p>
                     </div>
                     {{-- Close Button (Triggers Discard Modal) --}}
                     <button
@@ -97,6 +97,26 @@
                             </label>
                             @error('propertyId')
                             <span class="text-xs text-red-500 mt-1 block">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        {{-- Notification Date --}}
+                        <div class="relative">
+                            <input
+                                wire:model="notificationDate"
+                                type="date"
+                                id="notificationDate"
+                                class="block px-2.5 pb-2.5 pt-4 w-full text-sm text-gray-900 bg-transparent rounded-lg border border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-[#0030C5] peer placeholder-transparent"
+                                placeholder=" "
+                            />
+                            <label
+                                for="notificationDate"
+                                class="absolute text-sm text-gray-500 duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-white px-2 peer-focus:px-2 peer-focus:text-[#0030C5] peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 start-1 pointer-events-none"
+                            >
+                                Notification Date
+                            </label>
+                            @error('notificationDate')
+                                <span class="text-xs text-red-500 mt-1 block">{{ $message }}</span>
                             @enderror
                         </div>
 

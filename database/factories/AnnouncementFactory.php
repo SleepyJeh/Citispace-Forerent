@@ -30,6 +30,7 @@ class AnnouncementFactory extends Factory
             'details'        => $details,
             'sender_role'    => $author->role,
             'recipient_role' => $this->determineRecipientRole($author->role),
+            'notification_date' => $this->faker->dateTimeBetween('first day of November this year', 'last day of November this year')->format('Y-m-d'),
             'created_at'     => $this->faker->dateTimeBetween('first day of November this year', 'last day of November this year'),
             'updated_at'     => $this->faker->dateTimeBetween('first day of November this year', 'last day of November this year')
         ];
