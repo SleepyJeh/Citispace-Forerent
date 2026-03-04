@@ -3,6 +3,7 @@
 namespace App\Livewire\Layouts;
 
 use Livewire\Component;
+use Livewire\Attributes\On;
 use App\Services\RevenueForecastService;
 use Carbon\Carbon;
 
@@ -27,6 +28,14 @@ class RevenueForecast extends Component
     public function mount()
     {
         $this->forecastYear = Carbon::now()->year;
+        $this->generateForecast();
+    }
+
+    #[On('updateYear')]
+    public function updateYear($year)
+    {
+        $this->forecastYear = $year;
+        $this->generateForecast();
     }
 
     public function generateForecast()

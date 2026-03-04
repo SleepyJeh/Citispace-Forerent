@@ -2,27 +2,12 @@
     <div class="flex justify-between items-center mb-6">
         <h2 class="text-2xl font-bold text-gray-800">Revenue Forecast</h2>
         
-        <div class="flex items-center space-x-4">
-            <select wire:model="forecastYear" class="border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <div class="flex items-center">
+            <select wire:model.live="forecastYear" class="border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-700">
                 @foreach(range(now()->year, now()->year + 2) as $year)
                     <option value="{{ $year }}">{{ $year }}</option>
                 @endforeach
             </select>
-            
-            <button 
-                wire:click="generateForecast" 
-                wire:loading.attr="disabled"
-                class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 disabled:opacity-50 transition duration-200"
-            >
-                <span wire:loading.remove>Generate Forecast</span>
-                <span wire:loading>
-                    <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Generating...
-                </span>
-            </button>
         </div>
     </div>
 
@@ -42,73 +27,202 @@
 
     @if(!empty($monthlyForecasts))
         <!-- Summary Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            <div class="bg-green-50 border border-green-200 rounded-lg p-4 shadow-sm">
-                <h3 class="text-lg font-semibold text-green-800 mb-2">Annual Forecast</h3>
-                <p class="text-2xl font-bold text-green-600">₱{{ number_format($totalAnnualRevenue, 2) }}</p>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+            <div class="bg-gradient-to-br from-green-50 to-green-100 border border-green-200 rounded-xl p-6 shadow-sm">
+                <p class="text-sm font-medium text-green-700 mb-2">Annual Forecast</p>
+                <p class="text-3xl font-bold text-green-600">₱{{ number_format($totalAnnualRevenue, 0) }}</p>
             </div>
             
-            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 shadow-sm">
-                <h3 class="text-lg font-semibold text-blue-800 mb-2">Remaining Revenue</h3>
-                <p class="text-2xl font-bold text-blue-600">₱{{ number_format($totalRemainingRevenue, 2) }}</p>
+            <div class="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 rounded-xl p-6 shadow-sm">
+                <p class="text-sm font-medium text-blue-700 mb-2">Remaining Revenue</p>
+                <p class="text-3xl font-bold text-blue-600">₱{{ number_format($totalRemainingRevenue, 0) }}</p>
             </div>
             
-            <div class="bg-purple-50 border border-purple-200 rounded-lg p-4 shadow-sm">
-                <h3 class="text-lg font-semibold text-purple-800 mb-2">Monthly Average</h3>
-                <p class="text-2xl font-bold text-purple-600">₱{{ number_format($averageMonthlyRevenue, 2) }}</p>
+            <div class="bg-gradient-to-br from-purple-50 to-purple-100 border border-purple-200 rounded-xl p-6 shadow-sm">
+                <p class="text-sm font-medium text-purple-700 mb-2">Monthly Average</p>
+                <p class="text-3xl font-bold text-purple-600">₱{{ number_format($averageMonthlyRevenue, 0) }}</p>
             </div>
         </div>
 
-        <!-- Monthly Forecast Table -->
-        <div class="overflow-x-auto border border-gray-200 rounded-lg">
-            <table class="min-w-full bg-white">
-                <thead>
-                    <tr class="bg-gray-50">
-                        <th class="px-6 py-3 border-b border-gray-200 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Month
-                        </th>
-                        <th class="px-6 py-3 border-b border-gray-200 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Forecasted Revenue
-                        </th>
-                        <th class="px-6 py-3 border-b border-gray-200 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Status
-                        </th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-200">
-                    @foreach($monthlyForecasts as $forecast)
-                        @php
-                            $isCurrentMonth = $forecast['month'] == now()->month && $forecast['year'] == now()->year;
-                            $isPastMonth = $forecast['month'] < now()->month && $forecast['year'] == now()->year;
-                        @endphp
-                        <tr class="{{ $isCurrentMonth ? 'bg-yellow-50' : '' }} hover:bg-gray-50">
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                {{ $forecast['month_name'] }} {{ $forecast['year'] }}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-semibold">
-                                ₱{{ number_format($forecast['forecasted_revenue'], 2) }}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                @if($isCurrentMonth)
-                                    <span class="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-medium">Current Month</span>
-                                @elseif($isPastMonth)
-                                    <span class="px-3 py-1 bg-gray-100 text-gray-800 rounded-full text-xs font-medium">Past Month</span>
-                                @else
-                                    <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">Future</span>
-                                @endif
-                            </td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
+        <!-- Revenue Chart -->
+        <div class="bg-white rounded-xl border border-gray-200 p-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-6">Monthly Revenue Forecast - {{ $forecastYear }}</h3>
+            <div id="revenueChart" style="height: 400px;"></div>
         </div>
+
+        <!-- Chart.js/ApexCharts Script -->
+        <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+        <script>
+            document.addEventListener('livewire:navigated', () => { renderRevenueChart(); });
+            document.addEventListener('DOMContentLoaded', () => { renderRevenueChart(); });
+
+            function renderRevenueChart() {
+                const monthlyForecasts = @json($monthlyForecasts);
+                
+                if (!monthlyForecasts || monthlyForecasts.length === 0) return;
+
+                const categories = monthlyForecasts.map(f => f.month_name);
+                const series = [{
+                    name: 'Forecasted Revenue',
+                    data: monthlyForecasts.map(f => f.forecasted_revenue)
+                }];
+
+                const options = {
+                    chart: {
+                        type: 'bar',
+                        height: 400,
+                        toolbar: {
+                            show: true,
+                            tools: {
+                                download: true,
+                                selection: true,
+                                zoom: true,
+                                zoomin: true,
+                                zoomout: true,
+                                pan: true,
+                                reset: true
+                            }
+                        },
+                        animations: {
+                            enabled: true,
+                            speed: 800,
+                            animateGradually: {
+                                enabled: true,
+                                delay: 150
+                            }
+                        }
+                    },
+                    plotOptions: {
+                        bar: {
+                            horizontal: false,
+                            columnWidth: '55%',
+                            borderRadius: 6,
+                            dataLabels: {
+                                position: 'top'
+                            },
+                            colors: {
+                                ranges: [{
+                                    from: -100000,
+                                    to: 0,
+                                    color: '#F15B46'
+                                },
+                                {
+                                    from: 50000,
+                                    to: 100000,
+                                    color: '#FEB019'
+                                },
+                                {
+                                    from: 100000,
+                                    to: 150000,
+                                    color: '#1F77D2'
+                                },
+                                {
+                                    from: 150000,
+                                    to: 200000,
+                                    color: '#06D6A0'
+                                },
+                                {
+                                    from: 200000,
+                                    to: 300000,
+                                    color: '#118DFF'
+                                }]
+                            }
+                        }
+                    },
+                    dataLabels: {
+                        enabled: true,
+                        formatter: function (val) {
+                            return '₱' + (val / 1000).toFixed(0) + 'K';
+                        },
+                        offsetY: -20,
+                        style: {
+                            fontSize: '12px',
+                            colors: ['#304758']
+                        }
+                    },
+                    stroke: {
+                        show: true,
+                        width: 2,
+                        colors: ['transparent']
+                    },
+                    xaxis: {
+                        categories: categories,
+                        labels: {
+                            style: {
+                                fontSize: '12px'
+                            }
+                        }
+                    },
+                    yaxis: {
+                        title: {
+                            text: 'Revenue (₱)',
+                            style: {
+                                fontSize: '13px',
+                                fontWeight: 600
+                            }
+                        },
+                        labels: {
+                            formatter: function (val) {
+                                return '₱' + (val / 1000).toFixed(0) + 'K';
+                            }
+                        }
+                    },
+                    fill: {
+                        opacity: 0.9
+                    },
+                    tooltip: {
+                        y: {
+                            formatter: function (val) {
+                                return '₱' + val.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+                            }
+                        },
+                        theme: 'light'
+                    },
+                    grid: {
+                        borderColor: '#E7E7E7',
+                        strokeDashArray: 4,
+                        show: true
+                    },
+                    states: {
+                        hover: {
+                            filter: {
+                                type: 'darken',
+                                value: 0.15
+                            }
+                        },
+                        active: {
+                            filter: {
+                                type: 'darken',
+                                value: 0.15
+                            }
+                        }
+                    }
+                };
+
+                // Destroy existing chart if it exists
+                if (window.revenueChartInstance) {
+                    window.revenueChartInstance.destroy();
+                }
+
+                // Create new chart
+                window.revenueChartInstance = new ApexCharts(
+                    document.getElementById('revenueChart'),
+                    {
+                        series,
+                        ...options
+                    }
+                );
+                
+                window.revenueChartInstance.render();
+            }
+        </script>
     @else
-        <div class="text-center py-12 border-2 border-dashed border-gray-300 rounded-lg">
-            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+        <div class="text-center py-16 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50">
+            <svg class="mx-auto h-16 w-16 text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
             </svg>
-            <h3 class="mt-2 text-sm font-medium text-gray-900">No forecast generated</h3>
-            <p class="mt-1 text-sm text-gray-500">Click "Generate Forecast" to see revenue predictions.</p>
+            <h3 class="mt-2 text-lg font-medium text-gray-700">Loading Forecast</h3>
+            <p class="mt-1 text-sm text-gray-500">Generating revenue predictions...</p>
         </div>
     @endif
 </div>
