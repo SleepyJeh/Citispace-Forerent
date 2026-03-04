@@ -56,6 +56,24 @@ class CalendarWidget extends Component
         $this->updateCalendar();
     }
 
+    public function previousMonth()
+    {
+        $this->selectedDate = Carbon::parse($this->selectedDate)->subMonth()->startOfMonth();
+        $this->updateCalendar();
+    }
+
+    public function nextMonth()
+    {
+        $this->selectedDate = Carbon::parse($this->selectedDate)->addMonth()->startOfMonth();
+        $this->updateCalendar();
+    }
+
+    public function currentMonth()
+    {
+        $this->selectedDate = Carbon::now()->startOfDay();
+        $this->updateCalendar();
+    }
+
     public function loadDailyAnnouncements()
     {
         $this->role = auth()->user()->role;
