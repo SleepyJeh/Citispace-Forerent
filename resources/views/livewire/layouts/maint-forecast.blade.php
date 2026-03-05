@@ -1,216 +1,262 @@
-<div class="maintenance-forecast-component">
-
-    {{-- This is your debug box --}}
-    <div class="alert alert-warning mt-3">
-        <h5><i class="fas fa-exclamation-triangle"></i> All Available Variables</h5>
-        <p><strong>hasData:</strong> {{ $hasData ? 'true' : 'false' }}</p>
-        <p><strong>forecast exists:</strong> {{ isset($forecast) ? 'true' : 'false' }}</p>
-        <p><strong>forecast success:</strong> {{ isset($forecast['success']) ? ($forecast['success'] ? 'true' : 'false') : 'not set' }}</p>
-        <p><strong>debugInfo exists:</strong> {{ isset($debugInfo) ? 'true' : 'false' }}</p>
-        <p><strong>error:</strong> {{ $error ?? 'null' }}</p>
-        <p><strong>isGenerating:</strong> {{ $isGenerating ? 'true' : 'false' }}</p>
-    </div>
-
-    <div class="card">
-        <div class="card-header">
-            <h3 class="card-title">
-                <i class="fas fa-tools mr-2"></i>Maintenance Cost Forecast
-            </h3>
-        </div>
-        <div class="card-body">
-            <p class="text-muted mb-3">
-                Generate maintenance cost forecasts using historical maintenance data.
-            </p>
-
-            {{-- THIS IS THE BUTTON THAT WAS MISSING --}}
-            <form wire:submit.prevent="generateForecast">
-                <div class="row">
-                    <div class="col-md-4">
-                        <div class="form-group">
-                            <label for="year">Forecast Year</label>
-                            <select wire:model="year" id="year" class="form-control" required>
-                                @for($y = date('Y'); $y <= date('Y') + 3; $y++)
-                                    <option value="{{ $y }}">{{ $y }}</option>
-                                    @endfor
-                            </select>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="form-group">
-                            <label>&nbsp;</label>
-                            <div>
-                                <button type="submit" class="btn btn-primary" wire:loading.attr="disabled">
-                                    <span wire:loading.remove>
-                                        <i class="fas fa-chart-line"></i> Generate Forecast
-                                    </span>
-                                    <span wire:loading>
-                                        <i class="fas fa-spinner fa-spin"></i> Generating...
-                                    </span>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </form>
-
-            @if($hasData && $maintenanceStats)
-            <div class="row mt-4">
-                <div class="col-md-12">
-                    <h5>Historical Maintenance Data Summary</h5>
-                    <div class="table-responsive">
-                        <table class="table table-bordered table-sm">
-                            <thead>
-                                <tr>
-                                    <th>Total Records</th>
-                                    <th>Date Range</th>
-                                    <th>Total Cost</th>
-                                    <th>Average Monthly Cost</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>{{ number_format($maintenanceStats['total_records']) }}</td>
-                                    <td>{{ $maintenanceStats['date_range'] }}</td>
-                                    <td>₱{{ number_format($maintenanceStats['total_cost'], 2) }}</td>
-                                    <td>₱{{ number_format($maintenanceStats['avg_monthly_cost'], 2) }}</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-            @endif
-
-            @if($error)
-            <div class="alert alert-danger mt-3">
-                <h5><i class="icon fas fa-ban"></i> Error!</h5>
-                {{ $error }}
-            </div>
-            @endif
-
-            @if($debugInfo)
-            <div class="alert alert-info mt-3">
-                <h5><i class="fas fa-bug"></i> Debug Information</h5>
-                <pre>{{ json_encode($debugInfo, JSON_PRETTY_PRINT) }}</pre>
-            </div>
-            @endif
-
-            @if($forecast && isset($forecast['success']) && $forecast['success'])
-            <div class="forecast-results mt-4">
-                <div class="row mb-4">
-                    <div class="col-md-12">
-                        <div class="alert alert-success">
-                            <h5><i class="fas fa-check-circle"></i> Forecast Generated Successfully!</h5>
-                            <div class="row">
-                                <div class="col-md-3">
-                                    <strong>Annual Cost:</strong> ₱{{ number_format($forecast['total_annual_cost'] ?? 0, 2) }}
-                                </div>
-                                <div class="col-md-3">
-                                    <strong>Monthly Average:</strong> ₱{{ number_format($forecast['average_monthly_cost'] ?? 0, 2) }}
-                                </div>
-                                <div class="col-md-3">
-                                    <strong>Data Points:</strong> {{ $forecast['data_points_used'] ?? 0 }}
-                                </div>
-                                <div class="col-md-3">
-                                    <strong>R² Score:</strong> {{ number_format($forecast['model_performance']['r2_score'] ?? 0, 3) }}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="row mb-4">
-                    <div class="col-md-12">
-                        <div class="card">
-                            <div class="card-header">
-                                <h4 class="card-title">Monthly Cost Forecast for {{ $year }}</h4>
-                            </div>
-                            <div class="card-body p-0">
-                                <div class="table-responsive">
-                                    <table class="table table-bordered table-striped table-sm mb-0">
-                                        <thead class="thead-light">
-                                            <tr>
-                                                <th>Month</th>
-                                                <th>Forecasted Cost</th>
-                                                <th>Est. Jobs</th>
-                                                <th>Urgency Score</th>
-                                                <th>Seasonal Factor</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            @foreach(($forecast['monthly_forecasts'] ?? []) as $monthly)
-                                            <tr>
-                                                <td><strong>{{ $monthly['month_name'] ?? '' }}</strong></td>
-                                                <td>₱{{ number_format($monthly['forecasted_cost'] ?? 0, 2) }}</td>
-                                                <td>{{ $monthly['maintenance_count_estimate'] ?? 0 }}</td>
-                                                <td>{{ number_format($monthly['urgency_estimate'] ?? 0, 1) }}</td>
-                                                <td>{{ number_format($monthly['seasonal_factor'] ?? 0, 2) }}x</td>
-                                            </tr>
-                                            @endforeach
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="row">
-                    <div class="col-md-12">
-                        <div class="card">
-                            <div class="card-header">
-                                <h4 class="card-title">Recommended Maintenance Schedule (Top 5)</h4>
-                            </div>
-                            <div class="card-body p-0">
-                                @if(!empty($forecast['maintenance_schedule']))
-                                <div class="table-responsive">
-                                    <table class="table table-bordered table-striped table-sm mb-0">
-                                        <thead class="thead-light">
-                                            <tr>
-                                                <th>Month</th>
-                                                <th>Category</th>
-                                                <th>Priority</th>
-                                                <th>Estimated Cost</th>
-                                                <th>Reason</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            @foreach(($forecast['maintenance_schedule'] ?? []) as $schedule)
-                                            <tr>
-                                                <td><strong>{{ $schedule['month_name'] ?? '' }}</strong></td>
-                                                <td>{{ $schedule['category'] ?? '' }}</td>
-                                                <td>
-                                                    <span class="badge badge-{{ ($schedule['priority'] ?? '') == 'High' ? 'danger' : 'warning' }}">
-                                                        {{ $schedule['priority'] ?? '' }}
-                                                    </span>
-                                                </td>
-                                                <td>₱{{ number_format($schedule['estimated_cost'] ?? 0, 2) }}</td>
-                                                <td>{{ $schedule['reason'] ?? '' }}</td>
-                                            </tr>
-                                            @endforeach
-                                        </tbody>
-                                    </table>
-                                </div>
-                                @else
-                                <p class="text-muted p-3 mb-0">No maintenance schedule generated.</p>
-                                @endif
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            {{-- This is the end of the success block --}}
-            @elseif($forecast && isset($forecast['success']) && !$forecast['success'])
-            <div class="alert alert-warning mt-3">
-                <h5><i class="fas fa-exclamation-triangle"></i> Forecast Failed</h5>
-                <p>{{ $forecast['error'] ?? 'Unknown error' }}</p>
-            </div>
-            {{-- This is the initial "no data" block --}}
-            @else
-            <div class="alert alert-info mt-3">
-                No forecast data available. Click "Generate Forecast" to start.
-            </div>
-            @endif
+<div class="bg-white rounded-lg shadow-md p-6">
+    <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold text-gray-800">Maintenance Cost Forecast</h2>
+        
+        <div class="flex items-center">
+            <select wire:model.live="year" class="border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-700">
+                @for($y = date('Y'); $y <= date('Y') + 3; $y++)
+                    <option value="{{ $y }}">{{ $y }}</option>
+                @endfor
+            </select>
         </div>
     </div>
+
+    @if($error)
+        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+            <strong>Error:</strong> {{ $error }}
+        </div>
+    @endif
+
+    @if($hasData && $maintenanceStats)
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+            <div class="bg-gradient-to-br from-orange-50 to-orange-100 border border-orange-200 rounded-xl p-6 shadow-sm">
+                <p class="text-sm font-medium text-orange-700 mb-2">Annual Forecast</p>
+                <p class="text-3xl font-bold text-orange-600">₱{{ number_format($forecast['total_annual_cost'] ?? 0, 0) }}</p>
+            </div>
+            
+            <div class="bg-gradient-to-br from-yellow-50 to-yellow-100 border border-yellow-200 rounded-xl p-6 shadow-sm">
+                <p class="text-sm font-medium text-yellow-700 mb-2">Monthly Average</p>
+                <p class="text-3xl font-bold text-yellow-600">₱{{ number_format($forecast['average_monthly_cost'] ?? 0, 0) }}</p>
+            </div>
+        </div>
+    @endif
+
+    @if($forecast && isset($forecast['success']) && $forecast['success'])
+        <!-- Maintenance Chart -->
+        <div class="bg-white rounded-xl border border-gray-200 p-6 mb-8">
+            <h3 class="text-lg font-semibold text-gray-800 mb-6">Monthly Maintenance Costs - {{ $year }}</h3>
+            <div id="maintenanceChart" style="height: 400px;"></div>
+        </div>
+
+        <!-- Monthly Forecast Table -->
+        <div class="bg-white rounded-xl border border-gray-200 p-6 mb-8">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Monthly Forecast Details</h3>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead class="bg-gray-50">
+                        <tr class="border-b">
+                            <th class="px-4 py-3 text-left font-semibold text-gray-700">Month</th>
+                            <th class="px-4 py-3 text-left font-semibold text-gray-700">Forecasted Cost</th>
+                            <th class="px-4 py-3 text-left font-semibold text-gray-700">Est. Jobs</th>
+                            <th class="px-4 py-3 text-left font-semibold text-gray-700">Urgency Score</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach(($forecast['monthly_forecasts'] ?? []) as $monthly)
+                        <tr class="border-b hover:bg-gray-50">
+                            <td class="px-4 py-3 font-medium text-gray-900">{{ $monthly['month_name'] ?? '' }}</td>
+                            <td class="px-4 py-3 text-gray-700">₱{{ number_format($monthly['forecasted_cost'] ?? 0, 2) }}</td>
+                            <td class="px-4 py-3 text-gray-700">{{ $monthly['maintenance_count_estimate'] ?? 0 }}</td>
+                            <td class="px-4 py-3 text-gray-700">{{ number_format($monthly['urgency_estimate'] ?? 0, 1) }}</td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Maintenance Schedule -->
+        @if(!empty($forecast['maintenance_schedule']))
+        <div class="bg-white rounded-xl border border-gray-200 p-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Recommended Maintenance Schedule (Top 5)</h3>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead class="bg-gray-50">
+                        <tr class="border-b">
+                            <th class="px-4 py-3 text-left font-semibold text-gray-700">Month</th>
+                            <th class="px-4 py-3 text-left font-semibold text-gray-700">Category</th>
+                            <th class="px-4 py-3 text-left font-semibold text-gray-700">Priority</th>
+                            <th class="px-4 py-3 text-left font-semibold text-gray-700">Estimated Cost</th>
+                            <th class="px-4 py-3 text-left font-semibold text-gray-700">Reason</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach(($forecast['maintenance_schedule'] ?? []) as $schedule)
+                        <tr class="border-b hover:bg-gray-50">
+                            <td class="px-4 py-3 font-medium text-gray-900">{{ $schedule['month_name'] ?? '' }}</td>
+                            <td class="px-4 py-3 text-gray-700">{{ $schedule['category'] ?? '' }}</td>
+                            <td class="px-4 py-3">
+                                <span class="inline-flex px-2 py-1 rounded-full text-xs font-semibold {{ ($schedule['priority'] ?? '') == 'High' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800' }}">
+                                    {{ $schedule['priority'] ?? '' }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-3 text-gray-700">₱{{ number_format($schedule['estimated_cost'] ?? 0, 2) }}</td>
+                            <td class="px-4 py-3 text-gray-700">{{ $schedule['reason'] ?? '' }}</td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        @endif
+
+        <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+        <script>
+            document.addEventListener('livewire:navigated', () => { renderMaintenanceChart(); });
+            document.addEventListener('DOMContentLoaded', () => { renderMaintenanceChart(); });
+
+            function renderMaintenanceChart() {
+                const forecast = @json($forecast);
+                const monthlyForecasts = forecast['monthly_forecasts'] || [];
+                
+                if (!monthlyForecasts || monthlyForecasts.length === 0) return;
+
+                const categories = monthlyForecasts.map(f => f.month_name);
+                const series = [
+                    {
+                        name: 'Forecasted Cost',
+                        data: monthlyForecasts.map(f => f.forecasted_cost)
+                    }
+                ];
+
+                const options = {
+                    chart: {
+                        type: 'bar',
+                        height: 400,
+                        toolbar: {
+                            show: true,
+                            tools: {
+                                download: true,
+                                selection: true,
+                                zoom: true,
+                                zoomin: true,
+                                zoomout: true,
+                                pan: true,
+                                reset: true
+                            }
+                        },
+                        animations: {
+                            enabled: true,
+                            speed: 800,
+                            animateGradually: {
+                                enabled: true,
+                                delay: 150
+                            }
+                        }
+                    },
+                    plotOptions: {
+                        bar: {
+                            horizontal: false,
+                            columnWidth: '55%',
+                            borderRadius: 6,
+                            dataLabels: {
+                                position: 'top'
+                            }
+                        }
+                    },
+                    dataLabels: {
+                        enabled: true,
+                        formatter: function (val) {
+                            return '₱' + (val / 1000).toFixed(0) + 'K';
+                        },
+                        offsetY: -20,
+                        style: {
+                            fontSize: '12px',
+                            colors: ['#304758']
+                        }
+                    },
+                    stroke: {
+                        show: true,
+                        width: 2,
+                        colors: ['transparent']
+                    },
+                    xaxis: {
+                        categories: categories,
+                        labels: {
+                            style: {
+                                fontSize: '12px'
+                            }
+                        }
+                    },
+                    yaxis: {
+                        title: {
+                            text: 'Cost (₱)',
+                            style: {
+                                fontSize: '13px',
+                                fontWeight: 600
+                            }
+                        },
+                        labels: {
+                            formatter: function (val) {
+                                return '₱' + (val / 1000).toFixed(0) + 'K';
+                            }
+                        }
+                    },
+                    fill: {
+                        opacity: 0.9
+                    },
+                    colors: ['#F59E0B'],
+                    tooltip: {
+                        y: {
+                            formatter: function (val) {
+                                return '₱' + val.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+                            }
+                        },
+                        theme: 'light'
+                    },
+                    grid: {
+                        borderColor: '#E7E7E7',
+                        strokeDashArray: 4,
+                        show: true
+                    },
+                    states: {
+                        hover: {
+                            filter: {
+                                type: 'darken',
+                                value: 0.15
+                            }
+                        },
+                        active: {
+                            filter: {
+                                type: 'darken',
+                                value: 0.15
+                            }
+                        }
+                    }
+                };
+
+                // Destroy existing chart if it exists
+                if (window.maintenanceChartInstance) {
+                    window.maintenanceChartInstance.destroy();
+                }
+
+                // Create new chart
+                window.maintenanceChartInstance = new ApexCharts(
+                    document.getElementById('maintenanceChart'),
+                    {
+                        series,
+                        ...options
+                    }
+                );
+                
+                window.maintenanceChartInstance.render();
+            }
+        </script>
+    @elseif($isGenerating)
+        <div class="text-center py-16 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50">
+            <svg class="mx-auto h-16 w-16 text-gray-400 mb-4 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m0 0c0-1 1-3 3-3s3 1 3 3-1 3-3 3-3-1-3-3m0 0c0 1-1 3-3 3s-3-1-3-3 1-3 3-3 3 1 3 3" />
+            </svg>
+            <h3 class="mt-2 text-lg font-medium text-gray-700">Generating Forecast</h3>
+            <p class="mt-1 text-sm text-gray-500">Processing maintenance data...</p>
+        </div>
+    @else
+        <div class="text-center py-16 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50">
+            <svg class="mx-auto h-16 w-16 text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+            <h3 class="mt-2 text-lg font-medium text-gray-700">No Forecast Data</h3>
+            <p class="mt-1 text-sm text-gray-500">Unable to generate forecast. Please ensure maintenance records exist.</p>
+        </div>
+    @endif
 </div>

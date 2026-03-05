@@ -5,6 +5,7 @@ namespace App\Livewire\Layouts;
 use Livewire\Component;
 use Livewire\Attributes\On;
 use App\Services\RevenueForecastService;
+use App\Models\Transaction;
 use Carbon\Carbon;
 
 class RevenueForecast extends Component
@@ -57,11 +58,37 @@ class RevenueForecast extends Component
             $this->averageMonthlyRevenue = $result['average_monthly_revenue'];
             $this->dataPointsUsed = $result['data_points_used'] ?? 0;
             
+            // Add actual earnings data to each month
+            $this->monthlyForecasts = $this->enrichForecastWithActualEarnings($this->monthlyForecasts);
+            
         } catch (\Exception $e) {
             $this->error = $e->getMessage();
         }
 
         $this->loading = false;
+    }
+
+    private function enrichForecastWithActualEarnings($forecasts)
+    {
+        foreach ($forecasts as &$monthForecast) {
+            $monthNumber = $monthForecast['month'] ?? null;
+            
+            if ($monthNumber) {
+                // Get actual revenue for this month
+                $startDate = Carbon::create($this->forecastYear, $monthNumber, 1)->startOfMonth();
+                $endDate = $startDate->copy()->endOfMonth();
+                
+                $actualRevenue = Transaction::where('transaction_type', 'CREDIT')
+                    ->whereBetween('transaction_date', [$startDate, $endDate])
+                    ->sum('amount');
+                
+                $monthForecast['actual_revenue'] = $actualRevenue ?? 0;
+            } else {
+                $monthForecast['actual_revenue'] = 0;
+            }
+        }
+        
+        return $forecasts;
     }
 
     public function render()

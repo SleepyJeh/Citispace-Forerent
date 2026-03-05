@@ -25,6 +25,7 @@ class MaintForecast extends Component
     {
         $this->year = date('Y');
         $this->loadStats();
+        $this->generateForecast();
     }
 
     public function loadStats()

@@ -62,10 +62,16 @@
                 if (!monthlyForecasts || monthlyForecasts.length === 0) return;
 
                 const categories = monthlyForecasts.map(f => f.month_name);
-                const series = [{
-                    name: 'Forecasted Revenue',
-                    data: monthlyForecasts.map(f => f.forecasted_revenue)
-                }];
+                const series = [
+                    {
+                        name: 'Actual Earnings',
+                        data: monthlyForecasts.map(f => f.actual_revenue || 0)
+                    },
+                    {
+                        name: 'Forecasted Revenue',
+                        data: monthlyForecasts.map(f => f.forecasted_revenue)
+                    }
+                ];
 
                 const options = {
                     chart: {
@@ -99,33 +105,6 @@
                             borderRadius: 6,
                             dataLabels: {
                                 position: 'top'
-                            },
-                            colors: {
-                                ranges: [{
-                                    from: -100000,
-                                    to: 0,
-                                    color: '#F15B46'
-                                },
-                                {
-                                    from: 50000,
-                                    to: 100000,
-                                    color: '#FEB019'
-                                },
-                                {
-                                    from: 100000,
-                                    to: 150000,
-                                    color: '#1F77D2'
-                                },
-                                {
-                                    from: 150000,
-                                    to: 200000,
-                                    color: '#06D6A0'
-                                },
-                                {
-                                    from: 200000,
-                                    to: 300000,
-                                    color: '#118DFF'
-                                }]
                             }
                         }
                     },
@@ -170,6 +149,7 @@
                     fill: {
                         opacity: 0.9
                     },
+                    colors: ['#118DFF', '#06D6A0'],
                     tooltip: {
                         y: {
                             formatter: function (val) {
